@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json());
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
-        ? ['https://your-domain.vercel.app'] 
+        ? ['https://trickle-base-faucet.vercel.app'] 
         : ['http://localhost:3000', 'http://localhost:3001'],
     credentials: true
 }));

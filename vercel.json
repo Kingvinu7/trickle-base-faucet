@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "name": "trickle-base-faucet",
+  "builds": [
+    {
+      "src": "index.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/health",
+      "dest": "/index.js"
+    },
+    {
+      "src": "/stats",
+      "dest": "/index.js"
+    },
+    {
+      "src": "/check-eligibility",
+      "dest": "/index.js"
+    },
+    {
+      "src": "/log-claim",
+      "dest": "/index.js"
+    },
+    {
+      "src": "/.*",
+      "dest": "/index.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

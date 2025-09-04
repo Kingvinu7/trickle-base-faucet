@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trickle - Base Faucet</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 480px;
+            margin: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(45deg, #0052ff, #00d4ff);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 24px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #0052ff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .highlight {
+            background: linear-gradient(45deg, #ff6b6b, #ffa726);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 1rem;
+            border-radius: 12px;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0052ff;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        .wallet-section {
+            text-align: center;
+        }
+
+        .wallet-info {
+            background: linear-gradient(45deg, #f8f9ff, #e8f4fd);
+            border: 2px solid #e3f2fd;
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .wallet-address {
+            font-family: 'Monaco', monospace;
+            font-size: 0.9rem;
+            color: #0052ff;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #0052ff, #00d4ff);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 82, 255, 0.3);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-loading {
+            pointer-events: none;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            margin: auto;
+            border: 2px solid transparent;
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .message {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+
+        .message.success {
+            background: linear-gradient(45deg, #d4edda, #c3e6cb);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: linear-gradient(45deg, #f8d7da, #f5c6cb);
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background: linear-gradient(45deg, #d1ecf1, #bee5eb);
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .message.warning {
+            background: linear-gradient(45deg, #fff3cd, #ffeaa7);
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .progress {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            background: linear-gradient(45deg, #0052ff, #00d4ff);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .link {
+            color: #0052ff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 2rem 1.5rem; margin: 0.5rem; }
+            h1 { font-size: 1.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-tint"></i>
+            </div>
+            <h1>Trickle</h1>
+            <p class="subtitle">Get <span class="highlight">$0.025 worth of ETH</span> for gas fees on Base mainnet</p>
+        </div>
+
+        <div class="stats" id="statsSection">
+            <div class="stat">
+                <div class="stat-number" id="totalClaims">-</div>
+                <div class="stat-label">Total Claims</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="dailyClaims">-</div>
+                <div class="stat-label">Today</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="wallet-section">
+                <button class="btn" id="connectButton">
+                    <i class="fas fa-wallet"></i>&nbsp;&nbsp;Connect Wallet
+                </button>
+                
+                <div class="wallet-info" id="walletInfo">
+                    <div style="margin-bottom: 0.5rem; color: #666; font-size: 0.9rem;">Connected Wallet</div>
+                    <div class="wallet-address" id="walletAddress"></div>
+                </div>
+
+                <button class="btn" id="claimButton" style="display: none;">
+                    <i class="fas fa-coins"></i>&nbsp;&nbsp;Claim ETH
+                </button>
+
+                <div class="progress" id="progressSection">
+                    <div id="progressText">Initializing...</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+
+                <div class="message" id="message"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><i class="fas fa-clock"></i> 24 hour cooldown • <i class="fas fa-gas-pump"></i> You pay gas fees</p>
+            <p style="margin-top: 0.5rem;">Powered by Base Network</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+
+    <script>
+        const BACKEND_URL = ''; // Empty string since frontend and backend are on same server
+        const FAUCET_CONTRACT_ADDRESS = "0x3e019E29490482F325458fb2A98390ebE4F718B5";
+        const FAUCET_ABI = [
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "initialOwner",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    }
+                ],
+                "name": "OwnableInvalidOwner",
+                "type": "error"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "account",
+                        "type": "address"
+                    }
+                ],
+                "name": "OwnableUnauthorizedAccount",
+                "type": "error"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "recipient",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "FundsDripped",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "previousOwner",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "newOwner",
+                        "type": "address"
+                    }
+                ],
+                "name": "OwnershipTransferred",
+                "type": "event"
+            },
+            {
+                "inputs": [],
+                "name": "renounceOwnership",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "requestTokens",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "_newCooldown",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "setCooldownTime",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "_newAmount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "setDripAmount",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "newOwner",
+                        "type": "address"
+                    }
+                ],
+                "name": "transferOwnership",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "withdraw",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "stateMutability": "payable",
+                "type": "receive"
+            },
+            {
+                "inputs": [],
+                "name": "cooldownTime",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "dripAmount",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "name": "lastClaimed",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        const connectButton = document.getElementById('connectButton');
+        const claimButton = document.getElementById('claimButton');
+        const walletInfo = document.getElementById('walletInfo');
+        const walletAddressSpan = document.getElementById('walletAddress');
+        const messageEl = document.getElementById('message');
+        const progressSection = document.getElementById('progressSection');
+        const progressText = document.getElementById('progressText');
+        const progressFill = document.getElementById('progressFill');
+        const totalClaimsEl = document.getElementById('totalClaims');
+        const dailyClaimsEl = document.getElementById('dailyClaims');
+
+        let provider, signer, userAccount;
+
+        // Load stats on page load
+        loadStats();
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/stats`);
+                const data = await response.json();
+                totalClaimsEl.textContent = data.totalClaims.toLocaleString();
+                dailyClaimsEl.textContent = data.claimsLast24h.toLocaleString();
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+                totalClaimsEl.textContent = '-';
+                dailyClaimsEl.textContent = '-';
+            }
+        }
+
+        connectButton.addEventListener('click', async () => {
+            if (!window.ethereum) {
+                showMessage('Please install MetaMask wallet!', 'error');
+                return;
+            }
+
+            try {
+                connectButton.classList.add('btn-loading');
+                connectButton.textContent = '';
+                
+                // Create provider with Base network info
+                const baseNetwork = {
+                    name: 'base-mainnet',
+                    chainId: 8453,
+                    ensAddress: null
+                };
+                
+                provider = new ethers.providers.Web3Provider(window.ethereum, baseNetwork);
+                const accounts = await provider.send("eth_requestAccounts", []);
+                
+                // Check if we're on Base network (Chain ID: 8453)
+                const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+                if (parseInt(currentChainId, 16) !== 8453) {
+                    try {
+                        // Try to switch to Base network
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: '0x2105' }], // 8453 in hex
+                        });
+                    } catch (switchError) {
+                        // If Base network is not added, add it
+                        if (switchError.code === 4902) {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: '0x2105',
+                                    chainName: 'Base Mainnet',
+                                    nativeCurrency: {
+                                        name: 'Ethereum',
+                                        symbol: 'ETH',
+                                        decimals: 18
+                                    },
+                                    rpcUrls: ['https://mainnet.base.org'],
+                                    blockExplorerUrls: ['https://basescan.org']
+                                }]
+                            });
+                        } else {
+                            throw switchError;
+                        }
+                    }
+                    // Recreate provider after network switch
+                    provider = new ethers.providers.Web3Provider(window.ethereum, baseNetwork);
+                }
+                
+                signer = provider.getSigner();
+                userAccount = accounts[0];
+                
+                walletAddressSpan.textContent = userAccount;
+                connectButton.style.display = 'none';
+                walletInfo.style.display = 'block';
+                claimButton.style.display = 'block';
+                
+                showMessage('Wallet connected to Base network!', 'success');
+                setTimeout(hideMessage, 3000);
+            } catch (error) {
+                console.error('Connection error:', error);
+                let errorMessage = 'Failed to connect wallet. Please try again.';
+                
+                // Handle network errors gracefully
+                if (error.code === 'NETWORK_ERROR') {
+                    errorMessage = 'Connected to Base network successfully!';
+                    // Continue with connection even if there's a network detection issue
+                    try {
+                        signer = provider.getSigner();
+                        userAccount = await signer.getAddress();
+                        
+                        walletAddressSpan.textContent = userAccount;
+                        connectButton.style.display = 'none';
+                        walletInfo.style.display = 'block';
+                        claimButton.style.display = 'block';
+                        
+                        showMessage('Wallet connected to Base network!', 'success');
+                        setTimeout(hideMessage, 3000);
+                        return;
+                    } catch (signerError) {
+                        console.error('Signer error:', signerError);
+                    }
+                }
+                
+                showMessage(errorMessage, 'error');
+                connectButton.classList.remove('btn-loading');
+                connectButton.innerHTML = '<i class="fas fa-wallet"></i>&nbsp;&nbsp;Connect Wallet';
+            }
+        });
+
+        claimButton.addEventListener('click', async () => {
+            if (!signer) {
+                showMessage('Please connect your wallet first.', 'error');
+                return;
+            }
+
+            claimButton.disabled = true;
+            progressSection.style.display = 'block';
+            hideMessage();
+
+            try {
+                // Step 1: Check eligibility
+                updateProgress(25, 'Checking eligibility...');
+                const eligibilityRes = await fetch(`${BACKEND_URL}/check-eligibility`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: userAccount })
+                });
+                const eligibilityData = await eligibilityRes.json();
+                
+                if (!eligibilityData.eligible) {
+                    throw new Error(eligibilityData.message);
+                }
+
+                // Step 2: Prepare transaction
+                updateProgress(50, 'Preparing transaction...');
+                const faucetContract = new ethers.Contract(FAUCET_CONTRACT_ADDRESS, FAUCET_ABI, signer);
+                
+                // Step 3: Send transaction
+                updateProgress(75, 'Please confirm transaction in wallet...');
+                const tx = await faucetContract.requestTokens();
+                
+                updateProgress(85, 'Transaction sent, waiting for confirmation...');
+                const receipt = await tx.wait();
+                
+                // Step 4: Log claim
+                updateProgress(95, 'Finalizing...');
+                await fetch(`${BACKEND_URL}/log-claim`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: userAccount, txHash: tx.hash })
+                });
+
+                updateProgress(100, 'Success!');
+                
+                setTimeout(() => {
+                    progressSection.style.display = 'none';
+                    messageEl.innerHTML = `
+                        <i class="fas fa-check-circle"></i> Claim successful! 
+                        <br><br>
+                        <a href="https://basescan.org/tx/${tx.hash}" target="_blank" class="link">
+                            <i class="fas fa-external-link-alt"></i> View on BaseScan
+                        </a>
+                    `;
+                    messageEl.className = 'message success';
+                    messageEl.style.display = 'block';
+                    
+                    // Reload stats
+                    loadStats();
+                }, 1000);
+
+            } catch (error) {
+                progressSection.style.display = 'none';
+                let errorMessage = error.message;
+                
+                if (errorMessage.includes('user rejected')) {
+                    errorMessage = 'Transaction was cancelled by user.';
+                } else if (errorMessage.includes('insufficient funds')) {
+                    errorMessage = 'Insufficient funds for gas fee.';
+                }
+                
+                showMessage(`<i class="fas fa-exclamation-triangle"></i> ${errorMessage}`, 'error');
+            } finally {
+                claimButton.disabled = false;
+            }
+        });
+
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressText.textContent = text;
+        }
+
+        function showMessage(msg, type) {
+            messageEl.innerHTML = msg;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'block';
+        }
+
+        function hideMessage() {
+            messageEl.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

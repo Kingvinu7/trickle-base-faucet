@@ -4,27 +4,27 @@
   "routes": [
     {
       "src": "/health",
-      "dest": "/index.js"
+      "dest": "/api/index.js"
     },
     {
       "src": "/stats",
-      "dest": "/index.js"
+      "dest": "/api/index.js"
     },
     {
       "src": "/check-eligibility",
-      "dest": "/index.js"
+      "dest": "/api/index.js"
     },
     {
       "src": "/log-claim",
-      "dest": "/index.js"
+      "dest": "/api/index.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.js"
+      "dest": "/api/index.js"
     }
   ],
   "functions": {
-    "index.js": {
+    "/api/index.js": {
       "maxDuration": 10
     }
   }

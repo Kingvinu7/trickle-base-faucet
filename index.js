@@ -6,24 +6,47 @@ const path = require('path');
 
 const app = express();
 app.use(express.json());
-app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-        ? ['https://trickle-base-faucet.vercel.app'] 
-        : ['http://localhost:3000', 'http://localhost:3001'],
-    credentials: true
-}));
 
-// Serve static files (your HTML, CSS, JS files)
+// More permissive CORS for debugging
+app.use(cors());
+
+// Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 3001;
 const COOLDOWN_HOURS = 24;
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// Add connection pooling configuration for better Vercel performance
+const pool = new Pool({ 
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    max: 1, // Limit connections for serverless
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+});
+
+// Test database connection
+const testConnection = async () => {
+    try {
+        const client = await pool.connect();
+        console.log('Database connected successfully');
+        client.release();
+        return true;
+    } catch (error) {
+        console.error('Database connection failed:', error.message);
+        return false;
+    }
+};
 
 // Initialize database table if it doesn't exist
 const initDb = async () => {
     try {
+        const connected = await testConnection();
+        if (!connected) {
+            console.error('Skipping database initialization - no connection');
+            return;
+        }
+
         await pool.query(`
             CREATE TABLE IF NOT EXISTS claims (
                 id SERIAL PRIMARY KEY,
@@ -34,13 +57,27 @@ const initDb = async () => {
         `);
         console.log('Database initialized');
     } catch (error) {
-        console.error('Database initialization error:', error);
+        console.error('Database initialization error:', error.message);
     }
 };
 
+// Health check - simple endpoint that doesn't require database
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
 // Serve the main HTML file at root
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    try {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    } catch (error) {
+        console.error('Error serving index.html:', error);
+        res.status(500).json({ error: 'Failed to serve homepage' });
+    }
 });
 
 app.post('/check-eligibility', async (req, res) => {
@@ -104,15 +141,23 @@ app.get('/stats', async (req, res) => {
         });
     } catch (error) {
         console.error('Stats error:', error);
-        res.status(500).json({ error: "Error fetching stats." });
+        // Return default stats if database fails
+        res.json({
+            totalClaims: 0,
+            claimsLast24h: 0
+        });
     }
 });
 
-// Health check
-app.get('/health', (req, res) => {
-    res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
+// Export for Vercel
+module.exports = app;
 
-initDb().then(() => {
-    app.listen(PORT, () => console.log(`Faucet gatekeeper listening on port ${PORT}`));
-});
+// Initialize database and start server (only in development)
+if (process.env.NODE_ENV !== 'production') {
+    initDb().then(() => {
+        app.listen(PORT, () => console.log(`Faucet gatekeeper listening on port ${PORT}`));
+    });
+} else {
+    // Initialize database in production (but don't start server)
+    initDb();
+}

@@ -1,26 +1,26 @@
 {
   "version": 2,
   "name": "trickle-base-faucet",
-  "routes": [
+  "rewrites": [
     {
-      "src": "/health",
-      "dest": "/api/index.js"
+      "source": "/health",
+      "destination": "/api/index.js"
     },
     {
-      "src": "/stats",
-      "dest": "/api/index.js"
+      "source": "/stats", 
+      "destination": "/api/index.js"
     },
     {
-      "src": "/check-eligibility",
-      "dest": "/api/index.js"
+      "source": "/check-eligibility",
+      "destination": "/api/index.js"
     },
     {
-      "src": "/log-claim",
-      "dest": "/api/index.js"
+      "source": "/log-claim",
+      "destination": "/api/index.js"
     },
     {
-      "src": "/((?!.*\\.).*)$",
-      "dest": "/api/index.js"
+      "source": "/(.*)",
+      "destination": "/public/index.html"
     }
   ]
 }

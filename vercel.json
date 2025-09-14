@@ -11,6 +11,10 @@
       "destination": "/api/index.js"
     },
     {
+          "source": "/blockchain-stats",
+          "destination": "/api/index.js"
+    },
+    {
       "source": "/check-eligibility",
       "destination": "/api/index.js"
     },

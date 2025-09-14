@@ -127,48 +127,6 @@ app.post('/log-claim', async (req, res) => {
     }
 });
 
-// Get faucet stats from blockchain
-app.get('/blockchain-stats', async (req, res) => {
-    try {
-        const { ethers } = require('ethers');
-        
-        // Your contract ABI (minimal for events)
-        const contractABI = [
-            "event FundsDripped(address indexed recipient, uint256 amount)"
-        ];
-        
-        const provider = new ethers.providers.JsonRpcProvider('https://mainnet.base.org');
-        const contract = new ethers.Contract(process.env.FAUCET_CONTRACT_ADDRESS, contractABI, provider);
-        
-        // Get all FundsDripped events
-        const filter = contract.filters.FundsDripped();
-        const events = await contract.queryFilter(filter, 0, 'latest');
-        
-        // Count total claims
-        const totalClaims = events.length;
-        
-        // Count claims in last 24 hours
-        const last24Hours = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
-        let claimsLast24h = 0;
-        
-        for (let event of events) {
-            const block = await provider.getBlock(event.blockNumber);
-            if (block.timestamp >= last24Hours) {
-                claimsLast24h++;
-            }
-        }
-        
-        res.json({
-            totalClaims,
-            claimsLast24h,
-            source: 'blockchain'
-        });
-        
-    } catch (error) {
-        console.error('Blockchain stats error:', error);
-        res.status(500).json({ error: "Error fetching blockchain stats." });
-    }
-});
 
 // Simple test endpoint
 app.get('/test', (req, res) => {
@@ -182,65 +140,183 @@ app.get('/test', (req, res) => {
 // Get faucet stats from blockchain
 app.get('/blockchain-stats', async (req, res) => {
     try {
-        // Import ethers locally to avoid conflicts
-        let ethers;
-        try {
-            ethers = require('ethers');
-        } catch (importError) {
-            console.error('Failed to import ethers:', importError);
-            throw new Error('Ethers library not available');
-        }
-
-        // Your new contract address
-        const FAUCET_CONTRACT_ADDRESS = "0x8D08e77837c28fB271D843d84900544cA46bA2F3";
+        // Import ethers locally
+        const { ethers } = require('ethers');
         
-        console.log('Attempting to fetch blockchain stats for:', FAUCET_CONTRACT_ADDRESS);
+        // Your contract address (use env variable or fallback to hardcoded)
+        const FAUCET_CONTRACT_ADDRESS = process.env.FAUCET_CONTRACT_ADDRESS || "0x8D08e77837c28fB271D843d84900544cA46bA2F3";
         
-        // Try multiple RPC providers
+        console.log('Fetching blockchain stats for contract:', FAUCET_CONTRACT_ADDRESS);
+        
+        // Contract ABI for the FundsDripped event
+        const contractABI = [
+            "event FundsDripped(address indexed recipient, uint256 amount)"
+        ];
+        
+        // Try multiple RPC providers for reliability
         const rpcUrls = [
             'https://mainnet.base.org',
             'https://base.llamarpc.com',
-            'https://base-rpc.publicnode.com'
+            'https://base-rpc.publicnode.com',
+            'https://base-mainnet.public.blastapi.io',
+            'https://developer-access-mainnet.base.org'
         ];
         
         let provider = null;
+        let lastError = null;
+        
         for (const rpcUrl of rpcUrls) {
             try {
                 console.log('Trying RPC:', rpcUrl);
-                provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+                // Ethers v6 syntax
+                provider = new ethers.JsonRpcProvider(rpcUrl);
                 
                 // Test the connection
-                await provider.getNetwork();
-                console.log('RPC connection successful:', rpcUrl);
+                const network = await provider.getNetwork();
+                console.log('Connected to network:', network.name, 'Chain ID:', network.chainId);
                 break;
             } catch (rpcError) {
                 console.log('RPC failed:', rpcUrl, rpcError.message);
+                lastError = rpcError;
                 continue;
             }
         }
         
         if (!provider) {
-            throw new Error('All RPC providers failed');
+            throw new Error(`All RPC providers failed. Last error: ${lastError?.message}`);
         }
         
-        // Simple approach: just return mock data for now to test
-        console.log('Returning mock blockchain stats for testing...');
+        // Create contract instance (ethers v6 syntax)
+        const contract = new ethers.Contract(FAUCET_CONTRACT_ADDRESS, contractABI, provider);
         
-        res.json({
-            totalClaims: 5, // Mock data - replace with real data once connection works
-            claimsLast24h: 2,
-            source: 'blockchain-mock',
-            contractAddress: FAUCET_CONTRACT_ADDRESS,
-            status: 'testing'
-        });
+        try {
+            // Get the current block number
+            const currentBlock = await provider.getBlockNumber();
+            console.log('Current block:', currentBlock);
+            
+            // Try to query events in smaller chunks to avoid RPC limits
+            const blocksPerDay = 43200; // 86400 seconds / 2 seconds per block
+            const chunkSize = 10000; // Query 10k blocks at a time
+            let allEvents = [];
+            let querySuccess = false;
+            
+            // Try different strategies based on what works
+            try {
+                // Strategy 1: Try last 7 days in chunks
+                const daysToQuery = 7;
+                const totalBlocks = blocksPerDay * daysToQuery;
+                const fromBlock = Math.max(0, currentBlock - totalBlocks);
+                
+                console.log(`Attempting to query ${daysToQuery} days of events (${totalBlocks} blocks)`);
+                
+                // Query in chunks to avoid RPC limits
+                for (let start = fromBlock; start < currentBlock; start += chunkSize) {
+                    const end = Math.min(start + chunkSize - 1, currentBlock);
+                    console.log(`Querying blocks ${start} to ${end}...`);
+                    
+                    try {
+                        const filter = contract.filters.FundsDripped();
+                        const events = await contract.queryFilter(filter, start, end);
+                        allEvents = allEvents.concat(events);
+                        console.log(`Found ${events.length} events in this chunk`);
+                    } catch (chunkError) {
+                        console.log(`Chunk failed: ${chunkError.message}`);
+                        // Continue with other chunks
+                    }
+                }
+                
+                querySuccess = true;
+                console.log(`Total events found: ${allEvents.length}`);
+                
+            } catch (strategyError) {
+                console.log('Strategy 1 failed:', strategyError.message);
+                
+                // Strategy 2: Just try the last 1000 blocks
+                try {
+                    console.log('Trying fallback: last 1000 blocks only');
+                    const filter = contract.filters.FundsDripped();
+                    allEvents = await contract.queryFilter(filter, currentBlock - 1000, currentBlock);
+                    querySuccess = true;
+                    console.log(`Found ${allEvents.length} recent events`);
+                } catch (fallbackError) {
+                    console.log('Fallback also failed:', fallbackError.message);
+                }
+            }
+            
+            if (!querySuccess || allEvents.length === 0) {
+                // If we can't get real events, return placeholder data
+                console.log('Unable to fetch events, returning placeholder data');
+                
+                res.json({
+                    totalClaims: 0,
+                    claimsLast24h: 0,
+                    source: 'blockchain',
+                    contractAddress: FAUCET_CONTRACT_ADDRESS,
+                    status: 'no-events',
+                    message: 'Contract deployed but no events found or RPC limits exceeded',
+                    currentBlock
+                });
+                return;
+            }
+            
+            // Count total claims
+            const totalClaims = allEvents.length;
+            
+            // Count claims in last 24 hours
+            const last24HoursBlock = currentBlock - blocksPerDay;
+            let claimsLast24h = 0;
+            
+            for (const event of allEvents) {
+                if (event.blockNumber >= last24HoursBlock) {
+                    claimsLast24h++;
+                }
+            }
+            
+            console.log(`Claims in last 24h: ${claimsLast24h}`);
+            
+            res.json({
+                totalClaims,
+                claimsLast24h,
+                source: 'blockchain',
+                contractAddress: FAUCET_CONTRACT_ADDRESS,
+                currentBlock,
+                eventsQueried: allEvents.length
+            });
+            
+        } catch (queryError) {
+            console.error('Error querying events:', queryError.message);
+            
+            // If querying events fails, try a simpler approach
+            // Just check if contract exists and return placeholder data
+            try {
+                const code = await provider.getCode(FAUCET_CONTRACT_ADDRESS);
+                if (code === '0x') {
+                    throw new Error('Contract not found at address');
+                }
+                
+                console.log('Contract exists but event query failed, returning placeholder data');
+                res.json({
+                    totalClaims: 0,
+                    claimsLast24h: 0,
+                    source: 'blockchain',
+                    contractAddress: FAUCET_CONTRACT_ADDRESS,
+                    status: 'partial',
+                    message: 'Contract found but unable to query events'
+                });
+            } catch (codeError) {
+                throw new Error(`Contract verification failed: ${codeError.message}`);
+            }
+        }
         
     } catch (error) {
         console.error('Blockchain stats error:', error.message);
-        console.error('Full error:', error);
+        console.error('Full error stack:', error.stack);
         
+        // Return error but don't fail completely
         res.status(500).json({ 
             error: "Blockchain stats failed",
             message: error.message,
+            fallback: true,
             timestamp: new Date().toISOString()
         });
     }

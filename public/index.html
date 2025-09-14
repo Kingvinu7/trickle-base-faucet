@@ -334,7 +334,7 @@
 
     <script>
         const BACKEND_URL = ''; // Empty string since frontend and backend are on same server
-        const FAUCET_CONTRACT_ADDRESS = "0x01bcEAE89c16C366f4dFE5Bb2bC763aB67341012";
+        const FAUCET_CONTRACT_ADDRESS = "0x3e019E29490482F325458fb2A98390ebE4F718B5";
         const FAUCET_ABI = [
             {
                 "inputs": [
@@ -556,13 +556,57 @@
 
         async function loadStats() {
             try {
+                // Get database stats
                 const response = await fetch(`${BACKEND_URL}/stats`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                let dbStats = { totalClaims: 0, claimsLast24h: 0 };
+                if (response.ok) {
+                    dbStats = await response.json();
                 }
-                const data = await response.json();
-                totalClaimsEl.textContent = data.totalClaims.toLocaleString();
-                dailyClaimsEl.textContent = data.claimsLast24h.toLocaleString();
+
+                // Get on-chain stats
+                let onChainStats = { totalClaims: 0, claimsLast24h: 0 };
+                try {
+                    // Create a provider for reading blockchain data
+                    const provider = new ethers.providers.JsonRpcProvider('https://mainnet.base.org');
+                    const faucetContract = new ethers.Contract(FAUCET_CONTRACT_ADDRESS, FAUCET_ABI, provider);
+                    
+                    // Get all FundsDripped events from contract deployment
+                    const filter = faucetContract.filters.FundsDripped();
+                    const events = await faucetContract.queryFilter(filter, 0, 'latest');
+                    
+                    // Total claims from blockchain
+                    onChainStats.totalClaims = events.length;
+                    
+                    // Claims in last 24 hours
+                    const last24Hours = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
+                    let recentClaims = 0;
+                    
+                    for (let event of events) {
+                        const block = await provider.getBlock(event.blockNumber);
+                        if (block.timestamp >= last24Hours) {
+                            recentClaims++;
+                        }
+                    }
+                    onChainStats.claimsLast24h = recentClaims;
+                    
+                    console.log('On-chain stats:', onChainStats);
+                } catch (error) {
+                    console.error('Failed to load on-chain stats:', error);
+                }
+
+                // Use on-chain data if available, otherwise fall back to database
+                const statsToShow = onChainStats.totalClaims > 0 ? onChainStats : dbStats;
+                
+                totalClaimsEl.textContent = statsToShow.totalClaims.toLocaleString();
+                dailyClaimsEl.textContent = statsToShow.claimsLast24h.toLocaleString();
+                
+                // Show data source
+                if (onChainStats.totalClaims > 0) {
+                    console.log('Showing on-chain stats');
+                } else {
+                    console.log('Showing database stats');
+                }
+                
             } catch (error) {
                 console.error('Failed to load stats:', error);
                 totalClaimsEl.textContent = '-';
@@ -766,4 +810,3 @@
     </script>
 </body>
 </html>
-

@@ -3,6 +3,7 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
+const { ethers } = require('ethers');
 
 const app = express();
 app.use(express.json());
@@ -129,52 +130,7 @@ app.post('/log-claim', async (req, res) => {
 // Get faucet stats from blockchain
 app.get('/blockchain-stats', async (req, res) => {
     try {
-        const { ethers } = require('ethers');
-        
-        // Your contract ABI (minimal for events)
-        const contractABI = [
-            "event FundsDripped(address indexed recipient, uint256 amount)"
-        ];
-        
-        const provider = new ethers.providers.JsonRpcProvider('https://mainnet.base.org');
-        const contract = new ethers.Contract(process.env.FAUCET_CONTRACT_ADDRESS, contractABI, provider);
-        
-        // Get all FundsDripped events
-        const filter = contract.filters.FundsDripped();
-        const events = await contract.queryFilter(filter, 0, 'latest');
-        
-        // Count total claims
-        const totalClaims = events.length;
-        
-        // Count claims in last 24 hours
-        const last24Hours = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
-        let claimsLast24h = 0;
-        
-        for (let event of events) {
-            const block = await provider.getBlock(event.blockNumber);
-            if (block.timestamp >= last24Hours) {
-                claimsLast24h++;
-            }
-        }
-        
-        res.json({
-            totalClaims,
-            claimsLast24h,
-            source: 'blockchain'
-        });
-        
-    } catch (error) {
-        console.error('Blockchain stats error:', error);
-        res.status(500).json({ error: "Error fetching blockchain stats." });
-    }
-});
-
-// Get faucet stats from blockchain
-app.get('/blockchain-stats', async (req, res) => {
-    try {
-        const { ethers } = require('ethers');
-        
-        // Your new contract address
+        // The contract address you provided
         const FAUCET_CONTRACT_ADDRESS = "0x8D08e77837c28fB271D843d84900544cA46bA2F3";
         
         // Minimal ABI for the FundsDripped event
@@ -185,34 +141,35 @@ app.get('/blockchain-stats', async (req, res) => {
         const provider = new ethers.providers.JsonRpcProvider('https://mainnet.base.org');
         const contract = new ethers.Contract(FAUCET_CONTRACT_ADDRESS, contractABI, provider);
         
-        // Get all FundsDripped events from the last 10000 blocks (to avoid timeout)
-        const currentBlock = await provider.getBlockNumber();
-        const fromBlock = Math.max(0, currentBlock - 10000); // Last ~10k blocks
+        const latestBlock = await provider.getBlockNumber();
+        // Query a more conservative range of blocks to avoid timeouts
+        const fromBlock = Math.max(0, latestBlock - 2000); 
         
         const filter = contract.filters.FundsDripped();
-        const events = await contract.queryFilter(filter, fromBlock, 'latest');
+        const events = await contract.queryFilter(filter, fromBlock, latestBlock);
         
-        // Count total claims
-        const totalClaims = events.length;
+        // Count claims in the last 24 hours
+        const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
         
-        // Count claims in last 24 hours  
-        const last24Hours = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
         let claimsLast24h = 0;
         
-        for (let event of events) {
-            const block = await provider.getBlock(event.blockNumber);
-            if (block.timestamp >= last24Hours) {
+        // Fetch all block data concurrently to improve performance
+        const blockPromises = events.map(event => provider.getBlock(event.blockNumber));
+        const blocks = await Promise.all(blockPromises);
+        
+        for (let i = 0; i < events.length; i++) {
+            if (blocks[i].timestamp >= twentyFourHoursAgo) {
                 claimsLast24h++;
             }
         }
         
-        console.log(`Blockchain stats: ${totalClaims} total, ${claimsLast24h} last 24h`);
+        console.log(`Blockchain stats: ${events.length} total (in range), ${claimsLast24h} last 24h`);
         
         res.json({
-            totalClaims,
-            claimsLast24h,
+            totalClaims: events.length,
+            claimsLast24h: claimsLast24h,
             source: 'blockchain',
-            blocksScanned: currentBlock - fromBlock
+            blocksScanned: latestBlock - fromBlock
         });
         
     } catch (error) {

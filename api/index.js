@@ -130,10 +130,7 @@ app.post('/log-claim', async (req, res) => {
 // Get faucet stats from blockchain
 app.get('/blockchain-stats', async (req, res) => {
     try {
-        // The contract address you provided
         const FAUCET_CONTRACT_ADDRESS = "0x8D08e77837c28fB271D843d84900544cA46bA2F3";
-        
-        // Minimal ABI for the FundsDripped event
         const contractABI = [
             "event FundsDripped(address indexed recipient, uint256 amount)"
         ];
@@ -142,18 +139,15 @@ app.get('/blockchain-stats', async (req, res) => {
         const contract = new ethers.Contract(FAUCET_CONTRACT_ADDRESS, contractABI, provider);
         
         const latestBlock = await provider.getBlockNumber();
-        // Query a more conservative range of blocks to avoid timeouts
         const fromBlock = Math.max(0, latestBlock - 2000); 
         
         const filter = contract.filters.FundsDripped();
         const events = await contract.queryFilter(filter, fromBlock, latestBlock);
         
-        // Count claims in the last 24 hours
         const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
         
         let claimsLast24h = 0;
         
-        // Fetch all block data concurrently to improve performance
         const blockPromises = events.map(event => provider.getBlock(event.blockNumber));
         const blocks = await Promise.all(blockPromises);
         
@@ -197,11 +191,9 @@ app.get('/stats', async (req, res) => {
         });
     } catch (error) {
         console.error('Stats error:', error);
-        // Return default stats if database fails
-        res.json({
-            totalClaims: 0,
-            claimsLast24h: 0,
-            source: 'database'
+        res.status(500).json({
+            error: "Error fetching database stats",
+            message: error.message
         });
     }
 });

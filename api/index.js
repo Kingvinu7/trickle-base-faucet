@@ -3,7 +3,6 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
-const { ethers } = require('ethers');
 
 const app = express();
 app.use(express.json());
@@ -130,47 +129,111 @@ app.post('/log-claim', async (req, res) => {
 // Get faucet stats from blockchain
 app.get('/blockchain-stats', async (req, res) => {
     try {
-        const FAUCET_CONTRACT_ADDRESS = "0x8D08e77837c28fB271D843d84900544cA46bA2F3";
+        const { ethers } = require('ethers');
+        
+        // Your contract ABI (minimal for events)
         const contractABI = [
             "event FundsDripped(address indexed recipient, uint256 amount)"
         ];
         
         const provider = new ethers.providers.JsonRpcProvider('https://mainnet.base.org');
-        const contract = new ethers.Contract(FAUCET_CONTRACT_ADDRESS, contractABI, provider);
+        const contract = new ethers.Contract(process.env.FAUCET_CONTRACT_ADDRESS, contractABI, provider);
         
-        const latestBlock = await provider.getBlockNumber();
-        const fromBlock = Math.max(0, latestBlock - 2000); 
-        
+        // Get all FundsDripped events
         const filter = contract.filters.FundsDripped();
-        const events = await contract.queryFilter(filter, fromBlock, latestBlock);
+        const events = await contract.queryFilter(filter, 0, 'latest');
         
-        const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
+        // Count total claims
+        const totalClaims = events.length;
         
+        // Count claims in last 24 hours
+        const last24Hours = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
         let claimsLast24h = 0;
         
-        const blockPromises = events.map(event => provider.getBlock(event.blockNumber));
-        const blocks = await Promise.all(blockPromises);
-        
-        for (let i = 0; i < events.length; i++) {
-            if (blocks[i].timestamp >= twentyFourHoursAgo) {
+        for (let event of events) {
+            const block = await provider.getBlock(event.blockNumber);
+            if (block.timestamp >= last24Hours) {
                 claimsLast24h++;
             }
         }
         
-        console.log(`Blockchain stats: ${events.length} total (in range), ${claimsLast24h} last 24h`);
+        res.json({
+            totalClaims,
+            claimsLast24h,
+            source: 'blockchain'
+        });
+        
+    } catch (error) {
+        console.error('Blockchain stats error:', error);
+        res.status(500).json({ error: "Error fetching blockchain stats." });
+    }
+});
+
+// Get faucet stats from blockchain
+app.get('/blockchain-stats', async (req, res) => {
+    try {
+        // Your new contract address
+        const FAUCET_CONTRACT_ADDRESS = "0x8D08e77837c28fB271D843d84900544cA46bA2F3";
+        
+        // Minimal ABI for the FundsDripped event
+        const contractABI = [
+            "event FundsDripped(address indexed recipient, uint256 amount)"
+        ];
+        
+        // Use a more reliable RPC provider
+        const provider = new ethers.providers.JsonRpcProvider('https://base.blockpi.network/v1/rpc/public');
+        
+        const contract = new ethers.Contract(FAUCET_CONTRACT_ADDRESS, contractABI, provider);
+        
+        // Get current block first
+        const currentBlock = await provider.getBlockNumber();
+        console.log(`Current block: ${currentBlock}`);
+        
+        // Start from a recent block to avoid timeout (last 5000 blocks = ~few hours on Base)
+        const fromBlock = Math.max(0, currentBlock - 5000);
+        console.log(`Scanning from block ${fromBlock} to ${currentBlock}`);
+        
+        const filter = contract.filters.FundsDripped();
+        const events = await contract.queryFilter(filter, fromBlock, 'latest');
+        
+        console.log(`Found ${events.length} FundsDripped events`);
+        
+        // Count total claims (from this scan)
+        const totalClaims = events.length;
+        
+        // Count claims in last 24 hours  
+        const last24Hours = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
+        let claimsLast24h = 0;
+        
+        for (let event of events) {
+            try {
+                const block = await provider.getBlock(event.blockNumber);
+                if (block && block.timestamp >= last24Hours) {
+                    claimsLast24h++;
+                }
+            } catch (blockError) {
+                console.error(`Error getting block ${event.blockNumber}:`, blockError.message);
+            }
+        }
+        
+        console.log(`Blockchain stats: ${totalClaims} total, ${claimsLast24h} last 24h`);
         
         res.json({
-            totalClaims: events.length,
-            claimsLast24h: claimsLast24h,
+            totalClaims,
+            claimsLast24h,
             source: 'blockchain',
-            blocksScanned: latestBlock - fromBlock
+            blocksScanned: currentBlock - fromBlock,
+            contractAddress: FAUCET_CONTRACT_ADDRESS
         });
         
     } catch (error) {
         console.error('Blockchain stats error:', error.message);
+        
+        // Return a more helpful error
         res.status(500).json({ 
-            error: "Error fetching blockchain stats",
-            message: error.message 
+            error: "Blockchain stats temporarily unavailable",
+            message: error.message,
+            fallbackAdvice: "Using database stats instead"
         });
     }
 });
@@ -191,9 +254,11 @@ app.get('/stats', async (req, res) => {
         });
     } catch (error) {
         console.error('Stats error:', error);
-        res.status(500).json({
-            error: "Error fetching database stats",
-            message: error.message
+        // Return default stats if database fails
+        res.json({
+            totalClaims: 0,
+            claimsLast24h: 0,
+            source: 'database'
         });
     }
 });

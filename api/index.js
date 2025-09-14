@@ -175,7 +175,7 @@ app.get('/blockchain-stats', async (req, res) => {
         const { ethers } = require('ethers');
         
         // Your new contract address
-        const FAUCET_CONTRACT_ADDRESS = "0x01bcEAE89c16C366f4dFE5Bb2bC763aB67341012";
+        const FAUCET_CONTRACT_ADDRESS = "0x8D08e77837c28fB271D843d84900544cA46bA2F3";
         
         // Minimal ABI for the FundsDripped event
         const contractABI = [

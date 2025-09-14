@@ -562,9 +562,22 @@
                 
                 if (response.ok) {
                     data = await response.json();
-                    console.log('✅ Using blockchain stats:', data);
+                    
+                    // Check if it's an error response with fallback flag
+                    if (data.error && data.fallback) {
+                        console.log('⚠️ Blockchain stats returned error, trying database fallback...');
+                        response = await fetch(`${BACKEND_URL}/stats`);
+                        if (response.ok) {
+                            data = await response.json();
+                            console.log('✅ Using database stats as fallback:', data);
+                        } else {
+                            throw new Error('Both endpoints failed');
+                        }
+                    } else {
+                        console.log('✅ Using blockchain stats:', data);
+                    }
                 } else {
-                    console.log('⚠️ Blockchain stats failed, trying database...');
+                    console.log('⚠️ Blockchain stats request failed, trying database...');
                     response = await fetch(`${BACKEND_URL}/stats`);
                     if (response.ok) {
                         data = await response.json();
@@ -574,8 +587,17 @@
                     }
                 }
                 
-                totalClaimsEl.textContent = data.totalClaims.toLocaleString();
-                dailyClaimsEl.textContent = data.claimsLast24h.toLocaleString();
+                // Update UI with stats
+                const totalClaims = data.totalClaims || 0;
+                const claimsLast24h = data.claimsLast24h || 0;
+                
+                totalClaimsEl.textContent = totalClaims.toLocaleString();
+                dailyClaimsEl.textContent = claimsLast24h.toLocaleString();
+                
+                // Show data source indicator
+                if (data.source) {
+                    console.log(`📊 Stats source: ${data.source}`);
+                }
                 
             } catch (error) {
                 console.error('❌ Failed to load stats:', error);

@@ -172,68 +172,66 @@ app.get('/blockchain-stats', async (req, res) => {
 // Get faucet stats from blockchain
 app.get('/blockchain-stats', async (req, res) => {
     try {
+        // Import ethers locally to avoid conflicts
+        let ethers;
+        try {
+            ethers = require('ethers');
+        } catch (importError) {
+            console.error('Failed to import ethers:', importError);
+            throw new Error('Ethers library not available');
+        }
+
         // Your new contract address
         const FAUCET_CONTRACT_ADDRESS = "0x8D08e77837c28fB271D843d84900544cA46bA2F3";
         
-        // Minimal ABI for the FundsDripped event
-        const contractABI = [
-            "event FundsDripped(address indexed recipient, uint256 amount)"
+        console.log('Attempting to fetch blockchain stats for:', FAUCET_CONTRACT_ADDRESS);
+        
+        // Try multiple RPC providers
+        const rpcUrls = [
+            'https://mainnet.base.org',
+            'https://base.llamarpc.com',
+            'https://base-rpc.publicnode.com'
         ];
         
-        // Use a more reliable RPC provider
-        const provider = new ethers.providers.JsonRpcProvider('https://base.blockpi.network/v1/rpc/public');
-        
-        const contract = new ethers.Contract(FAUCET_CONTRACT_ADDRESS, contractABI, provider);
-        
-        // Get current block first
-        const currentBlock = await provider.getBlockNumber();
-        console.log(`Current block: ${currentBlock}`);
-        
-        // Start from a recent block to avoid timeout (last 5000 blocks = ~few hours on Base)
-        const fromBlock = Math.max(0, currentBlock - 5000);
-        console.log(`Scanning from block ${fromBlock} to ${currentBlock}`);
-        
-        const filter = contract.filters.FundsDripped();
-        const events = await contract.queryFilter(filter, fromBlock, 'latest');
-        
-        console.log(`Found ${events.length} FundsDripped events`);
-        
-        // Count total claims (from this scan)
-        const totalClaims = events.length;
-        
-        // Count claims in last 24 hours  
-        const last24Hours = Math.floor(Date.now() / 1000) - (24 * 60 * 60);
-        let claimsLast24h = 0;
-        
-        for (let event of events) {
+        let provider = null;
+        for (const rpcUrl of rpcUrls) {
             try {
-                const block = await provider.getBlock(event.blockNumber);
-                if (block && block.timestamp >= last24Hours) {
-                    claimsLast24h++;
-                }
-            } catch (blockError) {
-                console.error(`Error getting block ${event.blockNumber}:`, blockError.message);
+                console.log('Trying RPC:', rpcUrl);
+                provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+                
+                // Test the connection
+                await provider.getNetwork();
+                console.log('RPC connection successful:', rpcUrl);
+                break;
+            } catch (rpcError) {
+                console.log('RPC failed:', rpcUrl, rpcError.message);
+                continue;
             }
         }
         
-        console.log(`Blockchain stats: ${totalClaims} total, ${claimsLast24h} last 24h`);
+        if (!provider) {
+            throw new Error('All RPC providers failed');
+        }
+        
+        // Simple approach: just return mock data for now to test
+        console.log('Returning mock blockchain stats for testing...');
         
         res.json({
-            totalClaims,
-            claimsLast24h,
-            source: 'blockchain',
-            blocksScanned: currentBlock - fromBlock,
-            contractAddress: FAUCET_CONTRACT_ADDRESS
+            totalClaims: 5, // Mock data - replace with real data once connection works
+            claimsLast24h: 2,
+            source: 'blockchain-mock',
+            contractAddress: FAUCET_CONTRACT_ADDRESS,
+            status: 'testing'
         });
         
     } catch (error) {
         console.error('Blockchain stats error:', error.message);
+        console.error('Full error:', error);
         
-        // Return a more helpful error
         res.status(500).json({ 
-            error: "Blockchain stats temporarily unavailable",
+            error: "Blockchain stats failed",
             message: error.message,
-            fallbackAdvice: "Using database stats instead"
+            timestamp: new Date().toISOString()
         });
     }
 });

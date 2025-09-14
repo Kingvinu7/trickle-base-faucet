@@ -66,7 +66,8 @@ app.get('/health', (req, res) => {
     res.json({ 
         status: 'OK', 
         timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV || 'development',
+        version: '1.1'  // Added version to trigger new deployment
     });
 });
 
@@ -167,6 +168,15 @@ app.get('/blockchain-stats', async (req, res) => {
         console.error('Blockchain stats error:', error);
         res.status(500).json({ error: "Error fetching blockchain stats." });
     }
+});
+
+// Simple test endpoint
+app.get('/test', (req, res) => {
+    res.json({ 
+        message: "Backend is working!",
+        timestamp: new Date().toISOString(),
+        endpoint: "test"
+    });
 });
 
 // Get faucet stats from blockchain

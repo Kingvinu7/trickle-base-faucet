@@ -315,21 +315,48 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js" 
-            onload="console.log('Ethers loaded successfully')" 
-            onerror="console.error('Failed to load ethers.js')">
-    </script>
+    <!-- Web3Modal and Ethers v6 -->
+    <script type="module">
+        import { createWeb3Modal, defaultConfig } from 'https://unpkg.com/@web3modal/ethers@4.1.7/dist/index.js'
 
-    <script>
-        // Fallback CDN if the first one fails
-        if (typeof ethers === 'undefined') {
-            console.log('Loading ethers fallback...');
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js';
-            script.onload = () => console.log('Ethers fallback loaded');
-            script.onerror = () => console.error('Ethers fallback failed');
-            document.head.appendChild(script);
+        // 1. Get projectId from https://cloud.walletconnect.com
+        const projectId = 'YOUR_PROJECT_ID' // Replace with your actual project ID
+
+        // 2. Set chains
+        const base = {
+            chainId: 8453,
+            name: 'Base',
+            currency: 'ETH',
+            explorerUrl: 'https://basescan.org',
+            rpcUrl: 'https://mainnet.base.org'
         }
+
+        // 3. Create modal
+        const metadata = {
+            name: 'Trickle - Base Faucet',
+            description: 'Get gas fees for Base mainnet',
+            url: window.location.origin,
+            icons: [`${window.location.origin}/favicon.ico`]
+        }
+
+        const ethersConfig = defaultConfig({
+            metadata,
+            enableEIP6963: true,
+            enableInjected: true,
+            enableCoinbase: true,
+            rpcUrl: 'https://mainnet.base.org',
+            defaultChainId: 8453
+        })
+
+        const modal = createWeb3Modal({
+            ethersConfig,
+            chains: [base],
+            projectId,
+            enableAnalytics: true
+        })
+
+        // Make modal globally available
+        window.web3modal = modal;
     </script>
 
     <script>
@@ -547,10 +574,15 @@
         // Load stats on page load
         loadStats();
 
-        // Check if MetaMask is available on page load
-        window.addEventListener('load', () => {
-            if (typeof window.ethereum === 'undefined') {
-                showMessage('MetaMask not detected. Please install MetaMask to use this faucet.', 'warning');
+        // Initialize Web3Modal when page loads
+        window.addEventListener('load', async () => {
+            // Wait for Web3Modal to be ready
+            if (window.web3modal) {
+                // Check if already connected
+                const walletProvider = window.web3modal.getWalletProvider();
+                if (walletProvider) {
+                    await handleConnection();
+                }
             }
         });
 
@@ -611,75 +643,22 @@
         console.log('Ethers loaded:', typeof ethers);
         console.log('Web3Provider available:', ethers?.providers?.Web3Provider);
 
-        connectButton.addEventListener('click', async () => {
-            if (typeof window.ethereum === 'undefined') {
-                showMessage('MetaMask is not installed. Please install MetaMask wallet extension.', 'error');
-                return;
-            }
-
-            if (typeof ethers === 'undefined' || !ethers.providers) {
-                showMessage('Web3 library not loaded. Please refresh the page.', 'error');
-                return;
-            }
-
+        // Handle wallet connection with Web3Modal
+        async function handleConnection() {
             try {
-                connectButton.classList.add('btn-loading');
-                connectButton.textContent = '';
+                const walletProvider = window.web3modal.getWalletProvider();
+                if (!walletProvider) return;
+
+                // Import ethers dynamically
+                const { BrowserProvider } = await import('https://unpkg.com/ethers@6.15.0/dist/ethers.min.js');
                 
-                // Request account access
-                const accounts = await window.ethereum.request({
-                    method: 'eth_requestAccounts',
-                });
+                provider = new BrowserProvider(walletProvider);
+                signer = await provider.getSigner();
+                userAccount = await signer.getAddress();
                 
-                if (!accounts || accounts.length === 0) {
-                    throw new Error('No accounts found. Please unlock MetaMask.');
-                }
+                console.log('Connected to:', userAccount);
                 
-                // Check current network
-                const currentChainId = await window.ethereum.request({ 
-                    method: 'eth_chainId' 
-                });
-                
-                // Switch to Base if not already on it
-                if (parseInt(currentChainId, 16) !== 8453) {
-                    try {
-                        await window.ethereum.request({
-                            method: 'wallet_switchEthereumChain',
-                            params: [{ chainId: '0x2105' }], // 8453 in hex
-                        });
-                    } catch (switchError) {
-                        // Network not added, let's add it
-                        if (switchError.code === 4902) {
-                            await window.ethereum.request({
-                                method: 'wallet_addEthereumChain',
-                                params: [{
-                                    chainId: '0x2105',
-                                    chainName: 'Base Mainnet',
-                                    nativeCurrency: {
-                                        name: 'Ethereum',
-                                        symbol: 'ETH',
-                                        decimals: 18
-                                    },
-                                    rpcUrls: ['https://mainnet.base.org'],
-                                    blockExplorerUrls: ['https://basescan.org']
-                                }]
-                            });
-                        } else {
-                            throw switchError;
-                        }
-                    }
-                }
-                
-                // Create provider - simpler approach
-                provider = new ethers.providers.Web3Provider(window.ethereum);
-                signer = provider.getSigner();
-                userAccount = accounts[0];
-                
-                // Verify we can get the address
-                const address = await signer.getAddress();
-                console.log('Connected to:', address);
-                
-                walletAddressSpan.textContent = address;
+                walletAddressSpan.textContent = userAccount;
                 connectButton.style.display = 'none';
                 walletInfo.style.display = 'block';
                 claimButton.style.display = 'block';
@@ -689,21 +668,44 @@
                 
             } catch (error) {
                 console.error('Connection error:', error);
+                showMessage('Failed to connect wallet: ' + error.message, 'error');
+            }
+        }
+
+        connectButton.addEventListener('click', async () => {
+            try {
+                connectButton.classList.add('btn-loading');
+                connectButton.textContent = '';
+                
+                if (!window.web3modal) {
+                    throw new Error('Web3Modal not initialized. Please refresh the page.');
+                }
+
+                // Open Web3Modal
+                await window.web3modal.open();
+                
+                // Wait for connection
+                const walletProvider = window.web3modal.getWalletProvider();
+                if (walletProvider) {
+                    await handleConnection();
+                } else {
+                    throw new Error('No wallet selected');
+                }
+                
+            } catch (error) {
+                console.error('Connection error:', error);
                 
                 let errorMessage = 'Failed to connect wallet. ';
-                if (error.message.includes('User rejected')) {
+                if (error.message.includes('User rejected') || error.message.includes('User denied')) {
                     errorMessage = 'Connection cancelled by user.';
-                } else if (error.message.includes('No accounts')) {
-                    errorMessage = 'Please unlock your MetaMask wallet.';
-                } else if (error.code === 4001) {
-                    errorMessage = 'Connection rejected by user.';
-                } else if (error.code === -32002) {
-                    errorMessage = 'MetaMask is already processing a request. Please wait.';
+                } else if (error.message.includes('No wallet selected')) {
+                    errorMessage = 'Please select a wallet to continue.';
                 } else {
                     errorMessage += error.message || 'Please try again.';
                 }
                 
                 showMessage(errorMessage, 'error');
+            } finally {
                 connectButton.classList.remove('btn-loading');
                 connectButton.innerHTML = '<i class="fas fa-wallet"></i>&nbsp;&nbsp;Connect Wallet';
             }
@@ -735,7 +737,10 @@
 
                 // Step 2: Prepare transaction
                 updateProgress(50, 'Preparing transaction...');
-                const faucetContract = new ethers.Contract(FAUCET_CONTRACT_ADDRESS, FAUCET_ABI, signer);
+                
+                // Import Contract from ethers v6
+                const { Contract } = await import('https://unpkg.com/ethers@6.15.0/dist/ethers.min.js');
+                const faucetContract = new Contract(FAUCET_CONTRACT_ADDRESS, FAUCET_ABI, signer);
                 
                 // Step 3: Send transaction
                 updateProgress(75, 'Please confirm transaction in wallet...');

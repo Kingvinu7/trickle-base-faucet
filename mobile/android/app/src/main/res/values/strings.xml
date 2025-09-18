@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Trickle Faucet</string>
+    <string name="connect_wallet">Connect Wallet</string>
+    <string name="claim_eth">Claim ETH</string>
+    <string name="disconnect_wallet">Disconnect Wallet</string>
+    <string name="wallet_connected">Wallet Connected</string>
+    <string name="total_claims">Total Claims</string>
+    <string name="today_claims">Today</string>
+    <string name="cooldown_message">24 hour cooldown • You pay gas fees</string>
+    <string name="powered_by">Powered by Base Network</string>
+    <string name="claim_amount">Get $0.025 worth of ETH for gas fees on Base mainnet</string>
+    <string name="connecting">Connecting...</string>
+    <string name="claiming">Claiming...</string>
+    <string name="transaction_pending">Transaction pending...</string>
+    <string name="transaction_success">Transaction successful!</string>
+    <string name="connection_failed">Connection failed</string>
+    <string name="claim_failed">Claim failed</string>
+    <string name="please_connect_wallet">Please connect your wallet first</string>
+    <string name="cooldown_active">Cooldown active</string>
+</resources>

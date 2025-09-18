@@ -5,7 +5,7 @@
   "installCommand": "npm install",
   "devCommand": "npm run dev",
   "env": {
-    "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID": "@walletconnect_project_id",
+    "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID": "your_actual_project_id_here",
     "NEXT_PUBLIC_API_URL": "@api_url",
     "API_BASE_URL": "@api_base_url"
   },

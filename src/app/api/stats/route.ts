@@ -5,33 +5,16 @@ const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001'
 export async function GET(request: NextRequest) {
   try {
     // Forward request to backend API
-    const response = await fetch(`${API_BASE_URL}/blockchain-stats`, {
+    const response = await fetch(`${API_BASE_URL}/api/stats`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
       // Add cache control
-      next: { revalidate: 60 }, // Cache for 60 seconds (blockchain data changes slower)
+      next: { revalidate: 30 }, // Cache for 30 seconds
     })
 
     if (!response.ok) {
-      // If blockchain stats fail, try database stats as fallback
-      const fallbackResponse = await fetch(`${API_BASE_URL}/stats`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (fallbackResponse.ok) {
-        const fallbackData = await fallbackResponse.json()
-        return NextResponse.json({
-          ...fallbackData,
-          source: 'database',
-          fallback: true,
-        })
-      }
-
       throw new Error(`Backend API responded with ${response.status}`)
     }
 
@@ -39,11 +22,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data, {
       headers: {
-        'Cache-Control': 'public, max-age=60, stale-while-revalidate=120',
+        'Cache-Control': 'public, max-age=30, stale-while-revalidate=60',
       },
     })
   } catch (error) {
-    console.error('Blockchain stats API error:', error)
+    console.error('Stats API error:', error)
     
     // Return fallback data
     return NextResponse.json(
@@ -51,7 +34,7 @@ export async function GET(request: NextRequest) {
         totalClaims: 0,
         claimsLast24h: 0,
         source: 'error',
-        error: 'Failed to fetch blockchain stats',
+        error: 'Failed to fetch stats',
       },
       { 
         status: 500,

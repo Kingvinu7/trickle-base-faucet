@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
-const path = require('path');
+// path module removed - no longer serving static files
 
 const app = express();
 app.use(express.json());
@@ -10,8 +10,7 @@ app.use(express.json());
 // More permissive CORS for debugging
 app.use(cors());
 
-// Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
+// Static file serving removed - using Next.js frontend instead
 
 const PORT = process.env.PORT || 3001;
 const COOLDOWN_HOURS = 24;
@@ -71,14 +70,14 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Serve the main HTML file at root
+// Root endpoint for API status
 app.get('/', (req, res) => {
-    try {
-        res.sendFile(path.join(__dirname, 'public', 'index.html'));
-    } catch (error) {
-        console.error('Error serving index.html:', error);
-        res.status(500).json({ error: 'Failed to serve homepage' });
-    }
+    res.json({ 
+        message: "Trickle Base Faucet API",
+        version: "2.0.0",
+        endpoints: ["/health", "/stats", "/blockchain-stats", "/check-eligibility", "/log-claim"],
+        timestamp: new Date().toISOString()
+    });
 });
 
 app.post('/check-eligibility', async (req, res) => {

@@ -6,16 +6,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    // Validate request body
-    if (!body.address) {
-      return NextResponse.json(
-        { error: 'Address is required' },
-        { status: 400 }
-      )
-    }
-
     // Forward request to backend API
-    const response = await fetch(`${API_BASE_URL}/check-eligibility`, {
+    const response = await fetch(`${API_BASE_URL}/api/check-eligibility`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -35,20 +27,14 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
-
-    return NextResponse.json(data, {
-      headers: {
-        'Cache-Control': 'private, no-cache', // Don't cache eligibility checks
-      },
-    })
+    return NextResponse.json(data)
   } catch (error) {
     console.error('Check eligibility API error:', error)
     
     return NextResponse.json(
       {
-        error: 'Internal server error',
+        error: 'Failed to check eligibility',
         eligible: false,
-        message: 'Failed to check eligibility. Please try again.',
       },
       { status: 500 }
     )

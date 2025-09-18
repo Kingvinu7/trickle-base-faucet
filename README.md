@@ -1,244 +1,349 @@
-# Trickle Base Faucet - WalletConnect Integration
+# Trickle Base Faucet - Next.js Frontend
 
-A multi-platform faucet application for Base mainnet with WalletConnect support across Web, Android, and iOS platforms.
+A modern, responsive web application for claiming ETH on Base mainnet with WalletConnect integration.
 
-## 🚀 Features
+## ✨ Features
 
-- **Multi-platform support**: Web, Android (native), iOS (native)
-- **WalletConnect integration**: Connect with 300+ wallets
-- **Base mainnet support**: Get ETH for gas fees on Base
-- **24-hour cooldown**: Prevents spam and ensures fair distribution
-- **Real-time stats**: Track total claims and daily usage
-- **Modern UI**: Beautiful, responsive design across all platforms
+- 🔗 **WalletConnect Integration**: Connect with 300+ wallets
+- 🎨 **Beautiful UI**: Modern design with Tailwind CSS & Framer Motion
+- 📱 **Responsive**: Works perfectly on desktop, tablet, and mobile
+- ⚡ **Fast**: Built with Next.js 14 and App Router
+- 🔒 **Type Safe**: Full TypeScript support
+- 🌐 **Multi-Chain Ready**: Easily extendable to other networks
+- 📊 **Real-time Stats**: Live claim statistics and eligibility checking
+- 🎯 **Smart Error Handling**: User-friendly error messages
+- 🚀 **Production Ready**: Optimized for deployment
 
-## 🌐 Platform
+## 🛠️ Tech Stack
 
-### Next.js Web Frontend
-- Built with Next.js 14 and TypeScript
-- Uses Web3Modal v4 for wallet connections
-- Supports 300+ WalletConnect-compatible wallets
-- Modern responsive design with Tailwind CSS
-- Framer Motion animations
-- Production-ready deployment configuration
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Animations**: Framer Motion
+- **Web3**: Wagmi + Viem
+- **WalletConnect**: Web3Modal v4
+- **State Management**: TanStack Query (React Query)
+- **UI Components**: Radix UI primitives
+- **Notifications**: Sonner
 
-## 🛠️ Setup Instructions
+## 🚀 Quick Start
 
 ### Prerequisites
 
-1. **WalletConnect Project ID**
-   - Visit [WalletConnect Cloud](https://cloud.walletconnect.com)
-   - Create a new project
-   - Copy your Project ID
+- Node.js 18+
+- npm or yarn
+- WalletConnect Project ID (get from [cloud.walletconnect.com](https://cloud.walletconnect.com))
 
-2. **Environment Variables**
-   ```bash
-   WALLETCONNECT_PROJECT_ID=your_project_id_here
-   DATABASE_URL=your_database_connection_string
-   FAUCET_CONTRACT_ADDRESS=0x8D08e77837c28fB271D843d84900544cA46bA2F3
-   ```
+### Installation
 
-### Frontend Setup
-
-1. **Navigate to Frontend Directory**
-   ```bash
-   cd frontend
-   ```
-
-2. **Install Dependencies**
+1. **Install dependencies**:
    ```bash
    npm install
    ```
 
-3. **Configure Environment**
+2. **Configure environment**:
    ```bash
    cp .env.example .env.local
-   # Edit .env.local and add your WalletConnect Project ID
+   ```
+   
+   Edit `.env.local` and add your WalletConnect Project ID:
+   ```env
+   NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
+   NEXT_PUBLIC_API_URL=http://localhost:3001
    ```
 
-4. **Start Development Server**
+3. **Start development server**:
    ```bash
    npm run dev
    ```
 
-5. **Open in Browser**
+4. **Open in browser**:
    ```
    http://localhost:3000
    ```
 
-6. **Deploy to Vercel**
-   - Push to GitHub and connect to Vercel
-   - Set environment variables in Vercel dashboard
-   - Deploy automatically
-
 ### Automated Setup
 
-Use the setup script for guided configuration:
+Run the setup script for guided configuration:
 
 ```bash
-cd frontend
 ./setup-frontend.sh
+```
+
+## 📁 Project Structure
+
+```
+frontend/
+├── src/
+│   ├── app/                 # Next.js App Router
+│   │   ├── api/            # API routes (proxy to backend)
+│   │   ├── globals.css     # Global styles
+│   │   ├── layout.tsx      # Root layout
+│   │   └── page.tsx        # Home page
+│   ├── components/         # React components
+│   │   ├── ui/             # Reusable UI components
+│   │   ├── faucet-card.tsx # Main faucet interface
+│   │   ├── header.tsx      # App header
+│   │   ├── footer.tsx      # App footer
+│   │   ├── stats-cards.tsx # Statistics display
+│   │   └── providers.tsx   # App providers
+│   ├── config/             # Configuration
+│   │   ├── wagmi.ts        # WalletConnect & Wagmi config
+│   │   └── constants.ts    # App constants
+│   ├── hooks/              # Custom React hooks
+│   │   ├── use-stats.ts    # Statistics hook
+│   │   ├── use-eligibility.ts # Eligibility checking
+│   │   └── use-faucet-claim.ts # Claim functionality
+│   └── lib/                # Utilities
+│       └── utils.ts        # Helper functions
+├── public/                 # Static assets
+├── .env.example           # Environment template
+├── .env.local            # Local environment (gitignored)
+├── next.config.js        # Next.js configuration
+├── tailwind.config.ts    # Tailwind configuration
+└── package.json          # Dependencies
 ```
 
 ## 🔧 Configuration
 
+### Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | WalletConnect Project ID | Yes |
+| `NEXT_PUBLIC_API_URL` | Frontend API base URL | Yes |
+| `API_BASE_URL` | Backend API base URL (for API routes) | Yes |
+| `NEXT_PUBLIC_FAUCET_CONTRACT_ADDRESS` | Override contract address | No |
+
 ### WalletConnect Configuration
 
-Update the configuration in `/wallet-config.js`:
+Edit `src/config/wagmi.ts` to customize:
 
-```javascript
-export const WALLETCONNECT_CONFIG = {
-    projectId: 'your_project_id_here',
-    metadata: {
-        name: 'Your App Name',
-        description: 'Your App Description',
-        url: 'https://your-domain.com',
-        icons: ['https://your-domain.com/favicon.ico']
-    }
-};
-```
-
-### Network Configuration
-
-The app is configured for Base mainnet by default. To add other networks, update `/shared/constants.js`:
-
-```javascript
-export const NETWORKS = {
-    BASE_MAINNET: {
-        chainId: 8453,
-        name: 'Base Mainnet',
-        rpcUrl: 'https://mainnet.base.org',
-        // ... other config
-    }
-    // Add more networks here
-};
-```
+- **Supported chains**: Add/remove blockchain networks
+- **Featured wallets**: Highlight specific wallets
+- **Theme**: Customize modal appearance
+- **Metadata**: Update app information
 
 ### Contract Configuration
 
-Update the faucet contract address in `/shared/constants.js`:
+Edit `src/config/constants.ts` to update:
 
-```javascript
-export const CONTRACTS = {
-    FAUCET: {
-        address: '0xYourContractAddress',
-        // ... ABI and other config
-    }
-};
+- **Contract address**: Faucet smart contract
+- **Contract ABI**: Smart contract interface
+- **Network settings**: RPC URLs, explorers
+- **App settings**: Claim amounts, cooldowns
+
+## 🎨 UI Customization
+
+### Theming
+
+The app uses a custom design system built on Tailwind CSS:
+
+- **Colors**: Defined in `tailwind.config.ts`
+- **Components**: Styled with CSS classes
+- **Animations**: Framer Motion for smooth interactions
+- **Responsive**: Mobile-first design approach
+
+### Custom Colors
+
+```css
+/* Trickle brand colors */
+--trickle-blue: #0052FF
+--trickle-blue-light: #00D4FF
+--trickle-gradient-from: #667eea
+--trickle-gradient-to: #764ba2
 ```
+
+### Component Library
+
+The app includes reusable components:
+
+- `Button`: Styled button with variants
+- `Progress`: Animated progress bar
+- `Card`: Container with glass morphism effect
+- `Toast`: Notification system
+
+## 🔗 API Integration
+
+The frontend communicates with your backend through Next.js API routes:
+
+### API Routes
+
+- `GET /api/stats` - Get faucet statistics
+- `GET /api/blockchain-stats` - Get blockchain statistics  
+- `POST /api/check-eligibility` - Check claim eligibility
+- `POST /api/log-claim` - Log successful claim
+
+### Custom Hooks
+
+- `useStats()` - Fetch and cache statistics
+- `useEligibility(address)` - Check if address can claim
+- `useFaucetClaim()` - Handle claim transactions
 
 ## 🚀 Deployment
 
-### Web Deployment (Vercel)
+### Vercel (Recommended)
 
-1. **Connect Repository**
-   - Connect your GitHub repository to Vercel
-   - Vercel will automatically detect the Node.js project
-
-2. **Environment Variables**
-   Set the following in Vercel dashboard:
-   ```
-   WALLETCONNECT_PROJECT_ID=your_project_id
-   DATABASE_URL=your_database_url
-   NODE_ENV=production
-   ```
-
-3. **Deploy**
-   - Push to main branch to trigger deployment
-   - Vercel will build and deploy automatically
-
-### Android Deployment (Google Play)
-
-1. **Generate Signed APK**
+1. **Push to GitHub**:
    ```bash
-   cd mobile/android
-   ./gradlew assembleRelease
+   git add .
+   git commit -m "Add Next.js frontend"
+   git push origin main
    ```
 
-2. **Upload to Google Play Console**
-   - Create app listing
-   - Upload APK/AAB
-   - Configure store listing and pricing
+2. **Deploy to Vercel**:
+   - Connect GitHub repository
+   - Set environment variables
+   - Deploy automatically
 
-### iOS Deployment (App Store)
+3. **Environment Variables in Vercel**:
+   ```
+   NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
+   NEXT_PUBLIC_API_URL=https://your-api-domain.com
+   API_BASE_URL=https://your-api-domain.com
+   ```
 
-1. **Archive in Xcode**
-   - Select "Any iOS Device" as target
-   - Product → Archive
-   - Upload to App Store Connect
+### Other Platforms
 
-2. **App Store Connect**
-   - Configure app metadata
-   - Submit for review
+The app can be deployed to:
 
-## 🔗 Deep Linking
+- **Netlify**: Static site deployment
+- **Railway**: Full-stack deployment
+- **DigitalOcean**: App platform
+- **AWS**: Amplify or EC2
 
-### URL Schemes
+### Build Commands
 
-- **iOS**: `trickle://`
-- **Android**: `trickle://`
-- **Universal**: `https://your-domain.com/app`
+```bash
+# Development
+npm run dev
 
-### Implementation
+# Production build
+npm run build
+npm start
 
-The apps handle deep links to redirect users back from wallet apps after signing transactions.
+# Type checking
+npm run type-check
+
+# Linting
+npm run lint
+```
 
 ## 🧪 Testing
 
-### Web Testing
+### Manual Testing Checklist
 
-1. **Local Testing**
-   ```bash
-   npm run dev
-   # Open http://localhost:3001
-   ```
+- [ ] Wallet connection flow
+- [ ] Network switching (to Base)
+- [ ] Eligibility checking
+- [ ] Transaction signing
+- [ ] Error handling
+- [ ] Responsive design
+- [ ] Loading states
+- [ ] Success notifications
 
-2. **Wallet Testing**
-   - Test with MetaMask browser extension
-   - Test with WalletConnect mobile wallets
-   - Test on different devices and browsers
+### Browser Testing
 
-### Mobile Testing
+Test in multiple browsers:
+- Chrome/Chromium
+- Firefox
+- Safari
+- Mobile browsers
 
-1. **Android Testing**
-   - Test on physical devices
-   - Test deep linking with wallet apps
-   - Test on different Android versions
+### Wallet Testing
 
-2. **iOS Testing**
-   - Test on physical devices
-   - Test universal links
-   - Test on different iOS versions
+Test with popular wallets:
+- MetaMask (browser extension)
+- Coinbase Wallet (mobile)
+- Trust Wallet (mobile)
+- Rainbow (mobile)
 
-## 📚 API Documentation
+## 🔍 Troubleshooting
 
-### Endpoints
+### Common Issues
 
-- `POST /check-eligibility` - Check if address can claim
-- `POST /log-claim` - Log successful claim
-- `GET /stats` - Get database statistics
-- `GET /blockchain-stats` - Get blockchain statistics
-- `GET /health` - Health check
+1. **WalletConnect not working**:
+   - Check Project ID is correct
+   - Verify network configuration
+   - Check browser console for errors
 
-### Example Usage
+2. **API calls failing**:
+   - Ensure backend is running
+   - Check API_BASE_URL configuration
+   - Verify CORS settings
+
+3. **Build errors**:
+   - Run `npm run type-check`
+   - Check for missing dependencies
+   - Verify environment variables
+
+4. **Wallet connection issues**:
+   - Clear browser cache
+   - Try different wallet
+   - Check network connectivity
+
+### Debug Mode
+
+Enable debug logging:
 
 ```javascript
-// Check eligibility
-const eligibility = await checkEligibility(walletAddress);
-
-// Log claim
-await logClaim(walletAddress, transactionHash);
-
-// Get stats
-const stats = await getCombinedStats();
+// Add to wagmi config
+config: {
+  // ...
+  logger: {
+    warn: console.warn,
+    error: console.error,
+  },
+}
 ```
 
-## 🛡️ Security Considerations
+## 🔒 Security
 
-1. **Rate Limiting**: Implement rate limiting on API endpoints
-2. **Input Validation**: Validate all user inputs
-3. **HTTPS Only**: Use HTTPS in production
-4. **Environment Variables**: Keep sensitive data in environment variables
-5. **Audit**: Regular security audits of smart contracts
+### Best Practices
+
+- ✅ Environment variables for sensitive data
+- ✅ Input validation on all forms
+- ✅ HTTPS in production
+- ✅ Content Security Policy headers
+- ✅ No private keys in frontend code
+- ✅ Secure API communication
+
+### Security Headers
+
+Configure in `next.config.js`:
+
+```javascript
+const securityHeaders = [
+  {
+    key: 'X-DNS-Prefetch-Control',
+    value: 'on'
+  },
+  {
+    key: 'X-XSS-Protection',
+    value: '1; mode=block'
+  },
+  // ... more headers
+]
+```
+
+## 📈 Performance
+
+### Optimizations
+
+- ⚡ Next.js App Router for fast navigation
+- 📦 Automatic code splitting
+- 🖼️ Optimized images with next/image
+- 🗃️ React Query for data caching
+- 🎨 CSS-in-JS with zero runtime cost
+- 📱 Mobile-optimized bundle size
+
+### Monitoring
+
+Add performance monitoring:
+
+- **Web Vitals**: Built-in Next.js analytics
+- **Vercel Analytics**: Deployment analytics
+- **Google Analytics**: User behavior tracking
 
 ## 🤝 Contributing
 
@@ -248,23 +353,23 @@ const stats = await getCombinedStats();
 4. Test thoroughly
 5. Submit a pull request
 
+### Development Guidelines
+
+- Use TypeScript for all new code
+- Follow existing code style
+- Add comments for complex logic
+- Test on multiple devices
+- Update documentation
+
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.
 
 ## 🆘 Support
 
 - **Documentation**: Check this README and inline comments
-- **Issues**: Open GitHub issues for bugs and feature requests
-- **Community**: Join our Discord for community support
-
-## 🔄 Updates
-
-### v1.0.0
-- Initial release with WalletConnect integration
-- Multi-platform support (Web, Android, iOS)
-- Base mainnet support
-- 24-hour cooldown system
+- **Issues**: Open GitHub issues for bugs
+- **Community**: Join our Discord for support
 
 ---
 

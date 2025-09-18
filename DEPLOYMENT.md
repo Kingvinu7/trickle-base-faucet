@@ -1,6 +1,6 @@
 # Deployment Guide - Trickle Base Faucet
 
-This guide covers deployment of the multi-platform WalletConnect-enabled faucet across Web, Android, and iOS platforms.
+This guide covers deployment of the Next.js web application with WalletConnect integration.
 
 ## 🌐 Web Deployment
 
@@ -56,170 +56,25 @@ docker build -t trickle-faucet .
 - Set environment variables
 - Deploy with auto-scaling
 
-## 🤖 Android Deployment
-
-### Google Play Store
-
-1. **Prepare Release Build**
-   ```bash
-   cd mobile/android
-   
-   # Generate signing key (first time only)
-   keytool -genkey -v -keystore release-key.keystore -alias release -keyalg RSA -keysize 2048 -validity 10000
-   
-   # Create gradle.properties
-   echo "MYAPP_RELEASE_STORE_FILE=release-key.keystore" >> gradle.properties
-   echo "MYAPP_RELEASE_KEY_ALIAS=release" >> gradle.properties
-   echo "MYAPP_RELEASE_STORE_PASSWORD=your_store_password" >> gradle.properties
-   echo "MYAPP_RELEASE_KEY_PASSWORD=your_key_password" >> gradle.properties
-   ```
-
-2. **Update build.gradle**
-   ```gradle
-   android {
-       ...
-       signingConfigs {
-           release {
-               if (project.hasProperty('MYAPP_RELEASE_STORE_FILE')) {
-                   storeFile file(MYAPP_RELEASE_STORE_FILE)
-                   storePassword MYAPP_RELEASE_STORE_PASSWORD
-                   keyAlias MYAPP_RELEASE_KEY_ALIAS
-                   keyPassword MYAPP_RELEASE_KEY_PASSWORD
-               }
-           }
-       }
-       buildTypes {
-           release {
-               ...
-               signingConfig signingConfigs.release
-           }
-       }
-   }
-   ```
-
-3. **Build Release APK/AAB**
-   ```bash
-   # For APK
-   ./gradlew assembleRelease
-   
-   # For App Bundle (recommended)
-   ./gradlew bundleRelease
-   ```
-
-4. **Google Play Console Setup**
-   - Create app listing
-   - Upload APK/AAB to Internal Testing
-   - Configure store listing:
-     - App name: "Trickle - Base Faucet"
-     - Short description: "Get ETH for gas fees on Base mainnet"
-     - Full description: Include features and benefits
-     - Screenshots: Include phone and tablet screenshots
-     - App icon: High-quality 512x512 PNG
-   - Set pricing (Free)
-   - Configure content rating
-   - Submit for review
-
-### Alternative Android Distribution
-
-#### Direct APK Distribution
-```bash
-# Build debug APK for testing
-./gradlew assembleDebug
-
-# Distribute via website or email
-# Note: Users need to enable "Unknown sources"
-```
-
-#### Amazon Appstore
-- Similar process to Google Play
-- Upload APK to Amazon Developer Console
-
-## 🍎 iOS Deployment
-
-### App Store Connect
-
-1. **Xcode Setup**
-   ```bash
-   cd mobile/ios
-   open TrickleFaucet.xcodeproj
-   ```
-
-2. **Configure Signing & Capabilities**
-   - Select your development team
-   - Configure App ID with your bundle identifier
-   - Enable required capabilities:
-     - Associated Domains (for universal links)
-     - Push Notifications (if needed)
-
-3. **Update Info.plist**
-   ```xml
-   <!-- Update with your domain -->
-   <key>com.apple.developer.associated-domains</key>
-   <array>
-       <string>applinks:yourdomain.com</string>
-   </array>
-   ```
-
-4. **Archive and Upload**
-   - Select "Any iOS Device" as target
-   - Product → Archive
-   - In Organizer, select archive and click "Distribute App"
-   - Choose "App Store Connect"
-   - Upload to App Store Connect
-
-5. **App Store Connect Configuration**
-   - App Information:
-     - Name: "Trickle - Base Faucet"
-     - Bundle ID: com.trickle.faucet
-     - SKU: unique identifier
-   - Pricing: Free
-   - App Store Listing:
-     - Screenshots (required sizes)
-     - App description
-     - Keywords
-     - Support URL
-     - Privacy Policy URL
-   - Submit for Review
-
-### TestFlight Beta Testing
-
-1. **Upload Build**
-   - Archive and upload as described above
-   - Build will appear in TestFlight section
-
-2. **Configure Beta Testing**
-   - Add beta testing information
-   - Invite internal testers (team members)
-   - Invite external testers (up to 10,000)
-
-3. **Distribute Test Link**
-   - Share TestFlight link with beta testers
-   - Collect feedback and iterate
 
 ## 🔧 Configuration for Production
 
 ### Environment Variables
 
-#### Web (Vercel)
+#### Frontend (Vercel)
+```env
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_production_project_id
+NEXT_PUBLIC_API_URL=https://your-api-domain.com
+API_BASE_URL=https://your-api-domain.com
+NODE_ENV=production
+```
+
+#### Backend
 ```env
 WALLETCONNECT_PROJECT_ID=your_production_project_id
 DATABASE_URL=your_production_database_url
-NODE_ENV=production
-API_BASE_URL=https://your-api-domain.com
 FAUCET_CONTRACT_ADDRESS=0x8D08e77837c28fB271D843d84900544cA46bA2F3
-```
-
-#### Android (gradle.properties)
-```properties
-WALLETCONNECT_PROJECT_ID=your_production_project_id
-API_BASE_URL=https://your-api-domain.com
-```
-
-#### iOS (Build Settings)
-```swift
-// In build configuration
-WALLETCONNECT_PROJECT_ID = your_production_project_id
-API_BASE_URL = https://your-api-domain.com
+NODE_ENV=production
 ```
 
 ### Domain Configuration
@@ -229,11 +84,9 @@ API_BASE_URL = https://your-api-domain.com
    - Set up SSL certificate (automatic with Vercel/Netlify)
    - Update CORS settings if needed
 
-2. **Mobile Deep Linking**
-   - Configure universal links (iOS) / app links (Android)
-   - Upload required JSON files to your domain:
-     - `/.well-known/apple-app-site-association` (iOS)
-     - `/.well-known/assetlinks.json` (Android)
+2. **SSL Configuration**
+   - Ensure HTTPS is enabled (automatic with Vercel/Netlify)
+   - Configure proper SSL certificates for custom domains
 
 ### Database Setup
 

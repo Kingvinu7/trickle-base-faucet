@@ -11,25 +11,15 @@ A multi-platform faucet application for Base mainnet with WalletConnect support 
 - **Real-time stats**: Track total claims and daily usage
 - **Modern UI**: Beautiful, responsive design across all platforms
 
-## 📱 Platforms
+## 🌐 Platform
 
-### Web Frontend
-- Built with vanilla HTML/CSS/JavaScript
+### Next.js Web Frontend
+- Built with Next.js 14 and TypeScript
 - Uses Web3Modal v4 for wallet connections
-- Supports all WalletConnect-compatible wallets
-- Responsive design for mobile and desktop
-
-### Android App
-- Native Android app built with Kotlin and Jetpack Compose
-- WalletConnect SDK integration
-- Material Design 3 UI
-- Deep linking support for wallet apps
-
-### iOS App
-- Native iOS app built with Swift and SwiftUI
-- WalletConnect Swift SDK integration
-- iOS design guidelines compliance
-- Universal links support
+- Supports 300+ WalletConnect-compatible wallets
+- Modern responsive design with Tailwind CSS
+- Framer Motion animations
+- Production-ready deployment configuration
 
 ## 🛠️ Setup Instructions
 
@@ -47,13 +37,11 @@ A multi-platform faucet application for Base mainnet with WalletConnect support 
    FAUCET_CONTRACT_ADDRESS=0x8D08e77837c28fB271D843d84900544cA46bA2F3
    ```
 
-### Web Frontend Setup
+### Frontend Setup
 
-1. **Update Configuration**
-   ```javascript
-   // In public/index.html, replace:
-   const projectId = 'YOUR_PROJECT_ID'
-   // With your actual WalletConnect Project ID
+1. **Navigate to Frontend Directory**
+   ```bash
+   cd frontend
    ```
 
 2. **Install Dependencies**
@@ -61,68 +49,35 @@ A multi-platform faucet application for Base mainnet with WalletConnect support 
    npm install
    ```
 
-3. **Start Development Server**
+3. **Configure Environment**
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local and add your WalletConnect Project ID
+   ```
+
+4. **Start Development Server**
    ```bash
    npm run dev
    ```
 
-4. **Deploy**
-   - The app is configured for Vercel deployment
+5. **Open in Browser**
+   ```
+   http://localhost:3000
+   ```
+
+6. **Deploy to Vercel**
    - Push to GitHub and connect to Vercel
    - Set environment variables in Vercel dashboard
+   - Deploy automatically
 
-### Android Setup
+### Automated Setup
 
-1. **Prerequisites**
-   - Android Studio Arctic Fox or later
-   - Kotlin 1.9.22 or later
-   - Android SDK 23+ (minimum)
+Use the setup script for guided configuration:
 
-2. **Configuration**
-   ```kotlin
-   // In TrickleFaucetApplication.kt, replace:
-   val projectId = "YOUR_PROJECT_ID"
-   // With your actual WalletConnect Project ID
-   ```
-
-3. **Deep Linking Setup**
-   - Update `android:host` in AndroidManifest.xml with your domain
-   - Configure your website to serve the required JSON files for app verification
-
-4. **Build and Run**
-   ```bash
-   cd mobile/android
-   ./gradlew assembleDebug
-   ```
-
-### iOS Setup
-
-1. **Prerequisites**
-   - Xcode 15.0 or later
-   - iOS 15.0+ deployment target
-   - Swift 5.9 or later
-
-2. **Dependencies**
-   - The project uses Swift Package Manager
-   - Dependencies are defined in Package.swift
-
-3. **Configuration**
-   ```swift
-   // In WalletConnectManager.swift, replace:
-   private let projectId = "YOUR_PROJECT_ID"
-   // With your actual WalletConnect Project ID
-   ```
-
-4. **Universal Links Setup**
-   - Update Info.plist with your domain
-   - Configure your website to serve apple-app-site-association file
-
-5. **Build and Run**
-   ```bash
-   cd mobile/ios
-   open TrickleFaucet.xcodeproj
-   # Build and run in Xcode
-   ```
+```bash
+cd frontend
+./setup-frontend.sh
+```
 
 ## 🔧 Configuration
 

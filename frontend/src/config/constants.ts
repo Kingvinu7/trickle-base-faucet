@@ -204,8 +204,8 @@ export const FAUCET_CONTRACT = {
 export const SUPPORTED_CHAINS = [base]
 export const DEFAULT_CHAIN = base
 
-// API Configuration
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+// API Configuration - Use Next.js API routes as proxy
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api'
 
 export const API_ENDPOINTS = {
   CHECK_ELIGIBILITY: '/check-eligibility',

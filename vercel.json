@@ -1,30 +1,50 @@
 {
   "version": 2,
   "name": "trickle-base-faucet",
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 10
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     {
-      "source": "/health",
+      "source": "/api/health",
       "destination": "/api/index.js"
     },
     {
-      "source": "/stats", 
+      "source": "/api/stats", 
       "destination": "/api/index.js"
     },
     {
-          "source": "/blockchain-stats",
-          "destination": "/api/index.js"
-    },
-    {
-      "source": "/check-eligibility",
+      "source": "/api/blockchain-stats",
       "destination": "/api/index.js"
     },
     {
-      "source": "/log-claim",
+      "source": "/api/check-eligibility",
       "destination": "/api/index.js"
     },
     {
-      "source": "/(.*)",
-      "destination": "/public/index.html"
+      "source": "/api/log-claim",
+      "destination": "/api/index.js"
     }
   ]
 }

@@ -260,11 +260,40 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🔄 Updates
 
+### v2.0.0 - CORS Fix & Architecture Cleanup
+- **FIXED**: Removed duplicate HTML version that was causing CORS issues
+- **IMPROVED**: Streamlined architecture with proper Next.js API proxy routes
+- **ENHANCED**: Better error handling and fallback mechanisms
+- **OPTIMIZED**: Cleaner deployment configuration
+
 ### v1.0.0
 - Initial release with WalletConnect integration
 - Multi-platform support (Web, Android, iOS)
 - Base mainnet support
 - 24-hour cooldown system
+
+## 🏗️ Architecture
+
+### Current Setup (v2.0.0)
+
+The application now follows a clean, single-frontend architecture:
+
+1. **Next.js Frontend** (`/frontend/`) - Main application with WalletConnect integration
+2. **Express API** (`/api/`) - Backend API for database operations and blockchain stats
+3. **API Proxy Routes** - Next.js API routes that proxy to the Express backend
+
+### CORS Resolution
+
+The previous CORS issues were caused by:
+- Duplicate HTML version conflicting with Next.js frontend
+- Incorrect routing configuration
+- Multiple CORS configurations interfering with each other
+
+**Fixed by:**
+- Removing the static HTML version (`/public/index.html`)
+- Implementing proper API proxy routes in Next.js
+- Streamlining Vercel configuration
+- Using consistent API endpoint structure
 
 ---
 

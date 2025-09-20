@@ -36,7 +36,6 @@ export function useFaucetClaim() {
   
   const { isLoading: isReceiptLoading, isSuccess: isReceiptSuccess } = useWaitForTransactionReceipt({
     hash: currentTxHash as `0x${string}` | undefined,
-    enabled: !!currentTxHash,
   })
 
   const mutation = useMutation({

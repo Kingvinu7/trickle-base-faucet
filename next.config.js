@@ -4,7 +4,12 @@ const nextConfig = {
     domains: ['assets.coingecko.com', 'raw.githubusercontent.com'],
   },
   webpack: (config) => {
-    config.resolve.fallback = { fs: false, net: false, tls: false };
+    config.resolve.fallback = { 
+      fs: false, 
+      net: false, 
+      tls: false,
+      '@react-native-async-storage/async-storage': false
+    };
     config.externals.push('pino-pretty', 'lokijs', 'encoding');
     return config;
   },

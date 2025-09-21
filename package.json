@@ -1,6 +1,8 @@
 {
   "name": "trickle-base-faucet-frontend",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "description": "Modern Base faucet with WalletConnect SDK v4 integration supporting 300+ wallets including MetaMask, Coinbase Wallet, Trust Wallet, and more",
+  "keywords": ["walletconnect", "web3", "faucet", "base", "ethereum", "wagmi", "web3modal"],
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -13,8 +15,6 @@
     "next": "14.1.0",
     "react": "^18",
     "react-dom": "^18",
-    
-    "// WalletConnect SDK Integration": "Added for multi-wallet support (300+ wallets)",
     "@web3modal/wagmi": "^4.1.7",
     "@wagmi/core": "^2.6.5",
     "wagmi": "^2.5.7",

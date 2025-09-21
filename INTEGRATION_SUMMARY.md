@@ -8,11 +8,16 @@
 
 ```json
 {
-  "// WalletConnect SDK Integration": "Added for multi-wallet support (300+ wallets)",
-  "@web3modal/wagmi": "^4.1.7",
-  "@wagmi/core": "^2.6.5", 
-  "wagmi": "^2.5.7",
-  "viem": "^2.7.15"
+  "name": "trickle-base-faucet-frontend",
+  "version": "2.0.0",
+  "description": "Modern Base faucet with WalletConnect SDK v4 integration supporting 300+ wallets including MetaMask, Coinbase Wallet, Trust Wallet, and more",
+  "keywords": ["walletconnect", "web3", "faucet", "base", "ethereum", "wagmi", "web3modal"],
+  "dependencies": {
+    "@web3modal/wagmi": "^4.1.7",
+    "@wagmi/core": "^2.6.5", 
+    "wagmi": "^2.5.7",
+    "viem": "^2.7.15"
+  }
 }
 ```
 
@@ -34,9 +39,13 @@
 
 Anyone reviewing your repository can easily identify the WalletConnect SDK integration through:
 
-### 1. **Package.json Comments**
+### 1. **Package.json Description & Keywords**
 ```json
-"// WalletConnect SDK Integration": "Added for multi-wallet support (300+ wallets)"
+{
+  "version": "2.0.0",
+  "description": "Modern Base faucet with WalletConnect SDK v4 integration supporting 300+ wallets including MetaMask, Coinbase Wallet, Trust Wallet, and more",
+  "keywords": ["walletconnect", "web3", "faucet", "base", "ethereum", "wagmi", "web3modal"]
+}
 ```
 
 ### 2. **README.md Section**

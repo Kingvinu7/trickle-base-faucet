@@ -32,10 +32,13 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Check eligibility API error:', error)
     
+    // For network/connection errors, assume eligible to avoid false cooldown messages
+    // This prevents showing "Cooldown Active" for new wallets when backend is unreachable
     return NextResponse.json(
       {
-        error: 'Failed to check eligibility',
-        eligible: false,
+        error: 'Unable to verify cooldown status. Please try again.',
+        eligible: true, // Default to eligible when we can't verify (fail-open approach)
+        message: 'Connection issue - please try claiming. If you are in cooldown, the transaction will fail safely.'
       },
       { status: 500 }
     )

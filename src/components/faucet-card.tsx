@@ -182,14 +182,33 @@ export function FaucetCard() {
                 <span className="text-gray-600">Checking eligibility...</span>
               </div>
             ) : !eligibility?.eligible ? (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
+              <div className={`border rounded-2xl p-4 ${
+                eligibility?.message?.includes('Connection issue') || eligibility?.message?.includes('Unable to verify')
+                  ? 'bg-blue-50 border-blue-200' // Connection issues get blue styling
+                  : 'bg-yellow-50 border-yellow-200' // Actual cooldown gets yellow styling
+              }`}>
                 <div className="flex items-center justify-center">
-                  <AlertCircle className="w-5 h-5 text-yellow-500 mr-2" />
+                  <AlertCircle className={`w-5 h-5 mr-2 ${
+                    eligibility?.message?.includes('Connection issue') || eligibility?.message?.includes('Unable to verify')
+                      ? 'text-blue-500'
+                      : 'text-yellow-500'
+                  }`} />
                   <div className="text-center">
-                    <div className="font-medium text-yellow-800">
-                      Cooldown Active
+                    <div className={`font-medium ${
+                      eligibility?.message?.includes('Connection issue') || eligibility?.message?.includes('Unable to verify')
+                        ? 'text-blue-800'
+                        : 'text-yellow-800'
+                    }`}>
+                      {eligibility?.message?.includes('Connection issue') || eligibility?.message?.includes('Unable to verify')
+                        ? 'Connection Issue'
+                        : 'Cooldown Active'
+                      }
                     </div>
-                    <div className="text-sm text-yellow-600">
+                    <div className={`text-sm ${
+                      eligibility?.message?.includes('Connection issue') || eligibility?.message?.includes('Unable to verify')
+                        ? 'text-blue-600'
+                        : 'text-yellow-600'
+                    }`}>
                       {eligibility?.message || 'Please wait before claiming again'}
                     </div>
                   </div>
@@ -230,7 +249,11 @@ export function FaucetCard() {
               ) : (
                 <>
                   <AlertCircle className="w-5 h-5 mr-2" />
-                  {!eligibility?.eligible ? 'Cooldown Active' : 'Cannot Claim'}
+                  {!eligibility?.eligible ? (
+                    eligibility?.message?.includes('Connection issue') || eligibility?.message?.includes('Unable to verify')
+                      ? 'Try Claim'
+                      : 'Cooldown Active'
+                  ) : 'Cannot Claim'}
                 </>
               )}
             </Button>

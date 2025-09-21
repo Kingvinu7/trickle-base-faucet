@@ -4,12 +4,16 @@ const nextConfig = {
     domains: ['assets.coingecko.com', 'raw.githubusercontent.com'],
   },
   webpack: (config) => {
+    // WalletConnect SDK webpack fallbacks
+    // Required for WalletConnect SDK which has React Native dependencies
     config.resolve.fallback = { 
       fs: false, 
       net: false, 
       tls: false,
+      // Fix for @metamask/sdk React Native async storage dependency
       '@react-native-async-storage/async-storage': false
     };
+    // Exclude problematic packages from bundling
     config.externals.push('pino-pretty', 'lokijs', 'encoding');
     return config;
   },

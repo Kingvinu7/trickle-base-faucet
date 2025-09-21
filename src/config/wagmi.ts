@@ -1,5 +1,19 @@
 'use client'
 
+/**
+ * WalletConnect SDK Integration
+ * 
+ * This file configures WalletConnect SDK v4 for comprehensive wallet support.
+ * Supports 300+ wallets including MetaMask, Coinbase Wallet, Trust Wallet, etc.
+ * 
+ * Key Features:
+ * - Multi-platform wallet support (desktop, mobile, browser extensions)
+ * - QR code connections for mobile wallets
+ * - Deep link integration for mobile apps
+ * - Session persistence across browser sessions
+ * - Network switching support
+ */
+
 import { createWeb3Modal } from '@web3modal/wagmi/react'
 import { defaultWagmiConfig } from '@web3modal/wagmi/react/config'
 import { WagmiConfig } from 'wagmi'

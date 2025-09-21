@@ -21,10 +21,32 @@ A modern, responsive web application for claiming ETH on Base mainnet with Walle
 - **Styling**: Tailwind CSS
 - **Animations**: Framer Motion
 - **Web3**: Wagmi + Viem
-- **WalletConnect**: Web3Modal v4
+- **WalletConnect SDK**: Web3Modal v4 (supports 300+ wallets)
 - **State Management**: TanStack Query (React Query)
 - **UI Components**: Radix UI primitives
 - **Notifications**: Sonner
+
+## 🔗 WalletConnect SDK Integration
+
+This project integrates **WalletConnect SDK v4** to provide comprehensive wallet support:
+
+### Key Features:
+- ✅ **300+ Wallet Support**: MetaMask, Coinbase Wallet, Trust Wallet, and many more
+- ✅ **Multi-Platform**: Desktop, mobile, and browser extension wallets
+- ✅ **QR Code Connection**: Easy mobile wallet connection via QR scanning
+- ✅ **Deep Links**: Direct wallet app integration on mobile devices
+- ✅ **Session Management**: Persistent wallet connections across browser sessions
+
+### WalletConnect Packages Used:
+- `@web3modal/wagmi` - Main WalletConnect modal integration
+- `@wagmi/core` - Core Web3 functionality
+- `wagmi` - React hooks for Web3 interactions
+- `viem` - Low-level Ethereum interactions
+
+### Configuration:
+- Project ID: Configured via `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`
+- Supported Networks: Base Mainnet (extensible to other chains)
+- Wallet Types: Injected, WalletConnect, Coinbase Wallet
 
 ## 🚀 Quick Start
 

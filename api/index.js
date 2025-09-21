@@ -104,7 +104,15 @@ app.post('/check-eligibility', async (req, res) => {
         return res.status(200).json({ eligible: true });
     } catch (error) {
         console.error('Eligibility check error:', error);
-        res.status(500).json({ error: "Error checking eligibility." });
+        console.error('Error details:', {
+            message: error.message,
+            code: error.code,
+            address: address
+        });
+        res.status(500).json({ 
+            error: "Error checking eligibility.",
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 

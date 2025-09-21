@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     
     // Forward request to backend API
-    const response = await fetch(`${API_BASE_URL}/api/log-claim`, {
+    const response = await fetch(`${API_BASE_URL}/log-claim`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

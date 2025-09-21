@@ -5,7 +5,7 @@ const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001'
 export async function GET(request: NextRequest) {
   try {
     // Forward request to backend API
-    const response = await fetch(`${API_BASE_URL}/api/stats`, {
+    const response = await fetch(`${API_BASE_URL}/stats`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

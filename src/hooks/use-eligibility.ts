@@ -22,7 +22,8 @@ async function checkEligibility(address: string): Promise<EligibilityResponse> {
   })
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(`HTTP ${response.status}: ${errorData.error || response.statusText}`)
   }
 
   const data = await response.json()

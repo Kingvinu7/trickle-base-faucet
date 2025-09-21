@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     
     // Forward request to backend API
-    const response = await fetch(`${API_BASE_URL}/api/check-eligibility`, {
+    const response = await fetch(`${API_BASE_URL}/check-eligibility`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -20,7 +20,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           error: errorData.error || 'Failed to check eligibility',
-          eligible: false 
+          eligible: response.status === 500 ? true : false, // If server error, assume eligible to avoid false cooldown
+          message: response.status === 500 ? 'Unable to verify cooldown status. Please try again.' : errorData.message
         },
         { status: response.status }
       )

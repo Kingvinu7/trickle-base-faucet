@@ -36,9 +36,9 @@ export async function POST(request: NextRequest) {
     // This prevents showing "Cooldown Active" for new wallets when backend is unreachable
     return NextResponse.json(
       {
-        error: 'Unable to verify cooldown status. Please try again.',
+        error: 'Network connection failed',
         eligible: true, // Default to eligible when we can't verify (fail-open approach)
-        message: 'Connection issue - please try claiming. If you are in cooldown, the transaction will fail safely.'
+        message: 'Connection issue - Unable to verify cooldown status. You can try claiming, and if you are in cooldown, the transaction will fail safely.'
       },
       { status: 500 }
     )

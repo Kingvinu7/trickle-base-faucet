@@ -66,5 +66,9 @@ export function useEligibility(address?: string) {
       return failureCount < 3
     },
     retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    // Provide default data when there's an error to prevent false cooldown messages
+    select: (data: EligibilityResponse) => data,
+    // Ensure we don't show false cooldowns when there are network issues
+    placeholderData: (previousData) => previousData || { eligible: true, message: 'Checking eligibility...' }
   })
 }

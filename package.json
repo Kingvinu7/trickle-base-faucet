@@ -2,7 +2,15 @@
   "name": "trickle-base-faucet-frontend",
   "version": "2.0.0",
   "description": "Modern Base faucet with WalletConnect SDK v4 integration supporting 300+ wallets including MetaMask, Coinbase Wallet, Trust Wallet, and more",
-  "keywords": ["walletconnect", "web3", "faucet", "base", "ethereum", "wagmi", "web3modal"],
+  "keywords": [
+    "walletconnect",
+    "web3",
+    "faucet",
+    "base",
+    "ethereum",
+    "wagmi",
+    "web3modal"
+  ],
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -15,10 +23,11 @@
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-progress": "^1.0.3",
     "@radix-ui/react-toast": "^1.1.5",
+
+    "@reown/appkit": "^1.8.6",
+    "@reown/appkit-adapter-wagmi": "^1.8.6",
     "@tanstack/react-query": "^5.25.0",
     "@wagmi/core": "^2.6.5",
-    "@web3modal/wagmi": "^4.1.7",
-    "@types/node": "^20.5.0",
     "autoprefixer": "^10.0.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
@@ -38,13 +47,14 @@
     "tailwindcss": "^3.3.0",
     "viem": "^2.7.15",
     "wagmi": "^2.5.7"
-    
+
   },
   "devDependencies": {
-     "@types/react": "^18",
+    "@types/node": "^20",
+    "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
-    "eslint-config-next": "14.1.0",
+    "eslint-config-next": "^14.2.32",
     "typescript": "^5"
   }
 }

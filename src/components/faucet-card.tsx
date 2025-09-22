@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
-import { useWeb3Modal } from '@web3modal/wagmi/react'
+import { appKit } from '@/config/wagmi'
 import { Wallet, Coins, LogOut, AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
-import { base } from 'wagmi/chains'
+import { base } from '@reown/appkit/networks'
 import { useFaucetClaim } from '@/hooks/use-faucet-claim'
 import { useEligibility } from '@/hooks/use-eligibility'
 import { formatAddress } from '@/lib/utils'
@@ -17,7 +17,7 @@ export function FaucetCard() {
   const { address, isConnected, chain } = useAccount()
   const { disconnect } = useDisconnect()
   const { switchChain } = useSwitchChain()
-  const { open } = useWeb3Modal()
+  // No need for useAppKit hook, we use appKit directly
   
   const [claimProgress, setClaimProgress] = useState(0)
   
@@ -29,7 +29,7 @@ export function FaucetCard() {
   
   const handleConnect = async () => {
     try {
-      await open()
+      appKit.open()
     } catch (error) {
       toast.error('Failed to open wallet modal')
     }
@@ -181,21 +181,33 @@ export function FaucetCard() {
                 <Loader2 className="w-5 h-5 animate-spin mr-2" />
                 <span className="text-gray-600">Checking eligibility...</span>
               </div>
-            ) : !eligibility?.eligible ? (
+            ) : eligibility && !eligibility.eligible ? (
               <div className={`border rounded-2xl p-4 ${
-                eligibility?.message?.includes('Connection issue') || eligibility?.message?.includes('Unable to verify')
+                eligibility?.message?.includes('Connection issue') || 
+                eligibility?.message?.includes('Unable to verify') ||
+                eligibility?.message?.includes('Please try again') ||
+                eligibility?.message?.includes('Error checking') ||
+                !eligibility?.message
                   ? 'bg-blue-50 border-blue-200' // Connection issues get blue styling
                   : 'bg-yellow-50 border-yellow-200' // Actual cooldown gets yellow styling
               }`}>
                 <div className="flex items-center justify-center">
                   <AlertCircle className={`w-5 h-5 mr-2 ${
-                    eligibility?.message?.includes('Connection issue') || eligibility?.message?.includes('Unable to verify')
+                    eligibility?.message?.includes('Connection issue') || 
+                eligibility?.message?.includes('Unable to verify') ||
+                eligibility?.message?.includes('Please try again') ||
+                eligibility?.message?.includes('Error checking') ||
+                !eligibility?.message
                       ? 'text-blue-500'
                       : 'text-yellow-500'
                   }`} />
                   <div className="text-center">
                     <div className={`font-medium ${
-                      eligibility?.message?.includes('Connection issue') || eligibility?.message?.includes('Unable to verify')
+                      eligibility?.message?.includes('Connection issue') || 
+                eligibility?.message?.includes('Unable to verify') ||
+                eligibility?.message?.includes('Please try again') ||
+                eligibility?.message?.includes('Error checking') ||
+                !eligibility?.message
                         ? 'text-blue-800'
                         : 'text-yellow-800'
                     }`}>
@@ -205,7 +217,11 @@ export function FaucetCard() {
                       }
                     </div>
                     <div className={`text-sm ${
-                      eligibility?.message?.includes('Connection issue') || eligibility?.message?.includes('Unable to verify')
+                      eligibility?.message?.includes('Connection issue') || 
+                eligibility?.message?.includes('Unable to verify') ||
+                eligibility?.message?.includes('Please try again') ||
+                eligibility?.message?.includes('Error checking') ||
+                !eligibility?.message
                         ? 'text-blue-600'
                         : 'text-yellow-600'
                     }`}>
@@ -250,7 +266,11 @@ export function FaucetCard() {
                 <>
                   <AlertCircle className="w-5 h-5 mr-2" />
                   {!eligibility?.eligible ? (
-                    eligibility?.message?.includes('Connection issue') || eligibility?.message?.includes('Unable to verify')
+                    eligibility?.message?.includes('Connection issue') || 
+                eligibility?.message?.includes('Unable to verify') ||
+                eligibility?.message?.includes('Please try again') ||
+                eligibility?.message?.includes('Error checking') ||
+                !eligibility?.message
                       ? 'Try Claim'
                       : 'Cooldown Active'
                   ) : 'Cannot Claim'}

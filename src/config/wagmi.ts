@@ -14,11 +14,10 @@
  * - Network switching support
  */
 
-import { createWeb3Modal } from '@web3modal/wagmi/react'
-import { defaultWagmiConfig } from '@web3modal/wagmi/react/config'
+import { createAppKit } from '@reown/appkit'
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { WagmiConfig } from 'wagmi'
-import { base, mainnet } from 'wagmi/chains'
-import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors'
+import { base, mainnet } from '@reown/appkit/networks'
 
 // Get projectId from https://cloud.walletconnect.com
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID'
@@ -38,51 +37,31 @@ const metadata = {
   icons: ['https://avatars.githubusercontent.com/u/37784886']
 }
 
-// Create wagmi config
-const config = defaultWagmiConfig({
-  chains,
+// Create wagmi adapter
+const wagmiAdapter = new WagmiAdapter({
   projectId,
-  metadata,
-  connectors: [
-    walletConnect({ projectId, metadata, showQrModal: false }),
-    injected({ shimDisconnect: true }),
-    coinbaseWallet({
-      appName: metadata.name,
-      appLogoUrl: metadata.icons[0]
-    })
-  ]
+  networks: [...chains]
 })
 
-// Create modal
-createWeb3Modal({
-  wagmiConfig: config,
+// Get the wagmi config from adapter
+const config = wagmiAdapter.wagmiConfig
+
+// Create AppKit
+const appKit = createAppKit({
+  adapters: [wagmiAdapter],
+  networks: [...chains],
   projectId,
-  enableAnalytics: true,
-  enableOnramp: false,
+  metadata,
+  features: {
+    analytics: true
+  },
   themeMode: 'light',
   themeVariables: {
     '--w3m-color-mix': '#0052FF',
     '--w3m-color-mix-strength': 40,
     '--w3m-font-family': 'Inter, sans-serif',
     '--w3m-border-radius-master': '12px'
-  },
-  featuredWalletIds: [
-    // MetaMask
-    'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96',
-    // Coinbase Wallet
-    'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa',
-    // Trust Wallet
-    '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0',
-    // Rainbow
-    '1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369',
-  ],
-  includeWalletIds: [
-    // Add more wallet IDs as needed
-    'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask
-    'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase
-    '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0', // Trust
-    '1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369', // Rainbow
-  ]
+  }
 })
 
-export { config, projectId }
+export { config, projectId, appKit }

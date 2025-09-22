@@ -1,4 +1,4 @@
-import { base } from 'wagmi/chains'
+import { base } from '@reown/appkit/networks'
 
 // Contract Configuration
 export const FAUCET_CONTRACT = {

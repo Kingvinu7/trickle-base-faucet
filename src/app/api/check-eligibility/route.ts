@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       {
         error: 'Network connection failed',
         eligible: true, // Default to eligible when we can't verify (fail-open approach)
-        message: 'Connection issue - Unable to verify cooldown status. You can try claiming, and if you are in cooldown, the transaction will fail safely.'
+        message: 'Unable to verify cooldown status. Please try claiming - if you are in cooldown, the blockchain will prevent the transaction.'
       },
       { status: 500 }
     )

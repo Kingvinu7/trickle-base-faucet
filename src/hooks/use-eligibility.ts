@@ -34,6 +34,19 @@ async function checkEligibility(address: string): Promise<EligibilityResponse> {
       }
     }
     
+    // For 4xx errors, check if it's actually a cooldown or just an error
+    if (response.status >= 400 && response.status < 500) {
+      // If we have eligibility data, use it
+      if (errorData.eligible !== undefined) {
+        return {
+          eligible: errorData.eligible,
+          message: errorData.message || 'Client error occurred',
+          nextClaimTime: errorData.nextClaimTime || null,
+          hoursRemaining: errorData.hoursRemaining || 0,
+        }
+      }
+    }
+    
     throw new Error(`HTTP ${response.status}: ${errorData.error || response.statusText}`)
   }
 

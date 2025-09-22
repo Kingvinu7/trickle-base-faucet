@@ -47,8 +47,8 @@
     "tailwind-merge": "^2.2.1",
     "tailwindcss": "^3.3.0",
     "viem": "^2.7.15",
-    "wagmi": "^2.5.7"
-
+    "wagmi": "^2.5.7",
+    "@types/node": "^20"
   },
   "devDependencies": {
     "@types/react": "^18",

@@ -266,13 +266,12 @@ export function FaucetCard() {
                 <>
                   <AlertCircle className="w-5 h-5 mr-2" />
                   {!eligibility?.eligible ? (
-                    eligibility?.message?.includes('Connection issue') || 
-                eligibility?.message?.includes('Unable to verify') ||
-                eligibility?.message?.includes('Please try again') ||
-                eligibility?.message?.includes('Error checking') ||
-                !eligibility?.message
-                      ? 'Try Claim'
-                      : 'Cooldown Active'
+                    // Show "Cooldown Active" only for specific cooldown messages
+                    eligibility?.message?.includes('Please wait') ||
+                    eligibility?.message?.includes('more hours before claiming') ||
+                    eligibility?.message?.includes('hours before claiming again')
+                      ? 'Cooldown Active'
+                      : 'Try Claim'  // Default to "Try Claim" for all other cases
                   ) : 'Cannot Claim'}
                 </>
               )}

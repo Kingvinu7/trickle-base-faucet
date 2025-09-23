@@ -63,7 +63,15 @@ async function checkEligibility(address: string): Promise<EligibilityResponse> {
 export function useEligibility(address?: string) {
   return useQuery({
     queryKey: ['eligibility', address],
-    queryFn: () => checkEligibility(address!),
+    queryFn: async () => {
+      try {
+        return await checkEligibility(address!)
+      } catch (error) {
+        console.warn('Eligibility check failed:', error)
+        // Return fallback data on error to prevent false cooldowns
+        return { eligible: true, message: 'Unable to verify eligibility. You can try claiming.' }
+      }
+    },
     enabled: !!address,
     staleTime: 5000, // Consider data stale after 5 seconds
     refetchInterval: 10000, // Refetch every 10 seconds
@@ -82,10 +90,6 @@ export function useEligibility(address?: string) {
     // Handle errors gracefully
     select: (data: EligibilityResponse) => data,
     // Provide fallback data when there are network issues
-    placeholderData: { eligible: true, message: 'Checking eligibility...' },
-    // Handle query errors
-    onError: (error: any) => {
-      console.warn('Eligibility check failed:', error)
-    }
+    placeholderData: { eligible: true, message: 'Checking eligibility...' }
   })
 }

@@ -20,10 +20,10 @@ import { WagmiConfig } from 'wagmi'
 import { base, mainnet } from '@reown/appkit/networks'
 
 // Get projectId from https://cloud.walletconnect.com
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID'
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'a9e76b0ec4e509017100199fb6ff6957'
 
-if (!projectId) {
-  throw new Error('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set')
+if (!projectId || projectId === 'YOUR_PROJECT_ID') {
+  console.warn('Using fallback WalletConnect project ID. Please set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID environment variable.')
 }
 
 // Define chains

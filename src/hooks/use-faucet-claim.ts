@@ -41,18 +41,18 @@ export function useFaucetClaim() {
   const mutation = useMutation({
     mutationFn: async (address: string): Promise<string> => {
       return new Promise((resolve, reject) => {
-        writeContract(
-          {
-            address: FAUCET_CONTRACT.address,
-            abi: FAUCET_CONTRACT.abi,
-            functionName: 'requestTokens',
-          },
-          {
-            onSuccess: (txHash) => {
-              setCurrentTxHash(txHash)
-              
-              // Wait for transaction receipt
-              const checkReceipt = async () => {
+        try {
+          writeContract(
+            {
+              address: FAUCET_CONTRACT.address,
+              abi: FAUCET_CONTRACT.abi,
+              functionName: 'requestTokens',
+            },
+            {
+              onSuccess: async (txHash) => {
+                console.log('Transaction sent:', txHash)
+                setCurrentTxHash(txHash)
+                
                 try {
                   // Log the claim attempt
                   await logClaim(address, txHash)
@@ -63,26 +63,30 @@ export function useFaucetClaim() {
                   
                   resolve(txHash)
                 } catch (error) {
-                  reject(new Error(parseError(error)))
+                  console.warn('Failed to log claim, but transaction was successful:', error)
+                  // Don't reject here - the transaction was successful
+                  resolve(txHash)
                 }
-              }
-              
-              // Start checking for receipt
-              checkReceipt()
-            },
-            onError: (error) => {
-              setCurrentTxHash(null)
-              reject(new Error(parseError(error)))
-            },
-          }
-        )
+              },
+              onError: (error) => {
+                console.error('Transaction failed:', error)
+                setCurrentTxHash(null)
+                reject(new Error(parseError(error)))
+              },
+            }
+          )
+        } catch (error) {
+          console.error('Failed to initiate transaction:', error)
+          reject(new Error(parseError(error)))
+        }
       })
     },
     onError: (error) => {
       console.error('Claim failed:', error)
       setCurrentTxHash(null)
     },
-    onSuccess: () => {
+    onSuccess: (txHash) => {
+      console.log('Claim successful:', txHash)
       // Reset transaction hash after successful completion
       setTimeout(() => setCurrentTxHash(null), 5000)
     },

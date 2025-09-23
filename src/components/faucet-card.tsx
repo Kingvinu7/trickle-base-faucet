@@ -25,7 +25,12 @@ export function FaucetCard() {
   const { mutate: claimTokens, isPending: isClaimPending } = useFaucetClaim()
 
   const isWrongNetwork = isConnected && chain?.id !== base.id
-  const canClaim = eligibility?.eligible && !isWrongNetwork && !isClaimPending
+  // Allow claiming if eligibility is undefined (API issues) or true, but not when explicitly false with a real cooldown message
+  const hasRealCooldown = eligibility?.eligible === false && 
+    (eligibility?.message?.includes('Please wait') || 
+     eligibility?.message?.includes('more hours before claiming') || 
+     eligibility?.message?.includes('hours before claiming again'))
+  const canClaim = !isWrongNetwork && !isClaimPending && !eligibilityLoading && !hasRealCooldown
   
   const handleConnect = async () => {
     try {
@@ -50,52 +55,47 @@ export function FaucetCard() {
   }
 
   const handleClaim = async () => {
-    if (!address || !canClaim) return
+    if (!address || !canClaim) {
+      console.log('Cannot claim:', { address, canClaim, eligibility })
+      return
+    }
 
-    // Simulate progress steps
-    const progressSteps = [
-      { progress: 25, message: 'Checking eligibility...' },
-      { progress: 50, message: 'Preparing transaction...' },
-      { progress: 75, message: 'Please confirm in wallet...' },
-      { progress: 90, message: 'Transaction sent...' },
-      { progress: 100, message: 'Success!' }
-    ]
+    console.log('Starting claim process for address:', address)
+    setClaimProgress(25)
 
-    let currentStep = 0
-    const progressInterval = setInterval(() => {
-      if (currentStep < progressSteps.length) {
-        const step = progressSteps[currentStep]
-        setClaimProgress(step.progress)
-        if (currentStep === 0) {
-          // Start the actual claim process
-          claimTokens(address, {
-            onSuccess: (txHash) => {
-              setClaimProgress(100)
-              toast.success(
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <div>
-                    <div className="font-medium">Claim successful!</div>
-                    <div className="text-sm text-gray-500">
-                      Transaction: {formatAddress(txHash)}
-                    </div>
-                  </div>
+    try {
+      claimTokens(address, {
+        onSuccess: (txHash) => {
+          console.log('Claim successful:', txHash)
+          setClaimProgress(100)
+          toast.success(
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <div>
+                <div className="font-medium">Claim successful!</div>
+                <div className="text-sm text-gray-500">
+                  Transaction: {formatAddress(txHash)}
                 </div>
-              )
-              refetchEligibility()
-              setTimeout(() => setClaimProgress(0), 2000)
-            },
-            onError: (error) => {
-              toast.error(error.message)
-              setClaimProgress(0)
-            }
-          })
+              </div>
+            </div>
+          )
+          refetchEligibility()
+          setTimeout(() => setClaimProgress(0), 3000)
+        },
+        onError: (error) => {
+          console.error('Claim failed:', error)
+          toast.error(error.message || 'Claim failed. Please try again.')
+          setClaimProgress(0)
         }
-        currentStep++
-      } else {
-        clearInterval(progressInterval)
-      }
-    }, 1000)
+      })
+      
+      // Update progress to show transaction is being prepared
+      setClaimProgress(50)
+    } catch (error) {
+      console.error('Failed to initiate claim:', error)
+      toast.error('Failed to initiate claim. Please try again.')
+      setClaimProgress(0)
+    }
   }
 
   return (
@@ -252,7 +252,12 @@ export function FaucetCard() {
               disabled={!canClaim}
               className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-trickle-blue to-trickle-blue-light hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isClaimPending ? (
+              {eligibilityLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Checking...
+                </>
+              ) : isClaimPending ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                   Processing...
@@ -262,17 +267,20 @@ export function FaucetCard() {
                   <Coins className="w-5 h-5 mr-2" />
                   Claim ETH
                 </>
-              ) : (
+              ) : hasRealCooldown ? (
                 <>
                   <AlertCircle className="w-5 h-5 mr-2" />
-                  {!eligibility?.eligible ? (
-                    // Show "Cooldown Active" only for specific cooldown messages
-                    eligibility?.message?.includes('Please wait') ||
-                    eligibility?.message?.includes('more hours before claiming') ||
-                    eligibility?.message?.includes('hours before claiming again')
-                      ? 'Cooldown Active'
-                      : 'Try Claim'  // Default to "Try Claim" for all other cases
-                  ) : 'Cannot Claim'}
+                  Cooldown Active
+                </>
+              ) : isWrongNetwork ? (
+                <>
+                  <AlertCircle className="w-5 h-5 mr-2" />
+                  Wrong Network
+                </>
+              ) : (
+                <>
+                  <Coins className="w-5 h-5 mr-2" />
+                  Claim ETH
                 </>
               )}
             </Button>

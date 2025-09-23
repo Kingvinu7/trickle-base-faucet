@@ -68,20 +68,24 @@ export function useEligibility(address?: string) {
     staleTime: 5000, // Consider data stale after 5 seconds
     refetchInterval: 10000, // Refetch every 10 seconds
     retry: (failureCount: number, error: any) => {
-      // Don't retry on 4xx errors (client errors)
+      // Don't retry on 4xx errors (client errors) unless they contain eligibility data
       if (error && typeof error === 'object' && 'message' in error) {
         const message = error.message as string
         if (message.includes('HTTP 4')) {
           return false
         }
       }
-      // For 5xx errors, retry up to 3 times with exponential backoff
-      return failureCount < 3
+      // For 5xx errors, retry up to 2 times with exponential backoff
+      return failureCount < 2
     },
-    retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-    // Provide default data when there's an error to prevent false cooldown messages
+    retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 10000), // Shorter exponential backoff
+    // Handle errors gracefully
     select: (data: EligibilityResponse) => data,
-    // Ensure we don't show false cooldowns when there are network issues
-    placeholderData: (previousData) => previousData || { eligible: true, message: 'Checking eligibility...' }
+    // Provide fallback data when there are network issues
+    placeholderData: { eligible: true, message: 'Checking eligibility...' },
+    // Handle query errors
+    onError: (error: any) => {
+      console.warn('Eligibility check failed:', error)
+    }
   })
 }

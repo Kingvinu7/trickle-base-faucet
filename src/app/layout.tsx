@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { Providers } from '@/components/providers'
 import { Toaster } from 'sonner'
+
+import { headers } from 'next/headers' // Import headers function
+import ContextProvider from '@/context' // Adjust import path if needed
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -26,11 +28,12 @@ export const metadata: Metadata = {
   themeColor: '#0052FF',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+// ATTENTION!!! RootLayout must be an async function to use headers() 
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Retrieve cookies from request headers on the server
+  const headersObj = await headers() // IMPORTANT: await the headers() call
+  const cookies = headersObj.get('cookie')
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -39,7 +42,8 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={inter.className}>
-        <Providers>
+        {/* Wrap children with ContextProvider, passing cookies */}
+        <ContextProvider cookies={cookies}>
           {children}
           <Toaster
             position="top-center"
@@ -52,7 +56,7 @@ export default function RootLayout({
               },
             }}
           />
-        </Providers>
+        </ContextProvider>
       </body>
     </html>
   )

@@ -24,7 +24,11 @@ export const metadata: Metadata = {
     title: 'Trickle - Base Faucet',
     description: 'Get $0.025 worth of ETH for gas fees on Base mainnet',
   },
-  viewport: 'width=device-width, initial-scale=1',
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
   themeColor: '#0052FF',
 }
 

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
-import { appKit } from '@/config/wagmi'
+import { useAppKit } from '@reown/appkit/react'
 import { Wallet, Coins, LogOut, AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
 import { base } from '@reown/appkit/networks'
 import { useFaucetClaim } from '@/hooks/use-faucet-claim'
@@ -17,7 +17,7 @@ export function FaucetCard() {
   const { address, isConnected, chain } = useAccount()
   const { disconnect } = useDisconnect()
   const { switchChain } = useSwitchChain()
-  // No need for useAppKit hook, we use appKit directly
+  const { open } = useAppKit()
   
   const [claimProgress, setClaimProgress] = useState(0)
   
@@ -34,7 +34,7 @@ export function FaucetCard() {
   
   const handleConnect = async () => {
     try {
-      appKit.open()
+      open()
     } catch (error) {
       toast.error('Failed to open wallet modal')
     }

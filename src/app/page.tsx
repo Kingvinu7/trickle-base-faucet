@@ -21,6 +21,11 @@ export default function HomePage() {
         >
           {/* Header */}
           <Header />
+          
+          {/* AppKit Button Example */}
+          <div className="text-center">
+            <appkit-button />
+          </div>
 
           {/* Stats */}
           <StatsCards 

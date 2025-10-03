@@ -12,7 +12,7 @@
   "categories": ["finance", "utilities"],
   "icons": [
     {
-      "src": "/th.png",
+      "src": "/ti.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
@@ -24,13 +24,13 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/tp.png",
+      "src": "/ti.png",
       "sizes": "256x256", 
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/ts.png",
+      "src": "/ti.png",
       "sizes": "256x256",
       "type": "image/png", 
       "purpose": "any"
@@ -42,14 +42,14 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Trickle Faucet Interface"
+      "label": "Trickle Faucet Preview"
     },
     {
-      "src": "/ts.png",
+      "src": "/th.png",
       "sizes": "1280x720", 
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Trickle Faucet Stats"
+      "label": "Trickle Faucet Hero"
     }
   ],
   "shortcuts": [
@@ -60,7 +60,7 @@
       "url": "/",
       "icons": [
         {
-          "src": "/th.png",
+          "src": "/ti.png",
           "sizes": "96x96"
         }
       ]

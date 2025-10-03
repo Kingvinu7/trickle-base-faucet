@@ -22,16 +22,16 @@ export const metadata: Metadata = {
     siteName: 'Trickle Base Faucet',
     images: [
       {
-        url: '/th.png',
+        url: '/tp.png',
         width: 1200,
         height: 630,
         alt: 'Trickle Base Faucet - Get ETH for gas fees',
       },
       {
-        url: '/ti.png',
+        url: '/th.png',
         width: 800,
         height: 600,
-        alt: 'Trickle Base Faucet Interface',
+        alt: 'Trickle Base Faucet Hero',
       },
     ],
   },
@@ -39,11 +39,11 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Trickle - Base Faucet',
     description: 'Get $0.025 worth of ETH for gas fees on Base mainnet. A Farcaster miniapp for seamless crypto transactions.',
-    images: ['/th.png'],
+    images: ['/tp.png'],
   },
   other: {
     'farcaster:frame': 'vNext',
-    'farcaster:frame:image': '/th.png',
+    'farcaster:frame:image': '/tp.png',
     'farcaster:frame:button:1': 'Get ETH',
     'farcaster:frame:button:1:action': 'link',
     'farcaster:frame:button:1:target': 'https://trickle-faucet.vercel.app',
@@ -68,7 +68,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/th.png" />
+        <link rel="icon" href="/ti.png" />
         <link rel="apple-touch-icon" href="/ti.png" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="canonical" href="https://trickle-faucet.vercel.app" />

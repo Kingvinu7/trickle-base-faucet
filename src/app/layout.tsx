@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     description: 'Get $0.025 worth of ETH for gas fees on Base mainnet. A Farcaster miniapp for seamless crypto transactions.',
     type: 'website',
     locale: 'en_US',
-    url: 'https://trickle-faucet.vercel.app',
+    url: 'https://trickle-base-faucet.vercel.app',
     siteName: 'Trickle Base Faucet',
     images: [
       {
@@ -46,10 +46,10 @@ export const metadata: Metadata = {
     'farcaster:frame:image': '/tp.png',
     'farcaster:frame:button:1': 'Get ETH',
     'farcaster:frame:button:1:action': 'link',
-    'farcaster:frame:button:1:target': 'https://trickle-faucet.vercel.app',
+    'farcaster:frame:button:1:target': 'https://trickle-base-faucet.vercel.app',
     'farcaster:frame:button:2': 'View Stats',
     'farcaster:frame:button:2:action': 'link',
-    'farcaster:frame:button:2:target': 'https://trickle-faucet.vercel.app',
+    'farcaster:frame:button:2:target': 'https://trickle-base-faucet.vercel.app',
   },
 }
 
@@ -71,7 +71,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="icon" href="/ti.png" />
         <link rel="apple-touch-icon" href="/ti.png" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="canonical" href="https://trickle-faucet.vercel.app" />
+        <link rel="canonical" href="https://trickle-base-faucet.vercel.app" />
         <meta name="robots" content="index, follow" />
         <meta name="googlebot" content="index, follow" />
         <meta property="og:image:width" content="1200" />

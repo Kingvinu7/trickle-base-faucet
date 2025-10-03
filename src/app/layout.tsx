@@ -80,6 +80,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <meta property="og:image:secure_url" content="https://trickle-base-faucet.vercel.app/tp.png" />
         <meta property="og:image:type" content="image/png" />
         <meta property="og:image:alt" content="Trickle Base Faucet - Get ETH for gas fees" />
+        <meta name="fc:miniapp" content='{"version":"1","imageUrl":"https://trickle-base-faucet.vercel.app/tp.png","button":{"title":"Get ETH","action":{"type":"launch_miniapp","url":"https://trickle-base-faucet.vercel.app","name":"Trickle Base Faucet","splashImageUrl":"https://trickle-base-faucet.vercel.app/ts.png","splashBackgroundColor":"#0052FF"}}}' />
         <meta name="twitter:site" content="@tricklefaucet" />
         <meta name="twitter:creator" content="@tricklefaucet" />
         <meta name="application-name" content="Trickle Base Faucet" />

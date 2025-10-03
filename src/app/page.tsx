@@ -25,21 +25,22 @@ export default function HomePage() {
           <Header />
           
           {/* Farcaster Miniapp Status */}
-          {isInFarcaster && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-              <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${isReady ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                <span className="text-sm text-blue-800">
-                  {isReady ? 'Farcaster Miniapp Ready' : 'Initializing...'}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <div className="flex items-center space-x-2">
+              <div className={`w-2 h-2 rounded-full ${isReady ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+              <span className="text-sm text-blue-800">
+                {isReady ? 'Farcaster Miniapp Ready' : 'Initializing...'}
+              </span>
+              {error && (
+                <span className="text-sm text-red-600 ml-2">
+                  Error: {error}
                 </span>
-                {error && (
-                  <span className="text-sm text-red-600 ml-2">
-                    Error: {error}
-                  </span>
-                )}
-              </div>
+              )}
             </div>
-          )}
+            <div className="text-xs text-blue-600 mt-1">
+              {isInFarcaster ? 'Running in Farcaster' : 'Development Mode'}
+            </div>
+          </div>
           
           {/* AppKit Button Example */}
           <div className="text-center">

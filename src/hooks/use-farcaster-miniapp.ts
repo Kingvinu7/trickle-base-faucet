@@ -27,13 +27,13 @@ export function useFarcasterMiniapp() {
       }
     }
 
-    // Only initialize if we're in a Farcaster environment
-    if (typeof window !== 'undefined' && window.location !== window.parent.location) {
+    // Initialize SDK in both Farcaster and development environments
+    if (typeof window !== 'undefined') {
       initializeSDK()
     } else {
-      // If not in Farcaster environment, still set as ready for development
+      // If not in browser environment, still set as ready for development
       setIsReady(true)
-      console.log('Not in Farcaster environment, miniapp ready for development')
+      console.log('Not in browser environment, miniapp ready for development')
     }
   }, [])
 

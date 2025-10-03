@@ -22,13 +22,13 @@ export const metadata: Metadata = {
     siteName: 'Trickle Base Faucet',
     images: [
       {
-        url: '/tp.png',
+        url: 'https://trickle-base-faucet.vercel.app/tp.png',
         width: 1200,
         height: 630,
         alt: 'Trickle Base Faucet - Get ETH for gas fees',
       },
       {
-        url: '/th.png',
+        url: 'https://trickle-base-faucet.vercel.app/th.png',
         width: 800,
         height: 600,
         alt: 'Trickle Base Faucet Hero',
@@ -39,11 +39,11 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Trickle - Base Faucet',
     description: 'Get $0.025 worth of ETH for gas fees on Base mainnet. A Farcaster miniapp for seamless crypto transactions.',
-    images: ['/tp.png'],
+    images: ['https://trickle-base-faucet.vercel.app/tp.png'],
   },
   other: {
     'farcaster:frame': 'vNext',
-    'farcaster:frame:image': '/tp.png',
+    'farcaster:frame:image': 'https://trickle-base-faucet.vercel.app/tp.png',
     'farcaster:frame:button:1': 'Get ETH',
     'farcaster:frame:button:1:action': 'link',
     'farcaster:frame:button:1:target': 'https://trickle-base-faucet.vercel.app',
@@ -76,6 +76,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <meta name="googlebot" content="index, follow" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
+        <meta property="og:image" content="https://trickle-base-faucet.vercel.app/tp.png" />
+        <meta property="og:image:secure_url" content="https://trickle-base-faucet.vercel.app/tp.png" />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:alt" content="Trickle Base Faucet - Get ETH for gas fees" />
         <meta name="twitter:site" content="@tricklefaucet" />
         <meta name="twitter:creator" content="@tricklefaucet" />
         <meta name="application-name" content="Trickle Base Faucet" />

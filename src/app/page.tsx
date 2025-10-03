@@ -5,10 +5,12 @@ import { StatsCards } from '@/components/stats-cards'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { useStats } from '@/hooks/use-stats'
+import { useFarcasterMiniappContext } from '@/components/farcaster-miniapp-provider'
 import { motion } from 'framer-motion'
 
 export default function HomePage() {
   const { data: stats, isLoading: statsLoading } = useStats()
+  const { isReady, error, isInFarcaster } = useFarcasterMiniappContext()
 
   return (
     <div className="min-h-screen animated-gradient">
@@ -21,6 +23,23 @@ export default function HomePage() {
         >
           {/* Header */}
           <Header />
+          
+          {/* Farcaster Miniapp Status */}
+          {isInFarcaster && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${isReady ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                <span className="text-sm text-blue-800">
+                  {isReady ? 'Farcaster Miniapp Ready' : 'Initializing...'}
+                </span>
+                {error && (
+                  <span className="text-sm text-red-600 ml-2">
+                    Error: {error}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
           
           {/* AppKit Button Example */}
           <div className="text-center">

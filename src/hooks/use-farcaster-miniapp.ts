@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { sdk as MiniappSDK } from '@farcaster/miniapp-sdk'
 
 export function useFarcasterMiniapp() {
-  const [sdk, setSdk] = useState<MiniappSDK | null>(null)
+  const [sdk, setSdk] = useState<typeof MiniappSDK | null>(null)
   const [isReady, setIsReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

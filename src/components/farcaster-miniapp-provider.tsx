@@ -5,7 +5,7 @@ import { useFarcasterMiniapp } from '@/hooks/use-farcaster-miniapp'
 import { sdk as MiniappSDK } from '@farcaster/miniapp-sdk'
 
 interface FarcasterMiniappContextType {
-  sdk: MiniappSDK | null
+  sdk: typeof MiniappSDK | null
   isReady: boolean
   error: string | null
   isInFarcaster: boolean

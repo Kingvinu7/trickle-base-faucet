@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { sdk as MiniappSDK } from '@farcaster/miniapp-sdk'
+import { sdk as MiniappSDK, Ready } from '@farcaster/miniapp-sdk'
 
 export function useFarcasterMiniapp() {
   const [sdk, setSdk] = useState<typeof MiniappSDK | null>(null)
@@ -11,13 +11,12 @@ export function useFarcasterMiniapp() {
   useEffect(() => {
     const initializeSDK = async () => {
       try {
-        // Initialize the Farcaster Miniapp SDK
-        const miniappSDK = new MiniappSDK()
+        // Use the SDK instance directly (it's already initialized)
+        setSdk(MiniappSDK)
         
         // Call the ready function to signal the miniapp is ready
-        await miniappSDK.ready()
+        await Ready()
         
-        setSdk(miniappSDK)
         setIsReady(true)
         
         console.log('Farcaster Miniapp SDK initialized and ready')

@@ -5,6 +5,7 @@ import { Toaster } from 'sonner'
 
 import { headers } from 'next/headers' // Import headers function
 import ContextProvider from '@/context' // Adjust import path if needed
+import { FarcasterMiniappProvider } from '@/components/farcaster-miniapp-provider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -94,18 +95,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className={inter.className}>
         {/* Wrap children with ContextProvider, passing cookies */}
         <ContextProvider cookies={cookies}>
-          {children}
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: 'hsl(var(--background))',
-                color: 'hsl(var(--foreground))',
-                border: '1px solid hsl(var(--border))',
-              },
-            }}
-          />
+          <FarcasterMiniappProvider>
+            {children}
+            <Toaster
+              position="top-center"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: 'hsl(var(--background))',
+                  color: 'hsl(var(--foreground))',
+                  border: '1px solid hsl(var(--border))',
+                },
+              }}
+            />
+          </FarcasterMiniappProvider>
         </ContextProvider>
       </body>
     </html>

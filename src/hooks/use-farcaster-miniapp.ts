@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { MiniappSDK } from '@farcaster/miniapp-sdk'
+import { sdk as MiniappSDK } from '@farcaster/miniapp-sdk'
 
 export function useFarcasterMiniapp() {
   const [sdk, setSdk] = useState<MiniappSDK | null>(null)

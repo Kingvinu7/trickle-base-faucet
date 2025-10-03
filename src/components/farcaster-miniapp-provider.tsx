@@ -2,7 +2,7 @@
 
 import { createContext, useContext, ReactNode } from 'react'
 import { useFarcasterMiniapp } from '@/hooks/use-farcaster-miniapp'
-import { MiniappSDK } from '@farcaster/miniapp-sdk'
+import { sdk as MiniappSDK } from '@farcaster/miniapp-sdk'
 
 interface FarcasterMiniappContextType {
   sdk: MiniappSDK | null

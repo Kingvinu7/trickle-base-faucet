@@ -10,19 +10,46 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Trickle - Base Faucet',
-  description: 'Get $0.025 worth of ETH for gas fees on Base mainnet',
-  keywords: ['Base', 'faucet', 'ETH', 'gas fees', 'crypto', 'web3'],
+  description: 'Get $0.025 worth of ETH for gas fees on Base mainnet. A Farcaster miniapp for seamless crypto transactions.',
+  keywords: ['Base', 'faucet', 'ETH', 'gas fees', 'crypto', 'web3', 'Farcaster', 'miniapp', 'Base network'],
   authors: [{ name: 'Trickle Team' }],
   openGraph: {
     title: 'Trickle - Base Faucet',
-    description: 'Get $0.025 worth of ETH for gas fees on Base mainnet',
+    description: 'Get $0.025 worth of ETH for gas fees on Base mainnet. A Farcaster miniapp for seamless crypto transactions.',
     type: 'website',
     locale: 'en_US',
+    url: 'https://trickle-faucet.vercel.app',
+    siteName: 'Trickle Base Faucet',
+    images: [
+      {
+        url: '/th.png',
+        width: 1200,
+        height: 630,
+        alt: 'Trickle Base Faucet - Get ETH for gas fees',
+      },
+      {
+        url: '/ti.png',
+        width: 800,
+        height: 600,
+        alt: 'Trickle Base Faucet Interface',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Trickle - Base Faucet',
-    description: 'Get $0.025 worth of ETH for gas fees on Base mainnet',
+    description: 'Get $0.025 worth of ETH for gas fees on Base mainnet. A Farcaster miniapp for seamless crypto transactions.',
+    images: ['/th.png'],
+  },
+  other: {
+    'farcaster:frame': 'vNext',
+    'farcaster:frame:image': '/th.png',
+    'farcaster:frame:button:1': 'Get ETH',
+    'farcaster:frame:button:1:action': 'link',
+    'farcaster:frame:button:1:target': 'https://trickle-faucet.vercel.app',
+    'farcaster:frame:button:2': 'View Stats',
+    'farcaster:frame:button:2:action': 'link',
+    'farcaster:frame:button:2:target': 'https://trickle-faucet.vercel.app',
   },
 }
 
@@ -41,9 +68,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" href="/th.png" />
+        <link rel="apple-touch-icon" href="/ti.png" />
         <link rel="manifest" href="/manifest.json" />
+        <link rel="canonical" href="https://trickle-faucet.vercel.app" />
+        <meta name="robots" content="index, follow" />
+        <meta name="googlebot" content="index, follow" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:site" content="@tricklefaucet" />
+        <meta name="twitter:creator" content="@tricklefaucet" />
+        <meta name="application-name" content="Trickle Base Faucet" />
+        <meta name="apple-mobile-web-app-title" content="Trickle Faucet" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-TileColor" content="#0052FF" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
       </head>
       <body className={inter.className}>
         {/* Wrap children with ContextProvider, passing cookies */}

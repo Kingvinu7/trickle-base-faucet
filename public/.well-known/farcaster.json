@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "name": "Trickle Base Faucet",
+  "description": "Get $0.025 worth of ETH for gas fees on Base mainnet. A Farcaster miniapp for seamless crypto transactions.",
+  "icon": "/th.png",
+  "splash": "/ti.png",
+  "url": "https://trickle-faucet.vercel.app",
+  "category": "utility",
+  "tags": ["Base", "faucet", "ETH", "gas fees", "crypto", "web3"],
+  "developer": {
+    "name": "Trickle Team",
+    "url": "https://trickle-faucet.vercel.app"
+  },
+  "permissions": [
+    "wallet:connect",
+    "wallet:sign",
+    "wallet:send_transaction"
+  ],
+  "features": [
+    "Base network support",
+    "WalletConnect integration",
+    "Real-time stats",
+    "Gas fee optimization"
+  ],
+  "screenshots": [
+    {
+      "url": "/tp.png",
+      "alt": "Trickle Faucet Interface"
+    },
+    {
+      "url": "/ts.png", 
+      "alt": "Trickle Faucet Stats"
+    }
+  ],
+  "miniapp": {
+    "version": "1.0.0",
+    "compatible_networks": ["Base"],
+    "supported_wallets": [
+      "MetaMask",
+      "Coinbase Wallet", 
+      "Trust Wallet",
+      "WalletConnect"
+    ]
+  }
+}

@@ -14,7 +14,7 @@
     "tags": ["Base", "faucet", "ETH", "gas", "web3"],
     "tagline": "Free ETH for Base transactions",
     "ogTitle": "Trickle - Base Faucet",
-    "ogDescription": "Get 0.025 worth of ETH for gas fees on Base mainnet. A Farcaster miniapp for seamless crypto transactions.",
+    "ogDescription": "Get 0.025 ETH for gas fees on Base mainnet. A Farcaster miniapp for crypto transactions.",
     "ogImageUrl": "https://trickle-base-faucet.vercel.app/tp.png",
     "castShareUrl": "https://trickle-base-faucet.vercel.app"
   },

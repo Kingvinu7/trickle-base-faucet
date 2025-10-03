@@ -1,45 +1,26 @@
 {
-  "version": "1.0",
-  "name": "Trickle Base Faucet",
-  "description": "Get $0.025 worth of ETH for gas fees on Base mainnet. A Farcaster miniapp for seamless crypto transactions.",
-  "icon": "/ti.png",
-  "splash": "/ts.png",
-  "url": "https://trickle-faucet.vercel.app",
-  "category": "utility",
-  "tags": ["Base", "faucet", "ETH", "gas fees", "crypto", "web3"],
-  "developer": {
-    "name": "Trickle Team",
-    "url": "https://trickle-faucet.vercel.app"
+  "frame": {
+    "name": "Trickle Base Faucet",
+    "version": "1",
+    "iconUrl": "https://trickle-faucet.vercel.app/ti.png",
+    "homeUrl": "https://trickle-faucet.vercel.app",
+    "imageUrl": "https://trickle-faucet.vercel.app/tp.png",
+    "buttonTitle": "Get ETH",
+    "splashImageUrl": "https://trickle-faucet.vercel.app/ts.png",
+    "splashBackgroundColor": "#0052FF",
+    "subtitle": "Base Faucet",
+    "description": "Get $0.025 worth of ETH for gas fees on Base mainnet. A Farcaster miniapp for seamless crypto transactions.",
+    "primaryCategory": "utility",
+    "tags": ["Base", "faucet", "ETH", "gas", "web3"],
+    "tagline": "Free ETH for Base transactions",
+    "ogTitle": "Trickle - Base Faucet",
+    "ogDescription": "Get $0.025 worth of ETH for gas fees on Base mainnet. A Farcaster miniapp for seamless crypto transactions.",
+    "ogImageUrl": "https://trickle-faucet.vercel.app/tp.png",
+    "castShareUrl": "https://trickle-faucet.vercel.app"
   },
-  "permissions": [
-    "wallet:connect",
-    "wallet:sign",
-    "wallet:send_transaction"
-  ],
-  "features": [
-    "Base network support",
-    "WalletConnect integration",
-    "Real-time stats",
-    "Gas fee optimization"
-  ],
-  "screenshots": [
-    {
-      "url": "/tp.png",
-      "alt": "Trickle Faucet Preview"
-    },
-    {
-      "url": "/th.png", 
-      "alt": "Trickle Faucet Hero"
-    }
-  ],
-  "miniapp": {
-    "version": "1.0.0",
-    "compatible_networks": ["Base"],
-    "supported_wallets": [
-      "MetaMask",
-      "Coinbase Wallet", 
-      "Trust Wallet",
-      "WalletConnect"
-    ]
+  "accountAssociation": {
+    "header": "eyJmaWQiOjI1MDg2OSwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDQwZUY3Qzc1YjRlRDBkQjY3N0MzN2VjODkxODM0QjI1MDk1ODI1ZDYifQ",
+    "payload": "eyJkb21haW4iOiJ0cmlja2xlLWJhc2UtZmF1Y2V0LnZlcmNlbC5hcHAifQ",
+    "signature": "MHgzZmZjODlkYmUwYzUwNzI1ZmU4NmRjMzgxNDNiYWM2ZjE0NDhmZGU2M2UxNzdkMzQ5M2UyM2E5NzkwMGQ2ZGQ4NDVhYmRlMDI5ZDk1YzZmOGU5MDA2YmYzOGE5NGNkYjYwZTc5NWMxNDg1MWY5NTU4OWJkMTBkOGZlOWM0MWM4NzFi"
   }
 }

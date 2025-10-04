@@ -12,24 +12,30 @@ interface StatsResponse {
 async function fetchStats(): Promise<StatsResponse> {
   try {
     // Try blockchain stats first
+    console.log('Fetching blockchain stats from:', `${API_BASE_URL}${API_ENDPOINTS.BLOCKCHAIN_STATS}`)
     const blockchainResponse = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BLOCKCHAIN_STATS}`)
     if (blockchainResponse.ok) {
       const data = await blockchainResponse.json()
+      console.log('Blockchain stats response:', data)
       if (data.source === 'blockchain' && data.totalClaims >= 0) {
+        console.log('Using blockchain stats:', data)
         return data
       }
     }
   } catch (error) {
-    console.warn('Blockchain stats failed, falling back to database stats')
+    console.warn('Blockchain stats failed, falling back to database stats', error)
   }
 
   try {
     // Fallback to database stats
+    console.log('Falling back to database stats from:', `${API_BASE_URL}${API_ENDPOINTS.STATS}`)
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.STATS}`)
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
-    return await response.json()
+    const data = await response.json()
+    console.log('Database stats response:', data)
+    return data
   } catch (error) {
     console.error('Failed to fetch stats:', error)
     return {

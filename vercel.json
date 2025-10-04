@@ -12,8 +12,8 @@
   "build": {
     "env": {
       "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID": "walletconnect_project_id",
-      "NEXT_PUBLIC_API_URL": "api_url",
-      "API_BASE_URL": "api_base_url"
+      "NEXT_PUBLIC_API_URL": "/api",
+      "API_BASE_URL": "/api"
     }
   },
   "functions": {
@@ -47,26 +47,6 @@
     {
       "source": "/api/proxy/(.*)",
       "destination": "/api/$1"
-    },
-    {
-      "source": "/api/health",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/api/stats", 
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/api/blockchain-stats",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/api/check-eligibility",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/api/log-claim",
-      "destination": "/api/index.js"
     }
   ]
 }

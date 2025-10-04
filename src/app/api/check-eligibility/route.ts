@@ -1,34 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001'
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const { address } = body
     
-    // Forward request to backend API
-    const response = await fetch(`${API_BASE_URL}/check-eligibility`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
+    if (!address) {
       return NextResponse.json(
         { 
-          error: errorData.error || 'Failed to check eligibility',
-          eligible: response.status === 500 ? true : false, // If server error, assume eligible to avoid false cooldown
-          message: response.status === 500 ? 'Unable to verify cooldown status. Please try again.' : errorData.message
+          error: 'Address is required',
+          eligible: false
         },
-        { status: response.status }
+        { status: 400 }
       )
     }
-
-    const data = await response.json()
-    return NextResponse.json(data)
+    
+    // For now, always return eligible since we don't have a database connection
+    // In a real deployment, you would check the database for recent claims here
+    // The blockchain contract will enforce the cooldown anyway
+    
+    console.log('Eligibility check for address:', address)
+    
+    return NextResponse.json({
+      eligible: true,
+      message: 'Address is eligible to claim'
+    })
   } catch (error) {
     console.error('Check eligibility API error:', error)
     

@@ -375,6 +375,15 @@ Add performance monitoring:
 4. Test thoroughly
 5. Submit a pull request
 
+### Git Configuration
+
+Make sure to configure your git user information before contributing:
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+```
+
 ### Development Guidelines
 
 - Use TypeScript for all new code

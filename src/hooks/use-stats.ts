@@ -13,7 +13,7 @@ async function fetchStats(): Promise<StatsResponse> {
   try {
     // Try blockchain stats first
     console.log('Fetching blockchain stats from:', `${API_BASE_URL}${API_ENDPOINTS.BLOCKCHAIN_STATS}`)
-    const blockchainResponse = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BLOCKCHAIN_STATS}`)
+    const blockchainResponse = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BLOCKCHAIN_STATS}?t=${Date.now()}`)
     if (blockchainResponse.ok) {
       const data = await blockchainResponse.json()
       console.log('Blockchain stats response:', data)
@@ -29,7 +29,7 @@ async function fetchStats(): Promise<StatsResponse> {
   try {
     // Fallback to database stats
     console.log('Falling back to database stats from:', `${API_BASE_URL}${API_ENDPOINTS.STATS}`)
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.STATS}`)
+    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.STATS}?t=${Date.now()}`)
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
@@ -51,7 +51,7 @@ export function useStats() {
     queryKey: ['stats'],
     queryFn: fetchStats,
     refetchInterval: 30000, // Refetch every 30 seconds
-    staleTime: 10000, // Consider data stale after 10 seconds
+    staleTime: 0, // Always consider data stale to force refetch
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   })

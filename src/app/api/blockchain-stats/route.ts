@@ -37,14 +37,16 @@ export async function GET(request: NextRequest) {
         console.log('Connected to network:', network.name, 'Chain ID:', network.chainId)
         break
       } catch (rpcError) {
-        console.log('RPC failed:', rpcUrl, rpcError.message)
+        const errorMessage = rpcError instanceof Error ? rpcError.message : String(rpcError)
+        console.log('RPC failed:', rpcUrl, errorMessage)
         lastError = rpcError
         continue
       }
     }
     
     if (!provider) {
-      throw new Error(`All RPC providers failed. Last error: ${lastError?.message}`)
+      const lastErrorMessage = lastError instanceof Error ? lastError.message : String(lastError)
+      throw new Error(`All RPC providers failed. Last error: ${lastErrorMessage}`)
     }
     
     // Create contract instance
@@ -58,7 +60,7 @@ export async function GET(request: NextRequest) {
       // Try to query events in smaller chunks to avoid RPC limits
       const blocksPerDay = 43200 // 86400 seconds / 2 seconds per block
       const chunkSize = 10000 // Query 10k blocks at a time
-      let allEvents = []
+      let allEvents: any[] = []
       let querySuccess = false
       
       try {
@@ -80,7 +82,8 @@ export async function GET(request: NextRequest) {
             allEvents = allEvents.concat(events)
             console.log(`Found ${events.length} events in this chunk`)
           } catch (chunkError) {
-            console.log(`Chunk failed: ${chunkError.message}`)
+            const chunkErrorMessage = chunkError instanceof Error ? chunkError.message : String(chunkError)
+            console.log(`Chunk failed: ${chunkErrorMessage}`)
             // Continue with other chunks
           }
         }
@@ -89,7 +92,8 @@ export async function GET(request: NextRequest) {
         console.log(`Total events found: ${allEvents.length}`)
         
       } catch (strategyError) {
-        console.log('Strategy 1 failed:', strategyError.message)
+        const strategyErrorMessage = strategyError instanceof Error ? strategyError.message : String(strategyError)
+        console.log('Strategy 1 failed:', strategyErrorMessage)
         
         // Strategy 2: Just try the last 1000 blocks
         try {
@@ -99,7 +103,8 @@ export async function GET(request: NextRequest) {
           querySuccess = true
           console.log(`Found ${allEvents.length} recent events`)
         } catch (fallbackError) {
-          console.log('Fallback also failed:', fallbackError.message)
+          const fallbackErrorMessage = fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
+          console.log('Fallback also failed:', fallbackErrorMessage)
         }
       }
       
@@ -151,7 +156,8 @@ export async function GET(request: NextRequest) {
       })
       
     } catch (queryError) {
-      console.error('Error querying events:', queryError.message)
+      const queryErrorMessage = queryError instanceof Error ? queryError.message : String(queryError)
+      console.error('Error querying events:', queryErrorMessage)
       
       // If querying events fails, try a simpler approach
       try {
@@ -174,18 +180,21 @@ export async function GET(request: NextRequest) {
           },
         })
       } catch (codeError) {
-        throw new Error(`Contract verification failed: ${codeError.message}`)
+        const codeErrorMessage = codeError instanceof Error ? codeError.message : String(codeError)
+        throw new Error(`Contract verification failed: ${codeErrorMessage}`)
       }
     }
     
   } catch (error) {
-    console.error('Blockchain stats error:', error.message)
-    console.error('Full error stack:', error.stack)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
+    console.error('Blockchain stats error:', errorMessage)
+    console.error('Full error stack:', errorStack)
     
     // Return error but don't fail completely
     return NextResponse.json({ 
       error: "Blockchain stats failed",
-      message: error.message,
+      message: errorMessage,
       fallback: true,
       timestamp: new Date().toISOString()
     }, { 

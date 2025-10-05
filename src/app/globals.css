@@ -108,3 +108,32 @@
 .spinner {
   @apply animate-spin rounded-full border-2 border-gray-300 border-t-trickle-blue;
 }
+
+/* Focus styles for accessibility */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-trickle-blue focus:ring-offset-2;
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Hover effects */
+.hover-lift {
+  @apply hover:transform hover:-translate-y-1 hover:shadow-lg transition-all duration-200;
+}
+
+/* Text selection */
+.select-none {
+  @apply select-none;
+}
+
+/* Custom button variants */
+.btn-primary {
+  @apply bg-gradient-to-r from-trickle-blue to-trickle-blue-light text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 focus-ring;
+}
+
+.btn-secondary {
+  @apply bg-white/20 backdrop-blur-sm text-gray-700 font-medium py-2 px-4 rounded-lg hover:bg-white/30 transition-all duration-200 focus-ring;
+}

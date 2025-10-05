@@ -17,8 +17,10 @@ export function Header() {
         animate={{ rotate: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
         className="mx-auto w-16 h-16 bg-gradient-to-br from-trickle-blue to-trickle-blue-light rounded-2xl flex items-center justify-center shadow-lg"
+        role="img"
+        aria-label="Trickle faucet logo"
       >
-        <Droplets className="w-8 h-8 text-white" />
+        <Droplets className="w-8 h-8 text-white" aria-hidden="true" />
       </motion.div>
 
       {/* Title */}
@@ -27,6 +29,7 @@ export function Header() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
         className="text-4xl font-bold gradient-text"
+        id="app-title"
       >
         Trickle
       </motion.h1>

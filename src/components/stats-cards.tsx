@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { TrendingUp, Users } from 'lucide-react'
+import { memo } from 'react'
 
 interface StatsCardsProps {
   totalClaims: number
@@ -9,7 +10,7 @@ interface StatsCardsProps {
   isLoading?: boolean
 }
 
-export function StatsCards({ totalClaims, dailyClaims, isLoading }: StatsCardsProps) {
+export const StatsCards = memo(function StatsCards({ totalClaims, dailyClaims, isLoading }: StatsCardsProps) {
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-US').format(num)
   }
@@ -84,4 +85,4 @@ export function StatsCards({ totalClaims, dailyClaims, isLoading }: StatsCardsPr
       </motion.div>
     </motion.div>
   )
-}
+})

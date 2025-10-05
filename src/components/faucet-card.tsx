@@ -36,7 +36,8 @@ export function FaucetCard() {
     try {
       open()
     } catch (error) {
-      toast.error('Failed to open wallet modal')
+      console.error('Wallet connection error:', error)
+      toast.error('Failed to open wallet modal. Please try again.')
     }
   }
 

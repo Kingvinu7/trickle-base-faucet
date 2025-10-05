@@ -204,6 +204,21 @@ export const FAUCET_CONTRACT = {
 export const SUPPORTED_CHAINS = [base]
 export const DEFAULT_CHAIN = base
 
+// Environment validation
+function validateEnvironment() {
+  const requiredEnvVars = ['NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID']
+  const missingVars = requiredEnvVars.filter(varName => !process.env[varName])
+  
+  if (missingVars.length > 0) {
+    console.warn(`Missing required environment variables: ${missingVars.join(', ')}`)
+  }
+}
+
+// Validate environment on module load
+if (typeof window === 'undefined') {
+  validateEnvironment()
+}
+
 // API Configuration - Use Next.js API routes as proxy
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api'
 

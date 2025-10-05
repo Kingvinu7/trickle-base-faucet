@@ -137,3 +137,24 @@ export function debounce<T extends (...args: any[]) => any>(
     timeout = setTimeout(later, wait)
   }
 }
+
+/**
+ * Check if the app is running in development mode
+ */
+export function isDevelopment(): boolean {
+  return process.env.NODE_ENV === 'development'
+}
+
+/**
+ * Check if the app is running in production mode
+ */
+export function isProduction(): boolean {
+  return process.env.NODE_ENV === 'production'
+}
+
+/**
+ * Get a random delay between min and max milliseconds
+ */
+export function getRandomDelay(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}

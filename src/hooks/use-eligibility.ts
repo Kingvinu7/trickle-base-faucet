@@ -6,8 +6,13 @@ import { API_BASE_URL, API_ENDPOINTS } from '@/config/constants'
 interface EligibilityResponse {
   eligible: boolean
   message?: string
-  nextClaimTime?: string
+  nextClaimTime?: string | null
   hoursRemaining?: number
+}
+
+interface EligibilityError extends Error {
+  status?: number
+  data?: any
 }
 
 async function checkEligibility(address: string): Promise<EligibilityResponse> {

@@ -124,11 +124,6 @@
   @apply hover:transform hover:-translate-y-1 hover:shadow-lg transition-all duration-200;
 }
 
-/* Text selection */
-.select-none {
-  @apply select-none;
-}
-
 /* Custom button variants */
 .btn-primary {
   @apply bg-gradient-to-r from-trickle-blue to-trickle-blue-light text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300 focus-ring;

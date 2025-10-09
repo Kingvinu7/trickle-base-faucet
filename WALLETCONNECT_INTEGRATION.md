@@ -1,47 +1,75 @@
 # WalletConnect SDK Integration Guide
 
+> **⚠️ NOTICE:** This document describes the legacy Web3Modal v4 integration.  
+> **For the current Reown AppKit integration, see:**
+> - **[REOWN_INTEGRATION.md](./REOWN_INTEGRATION.md)** - Complete setup guide
+> - **[REOWN_COMPLIANCE_REPORT.md](./REOWN_COMPLIANCE_REPORT.md)** - Compliance checklist
+> - **[REOWN_APPKIT_COMPARISON.md](./REOWN_APPKIT_COMPARISON.md)** - Feature comparison
+
+---
+
 ## 🔗 Overview
 
-This project integrates **WalletConnect SDK v4** (Web3Modal) to provide comprehensive wallet connectivity supporting **300+ wallets** across desktop, mobile, and browser platforms.
+This project now integrates **Reown AppKit** (formerly WalletConnect/Web3Modal) to provide comprehensive wallet connectivity supporting **300+ wallets** across desktop, mobile, and browser platforms.
+
+**Current Version:** Reown AppKit 1.8.6 (upgraded from Web3Modal v4)
 
 ## 📦 Packages Added
 
-The following WalletConnect-related packages were added to `package.json`:
+**UPDATED:** The project now uses Reown AppKit packages:
 
 ```json
 {
   "dependencies": {
-    "@web3modal/wagmi": "^4.1.7",    // Main WalletConnect modal
-    "@wagmi/core": "^2.6.5",        // Core Web3 functionality  
-    "wagmi": "^2.5.7",              // React hooks for Web3
-    "viem": "^2.7.15"               // Low-level Ethereum client
+    "@reown/appkit": "^1.8.6",                    // Reown AppKit (formerly Web3Modal)
+    "@reown/appkit-adapter-wagmi": "^1.8.6",      // Wagmi adapter
+    "@wagmi/core": "^2.6.5",                      // Core Web3 functionality  
+    "wagmi": "^2.5.7",                            // React hooks for Web3
+    "viem": "^2.7.15",                            // Low-level Ethereum client
+    "@tanstack/react-query": "^5.25.0"            // Query client
   }
 }
 ```
 
+**Migration:** `@web3modal/wagmi` → `@reown/appkit` + `@reown/appkit-adapter-wagmi`
+
 ## 🔧 Configuration Files
 
-### 1. Wagmi Configuration (`src/config/wagmi.ts`)
+### 1. Reown Configuration (`src/lib/reownConfig.ts`)
+**UPDATED:** Main configuration now uses Reown AppKit
 ```typescript
-// Main WalletConnect SDK configuration
-- Project ID setup
-- Supported chains (Base, Ethereum)
-- Wallet connectors (WalletConnect, Injected, Coinbase)
+// Reown AppKit configuration
+- Project ID setup with validation
+- Supported chains (Base, Ethereum, Arbitrum)
+- WagmiAdapter integration
 - Modal customization and theming
-- Featured wallet selection
+- Fallback handling
+- Global instance access (window.reownAppKit)
 ```
 
-### 2. Next.js Configuration (`next.config.js`)
+### 2. Wagmi Re-exports (`src/config/wagmi.ts`)
+**UPDATED:** Now re-exports from reownConfig.ts for backward compatibility
+```typescript
+// Re-exports configuration from reownConfig
+export { projectId, networks, wagmiAdapter, config } from '../lib/reownConfig'
+```
+
+### 3. Next.js Configuration (`next.config.js`)
 ```javascript
-// Webpack fallbacks for WalletConnect SDK
+// Webpack fallbacks for WalletConnect SDK (if needed)
 config.resolve.fallback = {
-  '@react-native-async-storage/async-storage': false  // Fix for MetaMask SDK
+  '@react-native-async-storage/async-storage': false
 };
 ```
 
-### 3. Environment Variables
+### 4. Environment Variables
+**UPDATED:** Variable name changed
 ```env
+# Old (deprecated)
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
+
+# New (current)
+NEXT_PUBLIC_PROJECT_ID=your_project_id_here
 ```
 
 ## 🎯 Supported Wallets
@@ -83,14 +111,18 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
 ## 🔍 Technical Implementation
 
 ### React Hooks Used:
+**UPDATED:** Reown AppKit hooks
 ```typescript
 import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
-import { useWeb3Modal } from '@web3modal/wagmi/react'
+// Web component for modal: <appkit-button />
+// Or programmatic: window.reownAppKit?.open()
 ```
 
 ### Key Components:
+**UPDATED:** New component structure
+- `src/lib/reownConfig.ts` - Main Reown AppKit configuration
+- `src/context/index.tsx` - Wagmi & AppKit provider setup
 - `src/components/faucet-card.tsx` - Main wallet integration
-- `src/components/providers.tsx` - Wagmi provider setup
 - `src/hooks/use-eligibility.ts` - Wallet-based eligibility checking
 - `src/hooks/use-faucet-claim.ts` - Smart contract interactions
 
@@ -179,17 +211,50 @@ themeVariables: {
 ## 📞 Support & Resources
 
 ### Documentation:
+**UPDATED:** New documentation links
+- [Reown AppKit Docs](https://docs.reown.com/appkit)
 - [WalletConnect Docs](https://docs.walletconnect.com/)
-- [Web3Modal Docs](https://docs.walletconnect.com/web3modal/about)
 - [Wagmi Documentation](https://wagmi.sh/)
+- **Internal**: [REOWN_INTEGRATION.md](./REOWN_INTEGRATION.md)
 
 ### Project ID:
-- Get your Project ID at [cloud.walletconnect.com](https://cloud.walletconnect.com)
-- Required for WalletConnect functionality
+**UPDATED:** Get from new dashboard
+- Get your Project ID at [dashboard.reown.com](https://dashboard.reown.com)
+- Required for Reown AppKit functionality
 - Free tier available with generous limits
+- Qualifies for WalletConnect Builder Rewards
 
 ---
 
-**Integration Date**: September 21, 2025  
-**WalletConnect SDK Version**: v4.1.7  
-**Implementation Status**: ✅ Complete and Production Ready
+## 🔄 Migration to Reown AppKit
+
+### What Changed?
+
+| Aspect | Old (Web3Modal v4) | New (Reown AppKit) |
+|--------|-------------------|-------------------|
+| **Package** | `@web3modal/wagmi` | `@reown/appkit` |
+| **Adapter** | Built-in | `@reown/appkit-adapter-wagmi` |
+| **Hook** | `useWeb3Modal()` | Web component or `window.reownAppKit` |
+| **Env Var** | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | `NEXT_PUBLIC_PROJECT_ID` |
+| **Dashboard** | cloud.walletconnect.com | dashboard.reown.com |
+
+### Why Reown?
+
+- ✅ WalletConnect rebranded to Reown
+- ✅ Better Next.js App Router support
+- ✅ Improved SSR handling
+- ✅ Enhanced features and stability
+- ✅ Builder rewards program integration
+
+### Migration Complete
+
+All features from Web3Modal v4 are preserved and enhanced in Reown AppKit.
+
+---
+
+**Original Integration Date**: September 21, 2025  
+**Reown Migration Date**: October 9, 2025  
+**Current Version**: Reown AppKit 1.8.6  
+**Implementation Status**: ✅ Migrated and Production Ready  
+
+**📖 For Current Documentation:** See [REOWN_INTEGRATION.md](./REOWN_INTEGRATION.md)

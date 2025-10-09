@@ -1,4 +1,5 @@
 import 'react';
+import type { AppKit } from '@reown/appkit'
 
 declare global {
   namespace JSX {
@@ -8,6 +9,19 @@ declare global {
        */
       'appkit-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
     }
+  }
+  
+  interface Window {
+    /**
+     * Global Reown AppKit instance for programmatic modal control
+     * @example
+     * // Open the wallet connection modal
+     * window.reownAppKit?.open()
+     * 
+     * // Close the modal
+     * window.reownAppKit?.close()
+     */
+    reownAppKit?: AppKit;
   }
 }
 

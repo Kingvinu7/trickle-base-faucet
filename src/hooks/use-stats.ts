@@ -48,15 +48,5 @@ export function useStats() {
     staleTime: 10000, // Consider data stale after 10 seconds
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    // Add placeholder data for better UX
-    placeholderData: {
-      totalClaims: 0,
-      claimsLast24h: 0,
-      source: 'database' as const
-    },
-    // Add error handling
-    onError: (error) => {
-      console.error('Stats query error:', error)
-    }
   })
 }

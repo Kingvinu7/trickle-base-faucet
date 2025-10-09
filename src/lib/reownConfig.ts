@@ -55,21 +55,22 @@ if (hasValidProjectId) {
     networks,
   })
 } else {
-  // ⚠️ Fallback to regular wagmi config without Reown
+  // ⚠️ Fallback: Use a placeholder project ID for basic functionality
   console.warn('⚠️ Reown Project ID not configured or invalid.')
   console.warn('📝 To enable Reown AppKit and qualify for WalletConnect weekly rewards:')
   console.warn('   1. Get a Project ID from https://dashboard.reown.com')
   console.warn('   2. Add NEXT_PUBLIC_PROJECT_ID to your .env.local file')
   console.warn('   3. Restart the development server')
-  console.warn('🔄 Using fallback wagmi configuration for now...')
+  console.warn('🔄 Using fallback configuration for now...')
   
-  // Create fallback WagmiAdapter without projectId for basic functionality
-  // This allows the app to work without Reown setup during development
+  // WagmiAdapter requires a projectId, so we use a placeholder for development
+  // This allows the app to compile and run without Reown setup
   wagmiAdapter = new WagmiAdapter({
     storage: createStorage({ 
       storage: cookieStorage 
     }),
     ssr: true,
+    projectId: 'fallback-development-mode', // Placeholder for development
     networks,
   })
 }

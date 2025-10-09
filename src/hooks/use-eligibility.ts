@@ -92,9 +92,5 @@ export function useEligibility(address?: string) {
       return failureCount < 2
     },
     retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 10000), // Shorter exponential backoff
-    // Handle errors gracefully
-    select: (data: EligibilityResponse) => data,
-    // Provide fallback data when there are network issues
-    placeholderData: { eligible: true, message: 'Checking eligibility...' }
   })
 }

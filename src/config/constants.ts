@@ -206,11 +206,12 @@ export const DEFAULT_CHAIN = base
 
 // Environment validation
 function validateEnvironment() {
-  const requiredEnvVars = ['NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID']
+  const requiredEnvVars = ['NEXT_PUBLIC_PROJECT_ID']
   const missingVars = requiredEnvVars.filter(varName => !process.env[varName])
   
   if (missingVars.length > 0) {
-    console.warn(`Missing required environment variables: ${missingVars.join(', ')}`)
+    console.warn(`Missing environment variables: ${missingVars.join(', ')}`)
+    console.warn('App will use fallback wagmi configuration')
   }
 }
 

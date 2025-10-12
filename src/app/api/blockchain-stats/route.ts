@@ -64,15 +64,19 @@ export async function GET(request: NextRequest) {
       let querySuccess = false
       
       try {
-        // Strategy 1: Query all events from contract deployment to get ALL TIME claims
-        // Base mainnet started at block 0, but the contract was deployed later
-        // We'll query from a reasonable starting block or 0 to get all historical data
-        const contractDeploymentBlock = 0 // Start from block 0 to get all claims
-        const fromBlock = contractDeploymentBlock
+        // Strategy 1: Query events from a reasonable timeframe (30 days) to get all-time claims
+        // This avoids rate limiting while still capturing all claims for a new faucet
+        const daysToQuery = 30 // Query last 30 days (should cover all claims for new faucet)
+        const totalBlocks = blocksPerDay * daysToQuery
+        const fromBlock = Math.max(0, currentBlock - totalBlocks)
         
-        console.log(`Attempting to query all-time events from block ${fromBlock} to ${currentBlock}`)
+        console.log(`Attempting to query all-time events from block ${fromBlock} (last ${daysToQuery} days) to ${currentBlock}`)
         
-        // Query in chunks to avoid RPC limits
+        // Helper function to add delay between requests
+        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+        
+        // Query in chunks with delays to avoid RPC rate limits
+        let chunkCount = 0
         for (let start = fromBlock; start < currentBlock; start += chunkSize) {
           const end = Math.min(start + chunkSize - 1, currentBlock)
           console.log(`Querying blocks ${start} to ${end}...`)
@@ -82,10 +86,21 @@ export async function GET(request: NextRequest) {
             const events = await contract.queryFilter(filter, start, end)
             allEvents = allEvents.concat(events)
             console.log(`Found ${events.length} events in this chunk`)
+            
+            // Add a small delay every 10 chunks to avoid rate limiting
+            chunkCount++
+            if (chunkCount % 10 === 0) {
+              await delay(100) // 100ms delay every 10 chunks
+            }
           } catch (chunkError) {
             const chunkErrorMessage = chunkError instanceof Error ? chunkError.message : String(chunkError)
             console.log(`Chunk failed: ${chunkErrorMessage}`)
-            // Continue with other chunks
+            
+            // If we hit rate limit, add longer delay and continue
+            if (chunkErrorMessage.includes('rate limit')) {
+              console.log('Rate limit hit, adding delay...')
+              await delay(500)
+            }
           }
         }
         
@@ -96,16 +111,26 @@ export async function GET(request: NextRequest) {
         const strategyErrorMessage = strategyError instanceof Error ? strategyError.message : String(strategyError)
         console.log('Strategy 1 failed:', strategyErrorMessage)
         
-        // Strategy 2: Just try the last 1000 blocks
-        try {
-          console.log('Trying fallback: last 1000 blocks only')
-          const filter = contract.filters.FundsDripped()
-          allEvents = await contract.queryFilter(filter, currentBlock - 1000, currentBlock)
-          querySuccess = true
-          console.log(`Found ${allEvents.length} recent events`)
-        } catch (fallbackError) {
-          const fallbackErrorMessage = fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
-          console.log('Fallback also failed:', fallbackErrorMessage)
+        // Strategy 2: Try progressively smaller timeframes if strategy 1 fails
+        const fallbackStrategies = [
+          { name: 'last 30 days', blocks: blocksPerDay * 30 },
+          { name: 'last 7 days', blocks: blocksPerDay * 7 },
+          { name: 'last 1 day', blocks: blocksPerDay },
+          { name: 'last 1000 blocks', blocks: 1000 }
+        ]
+        
+        for (const strategy of fallbackStrategies) {
+          try {
+            console.log(`Trying fallback: ${strategy.name}`)
+            const filter = contract.filters.FundsDripped()
+            allEvents = await contract.queryFilter(filter, currentBlock - strategy.blocks, currentBlock)
+            querySuccess = true
+            console.log(`Found ${allEvents.length} events using ${strategy.name}`)
+            break
+          } catch (fallbackError) {
+            const fallbackErrorMessage = fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
+            console.log(`${strategy.name} fallback failed:`, fallbackErrorMessage)
+          }
         }
       }
       

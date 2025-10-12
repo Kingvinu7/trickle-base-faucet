@@ -64,12 +64,13 @@ export async function GET(request: NextRequest) {
       let querySuccess = false
       
       try {
-        // Strategy 1: Try last 7 days in chunks
-        const daysToQuery = 7
-        const totalBlocks = blocksPerDay * daysToQuery
-        const fromBlock = Math.max(0, currentBlock - totalBlocks)
+        // Strategy 1: Query all events from contract deployment to get ALL TIME claims
+        // Base mainnet started at block 0, but the contract was deployed later
+        // We'll query from a reasonable starting block or 0 to get all historical data
+        const contractDeploymentBlock = 0 // Start from block 0 to get all claims
+        const fromBlock = contractDeploymentBlock
         
-        console.log(`Attempting to query ${daysToQuery} days of events (${totalBlocks} blocks)`)
+        console.log(`Attempting to query all-time events from block ${fromBlock} to ${currentBlock}`)
         
         // Query in chunks to avoid RPC limits
         for (let start = fromBlock; start < currentBlock; start += chunkSize) {
@@ -122,7 +123,7 @@ export async function GET(request: NextRequest) {
           currentBlock
         }, {
           headers: {
-            'Cache-Control': 'public, max-age=60, stale-while-revalidate=120',
+            'Cache-Control': 'public, max-age=10, stale-while-revalidate=20',
           },
         })
       }
@@ -151,7 +152,7 @@ export async function GET(request: NextRequest) {
         eventsQueried: allEvents.length
       }, {
         headers: {
-          'Cache-Control': 'public, max-age=60, stale-while-revalidate=120',
+          'Cache-Control': 'public, max-age=10, stale-while-revalidate=20',
         },
       })
       
@@ -176,7 +177,7 @@ export async function GET(request: NextRequest) {
           message: 'Contract found but unable to query events'
         }, {
           headers: {
-            'Cache-Control': 'public, max-age=60, stale-while-revalidate=120',
+            'Cache-Control': 'public, max-age=10, stale-while-revalidate=20',
           },
         })
       } catch (codeError) {

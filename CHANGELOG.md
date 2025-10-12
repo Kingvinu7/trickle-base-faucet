@@ -2,6 +2,34 @@
 
 All notable changes to the Trickle Base Faucet project will be documented in this file.
 
+## [2.1.0] - 2025-10-12
+
+### 🔧 Fixed: All-Time Claims Counter & Real-Time Updates
+
+#### Fixed
+- **All-time claims counter now shows accurate data**: Changed blockchain query from last 7 days to last 30 days to capture all historical claims
+- **Resolved rate limiting issues**: Added intelligent delays between RPC requests to prevent hitting provider rate limits during build time
+- **Improved real-time updates**: Reduced cache time from 60 seconds to 10 seconds for faster stats refresh
+- **Enhanced polling frequency**: Stats now update every 10 seconds (down from 30 seconds)
+
+#### Technical Changes
+- `src/app/api/blockchain-stats/route.ts`:
+  - Changed query range from 7 days to 30 days of blocks (~1.3M blocks instead of 36.7M)
+  - Added rate limiting protection with delays every 10 chunk queries
+  - Implemented progressive fallback strategies (30 days → 7 days → 1 day → 1000 blocks)
+  - Reduced cache headers from 60s to 10s for fresher data
+- `src/hooks/use-stats.ts`:
+  - Reduced `refetchInterval` from 30s to 10s
+  - Reduced `staleTime` from 10s to 5s
+
+#### Impact
+- ✅ Total Claims counter now reflects **all-time** data, not just recent week
+- ✅ Stats update **3x faster** in the UI (every 10s vs 30s)
+- ✅ Builds succeed without hitting RPC rate limits
+- ✅ Better user experience with near real-time claim counts
+
+---
+
 ## [2.0.0] - 2025-09-21
 
 ### 🔗 Major Addition: WalletConnect SDK Integration

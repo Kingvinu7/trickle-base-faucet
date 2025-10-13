@@ -97,13 +97,11 @@ export async function GET(request: NextRequest) {
         console.log('Strategy 1 failed:', strategyErrorMessage)
         
         // Strategy 2: Try progressively smaller timeframes if strategy 1 fails
-        // Use reasonable timeframes that won't hit rate limits
         const fallbackStrategies = [
-          { name: 'last 365 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 365) },
-          { name: 'last 180 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 180) },
-          { name: 'last 90 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 90) },
-          { name: 'last 30 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 30) },
-          { name: 'last 7 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 7) }
+          { name: 'last 14 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 14) },
+          { name: 'last 7 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 7) },
+          { name: 'last 3 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 3) },
+          { name: 'last 1 day', fromBlock: Math.max(0, currentBlock - blocksPerDay * 1) }
         ]
         
         for (const strategy of fallbackStrategies) {

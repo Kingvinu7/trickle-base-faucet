@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
         if (allEvents.length > 0) {
           console.log(`First event: block ${allEvents[0].blockNumber}`)
         } else {
-          console.warn('⚠️ No events found in last 7 days')
+          console.warn('⚠️ No events found in last 24 hours')
         }
         
       } catch (strategyError) {

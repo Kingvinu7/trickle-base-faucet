@@ -84,9 +84,9 @@ export async function GET(request: NextRequest) {
         console.log(`Found ${allEvents.length} events`)
         
         if (allEvents.length > 0) {
-          console.log(`First: ${allEvents[0].blockNumber}, Last: ${allEvents[allEvents.length - 1].blockNumber}`)
+          console.log(`First event: block ${allEvents[0].blockNumber}`)
         } else {
-          console.warn('⚠️ No events found in last 24 hours')
+          console.warn('⚠️ No events found in last 7 days')
         }
         
       } catch (strategyError) {
@@ -217,6 +217,11 @@ export async function GET(request: NextRequest) {
     }, { 
       status: 500,
       headers: {
+        'Cache-Control': 'no-cache',
+      },
+    })
+  }
+}eaders: {
         'Cache-Control': 'no-cache',
       },
     })

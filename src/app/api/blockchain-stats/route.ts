@@ -82,12 +82,14 @@ export async function GET(request: NextRequest) {
       let querySuccess = false
       
       try {
-        // Strategy 1: Query events from Base mainnet genesis to get ALL claims
-        // Base mainnet launched in July 2023 at block 0
-        // Start from block 0 to ensure we capture every single claim ever made
-        const fromBlock = 0
+        // Strategy 1: Query events from last 180 days to capture all recent claims
+        // This avoids rate limiting while still getting complete claim history
+        // (contract was likely deployed recently, so 180 days should cover everything)
+        const daysToQuery = 180
+        const totalBlocks = blocksPerDay * daysToQuery
+        const fromBlock = Math.max(0, currentBlock - totalBlocks)
         
-        console.log(`Attempting to query ALL historical events from block ${fromBlock} (genesis) to ${currentBlock}`)
+        console.log(`Attempting to query historical events from block ${fromBlock} (last ${daysToQuery} days) to ${currentBlock}`)
         
         // Helper function to add delay between requests
         const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))

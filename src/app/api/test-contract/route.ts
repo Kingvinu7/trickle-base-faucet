@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       contractExists,
       currentBlock,
       test1: {
-        description: 'Last 50,000 blocks (~11 days)',
+        description: 'Last 45,000 blocks (single query, under 50k limit)',
         fromBlock,
         toBlock: currentBlock,
         eventsFound: events.length,

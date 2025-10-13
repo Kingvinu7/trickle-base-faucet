@@ -23,13 +23,13 @@ export async function GET(request: NextRequest) {
       "event FundsDripped(address indexed recipient, uint256 amount)"
     ]
     
-    // Try multiple RPC providers for reliability
+    // Use Alchemy and premium RPC providers for better reliability
     const rpcUrls = [
-      'https://mainnet.base.org',
-      'https://base.llamarpc.com',
-      'https://base-rpc.publicnode.com',
-      'https://base-mainnet.public.blastapi.io',
-      'https://developer-access-mainnet.base.org'
+      'https://base-mainnet.g.alchemy.com/v2/demo',  // Alchemy demo (best reliability)
+      'https://base.gateway.tenderly.co',            // Tenderly
+      'https://base-rpc.publicnode.com',             // PublicNode
+      'https://base.llamarpc.com',                   // LlamaRPC
+      'https://mainnet.base.org'                     // Official Base RPC
     ]
     
     let provider = null

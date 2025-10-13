@@ -5,6 +5,24 @@ const FAUCET_CONTRACT_ADDRESS = '0xED4BDAb6870B57aB80a163cEe39196cA440C25a6'
 
 export async function GET(request: NextRequest) {
   try {
+    // During build time, return placeholder data to avoid rate limiting
+    // The data will be fetched at runtime when users visit the page
+    const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build'
+    
+    if (isBuildTime) {
+      console.log('Build time detected, returning placeholder data')
+      return NextResponse.json({
+        totalClaims: 0,
+        claimsLast24h: 0,
+        source: 'placeholder',
+        message: 'Build time - stats will load at runtime'
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=5, stale-while-revalidate=10',
+        },
+      })
+    }
+    
     // Import ethers dynamically
     const { ethers } = await import('ethers')
     
@@ -86,10 +104,10 @@ export async function GET(request: NextRequest) {
             allEvents = allEvents.concat(events)
             console.log(`Found ${events.length} events in this chunk`)
             
-            // Add a small delay every 10 chunks to avoid rate limiting
+            // Add delays to avoid rate limiting
             chunkCount++
-            if (chunkCount % 10 === 0) {
-              await delay(100) // 100ms delay every 10 chunks
+            if (chunkCount % 5 === 0) {
+              await delay(200) // 200ms delay every 5 chunks for better rate limit handling
             }
           } catch (chunkError) {
             const chunkErrorMessage = chunkError instanceof Error ? chunkError.message : String(chunkError)
@@ -111,14 +129,13 @@ export async function GET(request: NextRequest) {
         console.log('Strategy 1 failed:', strategyErrorMessage)
         
         // Strategy 2: Try progressively smaller timeframes if strategy 1 fails
-        // Start with very broad queries to capture as much as possible
+        // Use reasonable timeframes that won't hit rate limits
         const fallbackStrategies = [
-          { name: 'from block 0', fromBlock: 0 },
-          { name: 'last 1000 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 1000) },
-          { name: 'last 730 days (2 years)', fromBlock: Math.max(0, currentBlock - blocksPerDay * 730) },
           { name: 'last 365 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 365) },
           { name: 'last 180 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 180) },
-          { name: 'last 90 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 90) }
+          { name: 'last 90 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 90) },
+          { name: 'last 30 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 30) },
+          { name: 'last 7 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 7) }
         ]
         
         for (const strategy of fallbackStrategies) {
@@ -170,6 +187,10 @@ export async function GET(request: NextRequest) {
       
       console.log(`Claims in last 24h: ${claimsLast24h}`)
       
+      // Calculate the actual fromBlock that was queried
+      const daysQueried = 180
+      const queriedFromBlock = Math.max(0, currentBlock - (blocksPerDay * daysQueried))
+      
       return NextResponse.json({
         totalClaims,
         claimsLast24h,
@@ -177,8 +198,9 @@ export async function GET(request: NextRequest) {
         contractAddress: FAUCET_CONTRACT_ADDRESS,
         currentBlock,
         eventsQueried: allEvents.length,
-        queriedFromBlock: 0,
-        queriedToBlock: currentBlock
+        queriedFromBlock,
+        queriedToBlock: currentBlock,
+        daysQueried
       }, {
         headers: {
           'Cache-Control': 'public, max-age=5, stale-while-revalidate=10',

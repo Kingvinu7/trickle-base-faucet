@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
         const fromBlock = Math.max(0, currentBlock - totalBlocks)
         const totalChunks = Math.ceil(totalBlocks / CHUNK_SIZE)
         
-        console.log(`Querying ${totalBlocks} blocks in ${totalChunks} chunks of ${CHUNK_SIZE} blocks each`)
+        console.log(`Querying ${totalBlocks} blocks in ${totalChunks} chunks (7 days)`)
         
         const filter = contract.filters.FundsDripped()
         

@@ -47,7 +47,7 @@ export const StatsCards = memo(function StatsCards({ totalClaims, dailyClaims, i
               {formatNumber(totalClaims)}
             </motion.div>
             <div className="text-xs text-gray-500 font-medium">
-              Last 24h
+              Last 48h
             </div>
           </>
         )}

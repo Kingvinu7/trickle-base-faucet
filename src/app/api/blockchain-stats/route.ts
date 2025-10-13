@@ -65,28 +65,45 @@ export async function GET(request: NextRequest) {
       const currentBlock = await provider.getBlockNumber()
       console.log('Current block:', currentBlock)
       
-      // PROVEN APPROACH: Simple single query like simple-query endpoint
+      // Use 10k block chunking as requested
       const blocksPerDay = 43200 // 86400 seconds / 2 seconds per block
+      const CHUNK_SIZE = 10000 // 10k blocks per chunk
       let allEvents: any[] = []
       let querySuccess = false
       
       try {
-        // Query last 24 hours only - proven to work from simple-query
-        const daysToQuery = 1
-        const fromBlock = Math.max(0, currentBlock - blocksPerDay)
+        // Query last 2 days with 10k chunks (9 chunks = ~9 seconds, under timeout)
+        const daysToQuery = 2
+        const totalBlocks = blocksPerDay * daysToQuery
+        const fromBlock = Math.max(0, currentBlock - totalBlocks)
+        const numChunks = Math.ceil(totalBlocks / CHUNK_SIZE)
         
-        console.log(`Querying last 24 hours: blocks ${fromBlock} to ${currentBlock}`)
+        console.log(`Querying ${daysToQuery} days in ${numChunks} chunks of 10k blocks`)
         
         const filter = contract.filters.FundsDripped()
-        allEvents = await contract.queryFilter(filter, fromBlock, currentBlock)
+        
+        // Query in 10k block chunks
+        for (let start = fromBlock; start < currentBlock; start += CHUNK_SIZE) {
+          const end = Math.min(start + CHUNK_SIZE - 1, currentBlock)
+          
+          try {
+            const events = await contract.queryFilter(filter, start, end)
+            if (events.length > 0) {
+              console.log(`Found ${events.length} events in chunk`)
+              allEvents = allEvents.concat(events)
+            }
+          } catch (chunkError) {
+            console.log(`Chunk failed:`, chunkError instanceof Error ? chunkError.message : String(chunkError))
+          }
+        }
         
         querySuccess = true
-        console.log(`Found ${allEvents.length} events`)
+        console.log(`Total: ${allEvents.length} events in last ${daysToQuery} days`)
         
         if (allEvents.length > 0) {
-          console.log(`First event: block ${allEvents[0].blockNumber}`)
+          console.log(`First: ${allEvents[0].blockNumber}, Last: ${allEvents[allEvents.length - 1].blockNumber}`)
         } else {
-          console.warn('⚠️ No events found in last 24 hours')
+          console.warn('⚠️ No events found in queried range')
         }
         
       } catch (strategyError) {

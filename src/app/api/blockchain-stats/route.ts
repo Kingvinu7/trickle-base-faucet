@@ -72,8 +72,8 @@ export async function GET(request: NextRequest) {
       let querySuccess = false
       
       try {
-        // Strategy 1: Query last 60 days in chunks of 45k blocks
-        const daysToQuery = 60
+        // Strategy 1: Query last 30 days in a single query (proven to work from simple-query)
+        const daysToQuery = 30
         const totalBlocks = blocksPerDay * daysToQuery
         const fromBlock = Math.max(0, currentBlock - totalBlocks)
         
@@ -81,28 +81,16 @@ export async function GET(request: NextRequest) {
         
         const filter = contract.filters.FundsDripped()
         
-        // Query in chunks of max 45k blocks
-        for (let start = fromBlock; start < currentBlock; start += MAX_BLOCKS_PER_QUERY) {
-          const end = Math.min(start + MAX_BLOCKS_PER_QUERY - 1, currentBlock)
-          console.log(`Querying chunk: ${start} to ${end}`)
-          
-          try {
-            const events = await contract.queryFilter(filter, start, end)
-            allEvents = allEvents.concat(events)
-            console.log(`Found ${events.length} events in this chunk`)
-          } catch (chunkError) {
-            console.log(`Chunk failed:`, chunkError instanceof Error ? chunkError.message : String(chunkError))
-            // Continue with next chunk even if one fails
-          }
-        }
+        // Single query - if this works for 1 day, it should work for 30 days (1.3M blocks)
+        allEvents = await contract.queryFilter(filter, fromBlock, currentBlock)
         
         querySuccess = true
         console.log(`Total events found: ${allEvents.length}`)
         
         if (allEvents.length > 0) {
-          console.log('Sample event:', allEvents[0])
+          console.log('Sample events:', allEvents.slice(0, 3))
         } else {
-          console.warn('⚠️ No events found in queried range')
+          console.warn('⚠️ No events found in last 30 days')
         }
         
       } catch (strategyError) {

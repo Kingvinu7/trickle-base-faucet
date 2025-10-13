@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         from: fromBlock,
         to: currentBlock,
         blocks: currentBlock - fromBlock,
-        days: 7
+        days: 1
       },
       eventsFound: events.length,
       events: events.map(e => ({

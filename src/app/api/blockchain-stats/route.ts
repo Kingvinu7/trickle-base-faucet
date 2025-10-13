@@ -64,9 +64,9 @@ export async function GET(request: NextRequest) {
       let querySuccess = false
       
       try {
-        // Strategy 1: Query events from a reasonable timeframe (30 days) to get all-time claims
-        // This avoids rate limiting while still capturing all claims for a new faucet
-        const daysToQuery = 30 // Query last 30 days (should cover all claims for new faucet)
+        // Strategy 1: Query events from contract deployment to get ALL claims
+        // Base mainnet launched in August 2023, so we query from far enough back to capture everything
+        const daysToQuery = 800 // Query ~2+ years to ensure we get all historical claims
         const totalBlocks = blocksPerDay * daysToQuery
         const fromBlock = Math.max(0, currentBlock - totalBlocks)
         
@@ -113,10 +113,11 @@ export async function GET(request: NextRequest) {
         
         // Strategy 2: Try progressively smaller timeframes if strategy 1 fails
         const fallbackStrategies = [
+          { name: 'last 365 days', blocks: blocksPerDay * 365 },
+          { name: 'last 180 days', blocks: blocksPerDay * 180 },
+          { name: 'last 90 days', blocks: blocksPerDay * 90 },
           { name: 'last 30 days', blocks: blocksPerDay * 30 },
-          { name: 'last 7 days', blocks: blocksPerDay * 7 },
-          { name: 'last 1 day', blocks: blocksPerDay },
-          { name: 'last 1000 blocks', blocks: 1000 }
+          { name: 'last 7 days', blocks: blocksPerDay * 7 }
         ]
         
         for (const strategy of fallbackStrategies) {

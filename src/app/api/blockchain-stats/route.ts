@@ -212,7 +212,9 @@ export async function GET(request: NextRequest) {
         daysQueried
       }, {
         headers: {
-          'Cache-Control': 'public, max-age=5, stale-while-revalidate=10',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
       })
       

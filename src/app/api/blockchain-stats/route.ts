@@ -9,6 +9,12 @@ export async function GET(request: NextRequest) {
     // The data will be fetched at runtime when users visit the page
     const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build'
     
+    console.log('Blockchain stats API called', {
+      isBuildTime,
+      NEXT_PHASE: process.env.NEXT_PHASE,
+      timestamp: new Date().toISOString()
+    })
+    
     if (isBuildTime) {
       console.log('Build time detected, returning placeholder data')
       return NextResponse.json({
@@ -22,6 +28,8 @@ export async function GET(request: NextRequest) {
         },
       })
     }
+    
+    console.log('Runtime detected - fetching actual blockchain data')
     
     // Import ethers dynamically
     const { ethers } = await import('ethers')
@@ -82,10 +90,9 @@ export async function GET(request: NextRequest) {
       let querySuccess = false
       
       try {
-        // Strategy 1: Query events from last 180 days to capture all recent claims
-        // This avoids rate limiting while still getting complete claim history
-        // (contract was likely deployed recently, so 180 days should cover everything)
-        const daysToQuery = 180
+        // Strategy 1: Query events from last 730 days (2 years) to capture all claims
+        // This ensures we get all historical data while managing rate limits
+        const daysToQuery = 730
         const totalBlocks = blocksPerDay * daysToQuery
         const fromBlock = Math.max(0, currentBlock - totalBlocks)
         
@@ -108,8 +115,8 @@ export async function GET(request: NextRequest) {
             
             // Add delays to avoid rate limiting
             chunkCount++
-            if (chunkCount % 5 === 0) {
-              await delay(200) // 200ms delay every 5 chunks for better rate limit handling
+            if (chunkCount % 3 === 0) {
+              await delay(300) // 300ms delay every 3 chunks for better rate limit handling
             }
           } catch (chunkError) {
             const chunkErrorMessage = chunkError instanceof Error ? chunkError.message : String(chunkError)
@@ -190,7 +197,7 @@ export async function GET(request: NextRequest) {
       console.log(`Claims in last 24h: ${claimsLast24h}`)
       
       // Calculate the actual fromBlock that was queried
-      const daysQueried = 180
+      const daysQueried = 730
       const queriedFromBlock = Math.max(0, currentBlock - (blocksPerDay * daysQueried))
       
       return NextResponse.json({

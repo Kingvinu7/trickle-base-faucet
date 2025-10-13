@@ -106,10 +106,9 @@ export async function GET(request: NextRequest) {
         console.log(`Total events found: ${allEvents.length}`)
         
         if (allEvents.length > 0) {
-          console.log('First event:', allEvents[0])
-          console.log('Last event:', allEvents[allEvents.length - 1])
+          console.log(`Sample: Block ${allEvents[0].blockNumber} to ${allEvents[allEvents.length - 1].blockNumber}`)
         } else {
-          console.warn('⚠️ No events found in 60 days')
+          console.warn('⚠️ No events found in last 3 days')
         }
         
       } catch (strategyError) {
@@ -174,7 +173,7 @@ export async function GET(request: NextRequest) {
       console.log(`Claims in last 24h: ${claimsLast24h}`)
       
       // Calculate the actual fromBlock that was queried
-      const daysQueried = 60
+      const daysQueried = 3
       const queriedFromBlock = Math.max(0, currentBlock - (blocksPerDay * daysQueried))
       
       return NextResponse.json({

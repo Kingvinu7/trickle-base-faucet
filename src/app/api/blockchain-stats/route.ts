@@ -65,45 +65,23 @@ export async function GET(request: NextRequest) {
       const currentBlock = await provider.getBlockNumber()
       console.log('Current block:', currentBlock)
       
-      // Use 40k block chunks to reduce number of requests
+      // PROVEN APPROACH: Simple single query like simple-query endpoint
       const blocksPerDay = 43200 // 86400 seconds / 2 seconds per block
-      const CHUNK_SIZE = 40000 // Under 50k limit, minimizes chunks
       let allEvents: any[] = []
       let querySuccess = false
       
       try {
-        // Strategy 1: Query last 7 days in 40k block chunks  
-        const daysToQuery = 7
-        const totalBlocks = blocksPerDay * daysToQuery
-        const fromBlock = Math.max(0, currentBlock - totalBlocks)
-        const totalChunks = Math.ceil(totalBlocks / CHUNK_SIZE)
+        // Query last 24 hours only - proven to work from simple-query
+        const daysToQuery = 1
+        const fromBlock = Math.max(0, currentBlock - blocksPerDay)
         
-        console.log(`Querying ${totalBlocks} blocks in ${totalChunks} chunks (7 days)`)
+        console.log(`Querying last 24 hours: blocks ${fromBlock} to ${currentBlock}`)
         
         const filter = contract.filters.FundsDripped()
-        
-        // Query in 10k block chunks
-        let successfulChunks = 0
-        for (let start = fromBlock; start < currentBlock; start += CHUNK_SIZE) {
-          const end = Math.min(start + CHUNK_SIZE - 1, currentBlock)
-          
-          try {
-            const events = await contract.queryFilter(filter, start, end)
-            allEvents = allEvents.concat(events)
-            successfulChunks++
-            
-            if (events.length > 0) {
-              console.log(`Chunk ${successfulChunks}/${totalChunks}: Found ${events.length} events`)
-            }
-          } catch (chunkError) {
-            console.log(`Chunk failed:`, chunkError instanceof Error ? chunkError.message : String(chunkError))
-          }
-        }
-        
-        console.log(`Completed ${successfulChunks}/${totalChunks} chunks`)
+        allEvents = await contract.queryFilter(filter, fromBlock, currentBlock)
         
         querySuccess = true
-        console.log(`Total events found: ${allEvents.length}`)
+        console.log(`Found ${allEvents.length} events`)
         
         if (allEvents.length > 0) {
           console.log(`First: ${allEvents[0].blockNumber}, Last: ${allEvents[allEvents.length - 1].blockNumber}`)

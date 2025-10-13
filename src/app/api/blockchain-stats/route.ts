@@ -64,13 +64,12 @@ export async function GET(request: NextRequest) {
       let querySuccess = false
       
       try {
-        // Strategy 1: Query events from contract deployment to get ALL claims
-        // Base mainnet launched in August 2023, so we query from far enough back to capture everything
-        const daysToQuery = 800 // Query ~2+ years to ensure we get all historical claims
-        const totalBlocks = blocksPerDay * daysToQuery
-        const fromBlock = Math.max(0, currentBlock - totalBlocks)
+        // Strategy 1: Query events from Base mainnet genesis to get ALL claims
+        // Base mainnet launched in July 2023 at block 0
+        // Start from block 0 to ensure we capture every single claim ever made
+        const fromBlock = 0
         
-        console.log(`Attempting to query all-time events from block ${fromBlock} (last ${daysToQuery} days) to ${currentBlock}`)
+        console.log(`Attempting to query ALL historical events from block ${fromBlock} (genesis) to ${currentBlock}`)
         
         // Helper function to add delay between requests
         const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
@@ -112,19 +111,21 @@ export async function GET(request: NextRequest) {
         console.log('Strategy 1 failed:', strategyErrorMessage)
         
         // Strategy 2: Try progressively smaller timeframes if strategy 1 fails
+        // Start with very broad queries to capture as much as possible
         const fallbackStrategies = [
-          { name: 'last 365 days', blocks: blocksPerDay * 365 },
-          { name: 'last 180 days', blocks: blocksPerDay * 180 },
-          { name: 'last 90 days', blocks: blocksPerDay * 90 },
-          { name: 'last 30 days', blocks: blocksPerDay * 30 },
-          { name: 'last 7 days', blocks: blocksPerDay * 7 }
+          { name: 'from block 0', fromBlock: 0 },
+          { name: 'last 1000 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 1000) },
+          { name: 'last 730 days (2 years)', fromBlock: Math.max(0, currentBlock - blocksPerDay * 730) },
+          { name: 'last 365 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 365) },
+          { name: 'last 180 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 180) },
+          { name: 'last 90 days', fromBlock: Math.max(0, currentBlock - blocksPerDay * 90) }
         ]
         
         for (const strategy of fallbackStrategies) {
           try {
-            console.log(`Trying fallback: ${strategy.name}`)
+            console.log(`Trying fallback: ${strategy.name} (from block ${strategy.fromBlock})`)
             const filter = contract.filters.FundsDripped()
-            allEvents = await contract.queryFilter(filter, currentBlock - strategy.blocks, currentBlock)
+            allEvents = await contract.queryFilter(filter, strategy.fromBlock, currentBlock)
             querySuccess = true
             console.log(`Found ${allEvents.length} events using ${strategy.name}`)
             break
@@ -175,10 +176,12 @@ export async function GET(request: NextRequest) {
         source: 'blockchain',
         contractAddress: FAUCET_CONTRACT_ADDRESS,
         currentBlock,
-        eventsQueried: allEvents.length
+        eventsQueried: allEvents.length,
+        queriedFromBlock: 0,
+        queriedToBlock: currentBlock
       }, {
         headers: {
-          'Cache-Control': 'public, max-age=10, stale-while-revalidate=20',
+          'Cache-Control': 'public, max-age=5, stale-while-revalidate=10',
         },
       })
       

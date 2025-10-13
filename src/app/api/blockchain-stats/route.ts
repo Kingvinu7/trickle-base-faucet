@@ -65,25 +65,42 @@ export async function GET(request: NextRequest) {
       const currentBlock = await provider.getBlockNumber()
       console.log('Current block:', currentBlock)
       
-      // RPC providers have a 50k block limit per query, so we need to chunk
+      // Use 10k block chunks for safety and reliability
       const blocksPerDay = 43200 // 86400 seconds / 2 seconds per block
-      const MAX_BLOCKS_PER_QUERY = 45000 // Stay under 50k limit
+      const CHUNK_SIZE = 10000 // Safe chunk size - well under any RPC limit
       let allEvents: any[] = []
       let querySuccess = false
       
       try {
-        // Strategy 1: Query last 7 days - balanced between coverage and RPC limits
-        // simple-query proved 1 day works, 7 days should also work without overload
-        const daysToQuery = 7
+        // Strategy 1: Query last 60 days in 10k block chunks
+        const daysToQuery = 60
         const totalBlocks = blocksPerDay * daysToQuery
         const fromBlock = Math.max(0, currentBlock - totalBlocks)
+        const totalChunks = Math.ceil(totalBlocks / CHUNK_SIZE)
         
-        console.log(`Querying ${totalBlocks} blocks from ${fromBlock} to ${currentBlock} (${daysToQuery} days)`)
+        console.log(`Querying ${totalBlocks} blocks in ${totalChunks} chunks of ${CHUNK_SIZE} blocks each`)
         
         const filter = contract.filters.FundsDripped()
         
-        // Single query for 7 days (302k blocks) - proven approach
-        allEvents = await contract.queryFilter(filter, fromBlock, currentBlock)
+        // Query in 10k block chunks
+        let successfulChunks = 0
+        for (let start = fromBlock; start < currentBlock; start += CHUNK_SIZE) {
+          const end = Math.min(start + CHUNK_SIZE - 1, currentBlock)
+          
+          try {
+            const events = await contract.queryFilter(filter, start, end)
+            allEvents = allEvents.concat(events)
+            successfulChunks++
+            
+            if (events.length > 0) {
+              console.log(`Chunk ${successfulChunks}/${totalChunks}: Found ${events.length} events`)
+            }
+          } catch (chunkError) {
+            console.log(`Chunk failed:`, chunkError instanceof Error ? chunkError.message : String(chunkError))
+          }
+        }
+        
+        console.log(`Completed ${successfulChunks}/${totalChunks} chunks`)
         
         querySuccess = true
         console.log(`Total events found: ${allEvents.length}`)

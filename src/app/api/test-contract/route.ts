@@ -37,17 +37,31 @@ export async function GET(request: NextRequest) {
     const code = await provider.getCode(FAUCET_CONTRACT_ADDRESS)
     const contractExists = code !== '0x'
     
-    // Test 2: Try to get events from last 50k blocks (about 11 days)
+    // Test 2: Try to get events from last 45k blocks (under 50k limit)
     const contractABI = ["event FundsDripped(address indexed recipient, uint256 amount)"]
     const contract = new ethers.Contract(FAUCET_CONTRACT_ADDRESS, contractABI, provider)
     
-    const fromBlock = Math.max(0, currentBlock - 50000)
+    const fromBlock = Math.max(0, currentBlock - 45000)
     const filter = contract.filters.FundsDripped()
     const events = await contract.queryFilter(filter, fromBlock, currentBlock)
     
-    // Test 3: Get a wider range - last 200k blocks (about 46 days)
-    const widerFrom = Math.max(0, currentBlock - 200000)
-    const widerEvents = await contract.queryFilter(filter, widerFrom, currentBlock)
+    // Test 3: Query 60 days in chunks (to test chunking logic)
+    console.log('Testing chunked query for 60 days...')
+    const daysToQuery = 60
+    const blocksPerDay = 43200
+    const totalBlocks = blocksPerDay * daysToQuery
+    const chunkSize = 45000
+    let widerEvents: any[] = []
+    
+    for (let start = Math.max(0, currentBlock - totalBlocks); start < currentBlock; start += chunkSize) {
+      const end = Math.min(start + chunkSize - 1, currentBlock)
+      try {
+        const chunkEvents = await contract.queryFilter(filter, start, end)
+        widerEvents = widerEvents.concat(chunkEvents)
+      } catch (e) {
+        console.log('Chunk failed:', e)
+      }
+    }
     
     return NextResponse.json({
       contractAddress: FAUCET_CONTRACT_ADDRESS,

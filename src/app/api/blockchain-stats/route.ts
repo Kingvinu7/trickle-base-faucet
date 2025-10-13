@@ -65,15 +65,15 @@ export async function GET(request: NextRequest) {
       const currentBlock = await provider.getBlockNumber()
       console.log('Current block:', currentBlock)
       
-      // Use 10k block chunks for safety and reliability
+      // Use 40k block chunks to reduce number of requests
       const blocksPerDay = 43200 // 86400 seconds / 2 seconds per block
-      const CHUNK_SIZE = 10000 // Safe chunk size - well under any RPC limit
+      const CHUNK_SIZE = 40000 // Under 50k limit, minimizes chunks
       let allEvents: any[] = []
       let querySuccess = false
       
       try {
-        // Strategy 1: Query last 60 days in 10k block chunks
-        const daysToQuery = 60
+        // Strategy 1: Query last 7 days in 40k block chunks  
+        const daysToQuery = 7
         const totalBlocks = blocksPerDay * daysToQuery
         const fromBlock = Math.max(0, currentBlock - totalBlocks)
         const totalChunks = Math.ceil(totalBlocks / CHUNK_SIZE)

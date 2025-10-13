@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const FAUCET_CONTRACT_ADDRESS = '0xED4BDAb6870B57aB80a163cEe39196cA440C25a6'
 
+// Force dynamic to ensure this runs at request time
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const { ethers } = await import('ethers')

@@ -72,8 +72,9 @@ export async function GET(request: NextRequest) {
       let querySuccess = false
       
       try {
-        // Strategy 1: Query last 30 days in a single query (proven to work from simple-query)
-        const daysToQuery = 30
+        // Strategy 1: Query last 7 days - balanced between coverage and RPC limits
+        // simple-query proved 1 day works, 7 days should also work without overload
+        const daysToQuery = 7
         const totalBlocks = blocksPerDay * daysToQuery
         const fromBlock = Math.max(0, currentBlock - totalBlocks)
         
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
         
         const filter = contract.filters.FundsDripped()
         
-        // Single query - if this works for 1 day, it should work for 30 days (1.3M blocks)
+        // Single query for 7 days (302k blocks) - proven approach
         allEvents = await contract.queryFilter(filter, fromBlock, currentBlock)
         
         querySuccess = true

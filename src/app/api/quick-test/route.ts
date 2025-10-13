@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const filter = contract.filters.FundsDripped()
     const events = await contract.queryFilter(filter, fromBlock, currentBlock)
     
-    console.log(`Found ${events.length} events in last 7 days`)
+    console.log(`Found ${events.length} events in last 1 day`)
     
     return NextResponse.json({
       success: true,

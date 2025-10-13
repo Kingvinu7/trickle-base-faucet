@@ -5,31 +5,9 @@ const FAUCET_CONTRACT_ADDRESS = '0xED4BDAb6870B57aB80a163cEe39196cA440C25a6'
 
 export async function GET(request: NextRequest) {
   try {
-    // During build time, return placeholder data to avoid rate limiting
-    // The data will be fetched at runtime when users visit the page
-    const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build'
-    
     console.log('Blockchain stats API called', {
-      isBuildTime,
-      NEXT_PHASE: process.env.NEXT_PHASE,
       timestamp: new Date().toISOString()
     })
-    
-    if (isBuildTime) {
-      console.log('Build time detected, returning placeholder data')
-      return NextResponse.json({
-        totalClaims: 0,
-        claimsLast24h: 0,
-        source: 'placeholder',
-        message: 'Build time - stats will load at runtime'
-      }, {
-        headers: {
-          'Cache-Control': 'public, max-age=5, stale-while-revalidate=10',
-        },
-      })
-    }
-    
-    console.log('Runtime detected - fetching actual blockchain data')
     
     // Import ethers dynamically
     const { ethers } = await import('ethers')

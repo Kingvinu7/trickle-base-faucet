@@ -221,9 +221,4 @@ export async function GET(request: NextRequest) {
       },
     })
   }
-}eaders: {
-        'Cache-Control': 'no-cache',
-      },
-    })
-  }
 }

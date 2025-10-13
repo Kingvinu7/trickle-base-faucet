@@ -174,7 +174,7 @@ export async function GET(request: NextRequest) {
       console.log(`Claims in last 24h: ${claimsLast24h}`)
       
       // Calculate the actual fromBlock that was queried
-      const daysQueried = 30
+      const daysQueried = 60
       const queriedFromBlock = Math.max(0, currentBlock - (blocksPerDay * daysQueried))
       
       return NextResponse.json({

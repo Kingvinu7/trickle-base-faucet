@@ -65,31 +65,44 @@ export async function GET(request: NextRequest) {
       const currentBlock = await provider.getBlockNumber()
       console.log('Current block:', currentBlock)
       
-      // Try to query events in smaller chunks to avoid RPC limits
+      // RPC providers have a 50k block limit per query, so we need to chunk
       const blocksPerDay = 43200 // 86400 seconds / 2 seconds per block
-      const chunkSize = 10000 // Query 10k blocks at a time
+      const MAX_BLOCKS_PER_QUERY = 45000 // Stay under 50k limit
       let allEvents: any[] = []
       let querySuccess = false
       
       try {
-        // Strategy 1: Simple single query for last 30 days (no chunking to avoid complexity)
-        // This should complete in under 5 seconds
-        const daysToQuery = 30
+        // Strategy 1: Query last 60 days in chunks of 45k blocks
+        const daysToQuery = 60
         const totalBlocks = blocksPerDay * daysToQuery
         const fromBlock = Math.max(0, currentBlock - totalBlocks)
         
-        console.log(`Querying events from block ${fromBlock} to ${currentBlock} (${daysToQuery} days)`)
+        console.log(`Querying ${totalBlocks} blocks from ${fromBlock} to ${currentBlock} (${daysToQuery} days)`)
         
         const filter = contract.filters.FundsDripped()
-        allEvents = await contract.queryFilter(filter, fromBlock, currentBlock)
+        
+        // Query in chunks of max 45k blocks
+        for (let start = fromBlock; start < currentBlock; start += MAX_BLOCKS_PER_QUERY) {
+          const end = Math.min(start + MAX_BLOCKS_PER_QUERY - 1, currentBlock)
+          console.log(`Querying chunk: ${start} to ${end}`)
+          
+          try {
+            const events = await contract.queryFilter(filter, start, end)
+            allEvents = allEvents.concat(events)
+            console.log(`Found ${events.length} events in this chunk`)
+          } catch (chunkError) {
+            console.log(`Chunk failed:`, chunkError instanceof Error ? chunkError.message : String(chunkError))
+            // Continue with next chunk even if one fails
+          }
+        }
         
         querySuccess = true
-        console.log(`Found ${allEvents.length} events`)
+        console.log(`Total events found: ${allEvents.length}`)
         
         if (allEvents.length > 0) {
           console.log('Sample event:', allEvents[0])
         } else {
-          console.warn('⚠️ No events found in last 30 days')
+          console.warn('⚠️ No events found in queried range')
         }
         
       } catch (strategyError) {

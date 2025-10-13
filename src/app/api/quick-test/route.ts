@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
     const provider = new ethers.JsonRpcProvider('https://base-rpc.publicnode.com')
     const currentBlock = await provider.getBlockNumber()
     
-    // Query just last 7 days (very fast, should never timeout)
+    // Query just last 1 day (under 50k block limit)
     const blocksPerDay = 43200
-    const last7Days = blocksPerDay * 7
-    const fromBlock = Math.max(0, currentBlock - last7Days)
+    const last1Day = blocksPerDay * 1
+    const fromBlock = Math.max(0, currentBlock - last1Day)
     
     const contractABI = ["event FundsDripped(address indexed recipient, uint256 amount)"]
     const contract = new ethers.Contract(FAUCET_CONTRACT_ADDRESS, contractABI, provider)

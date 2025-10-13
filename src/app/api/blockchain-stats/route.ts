@@ -3,6 +3,10 @@ import { NextRequest, NextResponse } from 'next/server'
 // Use the correct contract address from the frontend constants
 const FAUCET_CONTRACT_ADDRESS = '0xED4BDAb6870B57aB80a163cEe39196cA440C25a6'
 
+// Force this route to be dynamic (not static) to prevent build-time execution
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET(request: NextRequest) {
   try {
     console.log('Blockchain stats API called', {

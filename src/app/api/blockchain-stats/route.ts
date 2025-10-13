@@ -133,6 +133,19 @@ export async function GET(request: NextRequest) {
         querySuccess = true
         console.log(`Total events found: ${allEvents.length}`)
         
+        if (allEvents.length > 0) {
+          console.log('Sample events:', {
+            first: allEvents[0],
+            last: allEvents[allEvents.length - 1]
+          })
+        } else {
+          console.warn('⚠️ No events found! This could mean:')
+          console.warn('  1. Contract has no FundsDripped events')
+          console.warn('  2. Events are outside the queried block range')
+          console.warn('  3. Contract address might be incorrect')
+          console.warn(`  Contract: ${FAUCET_CONTRACT_ADDRESS}`)
+        }
+        
       } catch (strategyError) {
         const strategyErrorMessage = strategyError instanceof Error ? strategyError.message : String(strategyError)
         console.log('Strategy 1 failed:', strategyErrorMessage)

@@ -6,7 +6,7 @@ import { API_BASE_URL, API_ENDPOINTS } from '@/config/constants'
 interface StatsResponse {
   totalClaims: number
   claimsLast24h: number
-  source: 'database' | 'blockchain' | 'error'
+  source: 'database' | 'blockchain' | 'error' | 'placeholder'
 }
 
 async function fetchStats(): Promise<StatsResponse> {
@@ -15,12 +15,15 @@ async function fetchStats(): Promise<StatsResponse> {
     const blockchainResponse = await fetch(`${API_BASE_URL}${API_ENDPOINTS.BLOCKCHAIN_STATS}`)
     if (blockchainResponse.ok) {
       const data = await blockchainResponse.json()
-      if (data.source === 'blockchain' && data.totalClaims >= 0) {
+      console.log('Blockchain stats response:', data)
+      
+      // Accept both blockchain and placeholder sources (placeholder is used during build)
+      if ((data.source === 'blockchain' || data.source === 'placeholder') && data.totalClaims >= 0) {
         return data
       }
     }
   } catch (error) {
-    console.warn('Blockchain stats failed, falling back to database stats')
+    console.warn('Blockchain stats failed, falling back to database stats', error)
   }
 
   try {

@@ -72,61 +72,24 @@ export async function GET(request: NextRequest) {
       let querySuccess = false
       
       try {
-        // Strategy 1: Query events from last 60 days to capture all recent claims
-        // Contract is 1-2 months old, so 60 days covers all history
-        const daysToQuery = 60
+        // Strategy 1: Simple single query for last 30 days (no chunking to avoid complexity)
+        // This should complete in under 5 seconds
+        const daysToQuery = 30
         const totalBlocks = blocksPerDay * daysToQuery
         const fromBlock = Math.max(0, currentBlock - totalBlocks)
         
-        console.log(`Attempting to query historical events from block ${fromBlock} (last ${daysToQuery} days) to ${currentBlock}`)
-        console.log(`This will query ${totalBlocks} blocks (approx ${Math.ceil(totalBlocks / chunkSize)} chunks)`)
+        console.log(`Querying events from block ${fromBlock} to ${currentBlock} (${daysToQuery} days)`)
         
-        // Helper function to add delay between requests
-        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-        
-        // Query in chunks with delays to avoid RPC rate limits
-        let chunkCount = 0
-        for (let start = fromBlock; start < currentBlock; start += chunkSize) {
-          const end = Math.min(start + chunkSize - 1, currentBlock)
-          console.log(`Querying blocks ${start} to ${end}...`)
-          
-          try {
-            const filter = contract.filters.FundsDripped()
-            const events = await contract.queryFilter(filter, start, end)
-            allEvents = allEvents.concat(events)
-            console.log(`Found ${events.length} events in this chunk`)
-            
-            // Add delays to avoid rate limiting
-            chunkCount++
-            if (chunkCount % 3 === 0) {
-              await delay(300) // 300ms delay every 3 chunks for better rate limit handling
-            }
-          } catch (chunkError) {
-            const chunkErrorMessage = chunkError instanceof Error ? chunkError.message : String(chunkError)
-            console.log(`Chunk failed: ${chunkErrorMessage}`)
-            
-            // If we hit rate limit, add longer delay and continue
-            if (chunkErrorMessage.includes('rate limit')) {
-              console.log('Rate limit hit, adding delay...')
-              await delay(500)
-            }
-          }
-        }
+        const filter = contract.filters.FundsDripped()
+        allEvents = await contract.queryFilter(filter, fromBlock, currentBlock)
         
         querySuccess = true
-        console.log(`Total events found: ${allEvents.length}`)
+        console.log(`Found ${allEvents.length} events`)
         
         if (allEvents.length > 0) {
-          console.log('Sample events:', {
-            first: allEvents[0],
-            last: allEvents[allEvents.length - 1]
-          })
+          console.log('Sample event:', allEvents[0])
         } else {
-          console.warn('⚠️ No events found! This could mean:')
-          console.warn('  1. Contract has no FundsDripped events')
-          console.warn('  2. Events are outside the queried block range')
-          console.warn('  3. Contract address might be incorrect')
-          console.warn(`  Contract: ${FAUCET_CONTRACT_ADDRESS}`)
+          console.warn('⚠️ No events found in last 30 days')
         }
         
       } catch (strategyError) {
@@ -193,7 +156,7 @@ export async function GET(request: NextRequest) {
       console.log(`Claims in last 24h: ${claimsLast24h}`)
       
       // Calculate the actual fromBlock that was queried
-      const daysQueried = 60
+      const daysQueried = 30
       const queriedFromBlock = Math.max(0, currentBlock - (blocksPerDay * daysQueried))
       
       return NextResponse.json({

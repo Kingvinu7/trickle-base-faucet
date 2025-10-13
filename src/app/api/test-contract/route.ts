@@ -46,8 +46,8 @@ export async function GET(request: NextRequest) {
         eventsFound: widerEvents.length,
         sampleEvents: widerEvents.slice(0, 5).map(e => ({
           blockNumber: e.blockNumber,
-          recipient: e.args?.recipient,
-          amount: e.args?.amount?.toString()
+          recipient: (e as any).args?.recipient,
+          amount: (e as any).args?.amount?.toString()
         }))
       }
     })

@@ -72,9 +72,9 @@ export async function GET(request: NextRequest) {
       let querySuccess = false
       
       try {
-        // Strategy 1: Query events from last 90 days to capture all recent claims
-        // Contract is 1-2 months old, so 90 days covers all history
-        const daysToQuery = 90
+        // Strategy 1: Query events from last 60 days to capture all recent claims
+        // Contract is 1-2 months old, so 60 days covers all history
+        const daysToQuery = 60
         const totalBlocks = blocksPerDay * daysToQuery
         const fromBlock = Math.max(0, currentBlock - totalBlocks)
         
@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
       console.log(`Claims in last 24h: ${claimsLast24h}`)
       
       // Calculate the actual fromBlock that was queried
-      const daysQueried = 90
+      const daysQueried = 60
       const queriedFromBlock = Math.max(0, currentBlock - (blocksPerDay * daysQueried))
       
       return NextResponse.json({

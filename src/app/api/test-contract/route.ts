@@ -45,22 +45,18 @@ export async function GET(request: NextRequest) {
     const filter = contract.filters.FundsDripped()
     const events = await contract.queryFilter(filter, fromBlock, currentBlock)
     
-    // Test 3: Query 60 days in chunks (to test chunking logic)
-    console.log('Testing chunked query for 60 days...')
-    const daysToQuery = 60
+    // Test 3: Query just last 3 days (to avoid timeout)
+    console.log('Testing query for last 3 days...')
     const blocksPerDay = 43200
+    const daysToQuery = 3
     const totalBlocks = blocksPerDay * daysToQuery
-    const chunkSize = 45000
-    let widerEvents: any[] = []
+    const widerFrom = Math.max(0, currentBlock - totalBlocks)
     
-    for (let start = Math.max(0, currentBlock - totalBlocks); start < currentBlock; start += chunkSize) {
-      const end = Math.min(start + chunkSize - 1, currentBlock)
-      try {
-        const chunkEvents = await contract.queryFilter(filter, start, end)
-        widerEvents = widerEvents.concat(chunkEvents)
-      } catch (e) {
-        console.log('Chunk failed:', e)
-      }
+    let widerEvents: any[] = []
+    try {
+      widerEvents = await contract.queryFilter(filter, widerFrom, currentBlock)
+    } catch (e) {
+      console.log('3-day query failed:', e)
     }
     
     return NextResponse.json({
@@ -79,8 +75,8 @@ export async function GET(request: NextRequest) {
         }))
       },
       test2: {
-        description: 'Last 60 days (chunked into 45k block queries)',
-        fromBlock: Math.max(0, currentBlock - totalBlocks),
+        description: 'Last 3 days (single query to avoid timeout)',
+        fromBlock: widerFrom,
         toBlock: currentBlock,
         blocksQueried: totalBlocks,
         eventsFound: widerEvents.length,

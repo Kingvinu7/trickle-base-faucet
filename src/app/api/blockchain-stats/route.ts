@@ -72,13 +72,14 @@ export async function GET(request: NextRequest) {
       let querySuccess = false
       
       try {
-        // Strategy 1: Query events from last 730 days (2 years) to capture all claims
-        // This ensures we get all historical data while managing rate limits
-        const daysToQuery = 730
+        // Strategy 1: Query events from last 90 days to capture all recent claims
+        // Contract is 1-2 months old, so 90 days covers all history
+        const daysToQuery = 90
         const totalBlocks = blocksPerDay * daysToQuery
         const fromBlock = Math.max(0, currentBlock - totalBlocks)
         
         console.log(`Attempting to query historical events from block ${fromBlock} (last ${daysToQuery} days) to ${currentBlock}`)
+        console.log(`This will query ${totalBlocks} blocks (approx ${Math.ceil(totalBlocks / chunkSize)} chunks)`)
         
         // Helper function to add delay between requests
         const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))

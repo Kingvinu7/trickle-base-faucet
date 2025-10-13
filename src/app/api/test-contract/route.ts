@@ -79,9 +79,10 @@ export async function GET(request: NextRequest) {
         }))
       },
       test2: {
-        description: 'Last 200,000 blocks (~46 days)',
-        fromBlock: widerFrom,
+        description: 'Last 60 days (chunked into 45k block queries)',
+        fromBlock: Math.max(0, currentBlock - totalBlocks),
         toBlock: currentBlock,
+        blocksQueried: totalBlocks,
         eventsFound: widerEvents.length,
         sampleEvents: widerEvents.slice(0, 5).map(e => ({
           blockNumber: e.blockNumber,

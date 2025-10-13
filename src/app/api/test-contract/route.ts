@@ -9,23 +9,44 @@ export async function GET(request: NextRequest) {
   try {
     const { ethers } = await import('ethers')
     
-    const provider = new ethers.JsonRpcProvider('https://mainnet.base.org')
+    // Use a more reliable RPC provider
+    const rpcUrls = [
+      'https://base-rpc.publicnode.com',
+      'https://base.llamarpc.com',
+      'https://mainnet.base.org'
+    ]
+    
+    let provider = null
+    for (const rpcUrl of rpcUrls) {
+      try {
+        provider = new ethers.JsonRpcProvider(rpcUrl)
+        await provider.getBlockNumber() // Test connection
+        console.log('Connected to:', rpcUrl)
+        break
+      } catch (e) {
+        console.log('Failed to connect to:', rpcUrl)
+        continue
+      }
+    }
+    
+    if (!provider) throw new Error('All RPC providers failed')
+    
     const currentBlock = await provider.getBlockNumber()
     
     // Test 1: Check if contract exists
     const code = await provider.getCode(FAUCET_CONTRACT_ADDRESS)
     const contractExists = code !== '0x'
     
-    // Test 2: Try to get events from last 100k blocks (about 23 days)
+    // Test 2: Try to get events from last 50k blocks (about 11 days)
     const contractABI = ["event FundsDripped(address indexed recipient, uint256 amount)"]
     const contract = new ethers.Contract(FAUCET_CONTRACT_ADDRESS, contractABI, provider)
     
-    const fromBlock = Math.max(0, currentBlock - 100000)
+    const fromBlock = Math.max(0, currentBlock - 50000)
     const filter = contract.filters.FundsDripped()
     const events = await contract.queryFilter(filter, fromBlock, currentBlock)
     
-    // Test 3: Get a wider range - last 500k blocks (about 115 days)
-    const widerFrom = Math.max(0, currentBlock - 500000)
+    // Test 3: Get a wider range - last 200k blocks (about 46 days)
+    const widerFrom = Math.max(0, currentBlock - 200000)
     const widerEvents = await contract.queryFilter(filter, widerFrom, currentBlock)
     
     return NextResponse.json({
@@ -33,14 +54,18 @@ export async function GET(request: NextRequest) {
       contractExists,
       currentBlock,
       test1: {
-        description: 'Last 100,000 blocks (~23 days)',
+        description: 'Last 50,000 blocks (~11 days)',
         fromBlock,
         toBlock: currentBlock,
         eventsFound: events.length,
-        sampleEvent: events[0] || null
+        sampleEvents: events.slice(0, 3).map(e => ({
+          blockNumber: e.blockNumber,
+          recipient: (e as any).args?.recipient,
+          amount: (e as any).args?.amount?.toString()
+        }))
       },
       test2: {
-        description: 'Last 500,000 blocks (~115 days)',
+        description: 'Last 200,000 blocks (~46 days)',
         fromBlock: widerFrom,
         toBlock: currentBlock,
         eventsFound: widerEvents.length,

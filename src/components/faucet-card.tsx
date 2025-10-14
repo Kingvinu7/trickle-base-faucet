@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
 import { useAppKit } from '@reown/appkit/react'
-import { Wallet, Coins, LogOut, AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
+import { Wallet, Coins, LogOut, AlertCircle, CheckCircle, Loader2, Sparkles } from 'lucide-react'
 import { base } from '@reown/appkit/networks'
 import { useFaucetClaim } from '@/hooks/use-faucet-claim'
 import { useEligibility } from '@/hooks/use-eligibility'
@@ -175,6 +175,31 @@ export function FaucetCard() {
                 </div>
               </div>
             </div>
+
+            {/* Limited Time Promo Banner */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="relative overflow-hidden"
+            >
+              <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 rounded-2xl p-4 border-2 border-amber-200 shadow-md">
+                <div className="flex items-center justify-center space-x-2">
+                  <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />
+                  <div className="text-center">
+                    <div className="font-bold text-amber-900 text-lg">
+                      🎉 4x More ETH - Limited Time! 🎉
+                    </div>
+                    <div className="text-sm text-amber-700 mt-1">
+                      Now claiming <span className="font-semibold">$0.1</span> instead of $0.025
+                    </div>
+                  </div>
+                  <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />
+                </div>
+              </div>
+              {/* Animated shimmer effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 animate-shimmer pointer-events-none" />
+            </motion.div>
 
             {/* Eligibility Status */}
             {eligibilityLoading ? (

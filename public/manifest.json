@@ -1,7 +1,7 @@
 {
   "name": "Trickle - Base Faucet",
   "short_name": "Trickle Faucet",
-  "description": "Get $0.025 worth of ETH for gas fees on Base mainnet. A Farcaster miniapp for seamless crypto transactions.",
+  "description": "Get $0.1 worth of ETH for gas fees on Base mainnet. 4X limited time offer! A Farcaster miniapp for seamless crypto transactions.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",

@@ -15,7 +15,7 @@ interface EligibilityError extends Error {
   data?: any
 }
 
-async function checkEligibility(address: string): Promise<EligibilityResponse> {
+async function checkEligibility(address: string, isAllowedPlatform: boolean): Promise<EligibilityResponse> {
   const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.CHECK_ELIGIBILITY}`, {
     method: 'POST',
     headers: {
@@ -23,6 +23,7 @@ async function checkEligibility(address: string): Promise<EligibilityResponse> {
     },
     body: JSON.stringify({
       address: address.toLowerCase(),
+      isAllowedPlatform,
     }),
   })
 
@@ -65,12 +66,12 @@ async function checkEligibility(address: string): Promise<EligibilityResponse> {
   }
 }
 
-export function useEligibility(address?: string) {
+export function useEligibility(address?: string, isAllowedPlatform: boolean = false) {
   return useQuery({
-    queryKey: ['eligibility', address],
+    queryKey: ['eligibility', address, isAllowedPlatform],
     queryFn: async () => {
       try {
-        return await checkEligibility(address!)
+        return await checkEligibility(address!, isAllowedPlatform)
       } catch (error) {
         console.warn('Eligibility check failed:', error)
         // Return fallback data on error to prevent false cooldowns

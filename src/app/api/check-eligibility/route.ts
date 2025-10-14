@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { address } = body
+    const { address, isAllowedPlatform } = body
     
     if (!address) {
       return NextResponse.json(
@@ -15,11 +15,40 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    // Check if the request is from an allowed platform (Farcaster or Base app)
+    // Also check server-side headers for additional verification
+    const userAgent = request.headers.get('user-agent') || ''
+    const referer = request.headers.get('referer') || ''
+    const host = request.headers.get('host') || ''
+    
+    const isFromFarcaster = referer.includes('farcaster') || userAgent.toLowerCase().includes('farcaster')
+    const isFromBase = referer.includes('base.org') || userAgent.toLowerCase().includes('base')
+    
+    // Development mode bypass
+    const isDevelopment = process.env.NODE_ENV === 'development' || 
+                          host.includes('localhost') || 
+                          host.includes('127.0.0.1') ||
+                          referer.includes('localhost') ||
+                          referer.includes('vercel.app')
+    
+    const serverSideAllowed = isFromFarcaster || isFromBase || isDevelopment
+    
+    // Combine client-side and server-side checks (require at least one to be true)
+    const isAllowed = isAllowedPlatform || serverSideAllowed
+    
+    if (!isAllowed) {
+      console.log('Access denied - not from Farcaster or Base app:', { address, userAgent, referer })
+      return NextResponse.json({
+        eligible: false,
+        message: 'This faucet is only available for Farcaster and Base app users. Please access it through Farcaster or the Base app.'
+      })
+    }
+    
     // For now, always return eligible since we don't have a database connection
     // In a real deployment, you would check the database for recent claims here
     // The blockchain contract will enforce the cooldown anyway
     
-    console.log('Eligibility check for address:', address)
+    console.log('Eligibility check for address:', address, '- Platform allowed:', isAllowed)
     
     return NextResponse.json({
       eligible: true,

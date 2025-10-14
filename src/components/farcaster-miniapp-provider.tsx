@@ -9,7 +9,6 @@ interface FarcasterMiniappContextType {
   isReady: boolean
   error: string | null
   isInFarcaster: boolean
-  isFromBaseApp: boolean
   isAllowedPlatform: boolean
 }
 

@@ -15,14 +15,13 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // Check if the request is from an allowed platform (Farcaster or Base app)
+    // Check if the request is from an allowed platform (Farcaster only)
     // Also check server-side headers for additional verification
     const userAgent = request.headers.get('user-agent') || ''
     const referer = request.headers.get('referer') || ''
     const host = request.headers.get('host') || ''
     
     const isFromFarcaster = referer.includes('farcaster') || userAgent.toLowerCase().includes('farcaster')
-    const isFromBase = referer.includes('base.org') || userAgent.toLowerCase().includes('base')
     
     // Development mode bypass
     const isDevelopment = process.env.NODE_ENV === 'development' || 
@@ -31,16 +30,16 @@ export async function POST(request: NextRequest) {
                           referer.includes('localhost') ||
                           referer.includes('vercel.app')
     
-    const serverSideAllowed = isFromFarcaster || isFromBase || isDevelopment
+    const serverSideAllowed = isFromFarcaster || isDevelopment
     
     // Combine client-side and server-side checks (require at least one to be true)
     const isAllowed = isAllowedPlatform || serverSideAllowed
     
     if (!isAllowed) {
-      console.log('Access denied - not from Farcaster or Base app:', { address, userAgent, referer })
+      console.log('Access denied - not from Farcaster:', { address, userAgent, referer })
       return NextResponse.json({
         eligible: false,
-        message: 'This faucet is only available for Farcaster and Base app users. Please access it through Farcaster or the Base app.'
+        message: 'This faucet is only available for Farcaster users. Please access it through the Farcaster app.'
       })
     }
     

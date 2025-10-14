@@ -19,7 +19,7 @@ export function FaucetCard() {
   const { disconnect } = useDisconnect()
   const { switchChain } = useSwitchChain()
   const { open } = useAppKit()
-  const { isAllowedPlatform, isInFarcaster, isFromBaseApp } = useFarcasterMiniappContext()
+  const { isAllowedPlatform, isInFarcaster } = useFarcasterMiniappContext()
   
   const [claimProgress, setClaimProgress] = useState(0)
   
@@ -182,7 +182,7 @@ export function FaucetCard() {
                       Access Restricted
                     </div>
                     <div className="text-sm text-red-700">
-                      This faucet is only available for <span className="font-semibold">Farcaster</span> and <span className="font-semibold">Base app</span> users. Please access it through one of these platforms to claim your ETH.
+                      This faucet is only available for <span className="font-semibold">Farcaster</span> users. Please access it through the Farcaster app to claim your ETH.
                     </div>
                   </div>
                 </div>
@@ -218,7 +218,7 @@ export function FaucetCard() {
                       Now claiming <span className="font-semibold">$0.1</span> instead of $0.025
                     </div>
                     <div className="text-xs text-amber-600 mt-1 font-medium">
-                      Only for Farcaster & Base app users
+                      Only for Farcaster users
                     </div>
                   </div>
                   <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />

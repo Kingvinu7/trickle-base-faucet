@@ -36,15 +36,8 @@ export function useFarcasterMiniapp() {
     }
   }, [])
 
-  // Check if user is in Farcaster (iframe detection)
-  const isInFarcaster = typeof window !== 'undefined' && window.location !== window.parent.location
-  
-  // Check if user is from Base app (check referrer or user agent)
-  const isFromBaseApp = typeof window !== 'undefined' && (
-    window.location.hostname.includes('base.org') ||
-    document.referrer.includes('base.org') ||
-    navigator.userAgent.toLowerCase().includes('base')
-  )
+  // Check if user is in Farcaster using the SDK's built-in method
+  const isInFarcaster = typeof window !== 'undefined' && MiniappSDK.isInMiniApp
   
   // Development mode bypass - allow access on localhost for testing
   const isDevelopment = typeof window !== 'undefined' && (
@@ -59,7 +52,6 @@ export function useFarcasterMiniapp() {
     isReady,
     error,
     isInFarcaster,
-    isFromBaseApp,
-    isAllowedPlatform: isInFarcaster || isFromBaseApp || isDevelopment
+    isAllowedPlatform: isInFarcaster || isDevelopment
   }
 }

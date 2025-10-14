@@ -11,12 +11,12 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Trickle - Base Faucet',
-  description: 'Get $0.1 worth of ETH for gas fees on Base mainnet. 4X limited time offer - only for Farcaster & Base app users! A Farcaster miniapp for seamless crypto transactions.',
+  description: 'Get $0.1 worth of ETH for gas fees on Base mainnet. 4X limited time offer - only for Farcaster users! A Farcaster miniapp for seamless crypto transactions.',
   keywords: ['Base', 'faucet', 'ETH', 'gas fees', 'crypto', 'web3', 'Farcaster', 'miniapp', 'Base network'],
   authors: [{ name: 'Trickle Team' }],
   openGraph: {
     title: 'Trickle - Base Faucet',
-    description: 'Get $0.1 worth of ETH for gas fees on Base mainnet. 4X limited time offer - only for Farcaster & Base app users! A Farcaster miniapp for seamless crypto transactions.',
+    description: 'Get $0.1 worth of ETH for gas fees on Base mainnet. 4X limited time offer - only for Farcaster users! A Farcaster miniapp for seamless crypto transactions.',
     type: 'website',
     locale: 'en_US',
     url: 'https://trickle-base-faucet.vercel.app',
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Trickle - Base Faucet',
-    description: 'Get $0.1 worth of ETH for gas fees on Base mainnet. 4X limited time offer - only for Farcaster & Base app users! A Farcaster miniapp for seamless crypto transactions.',
+    description: 'Get $0.1 worth of ETH for gas fees on Base mainnet. 4X limited time offer - only for Farcaster users! A Farcaster miniapp for seamless crypto transactions.',
     images: ['https://trickle-base-faucet.vercel.app/tp.png'],
   },
   other: {

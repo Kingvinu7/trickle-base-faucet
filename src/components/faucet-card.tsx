@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
 import { useAppKit } from '@reown/appkit/react'
-import { Wallet, Coins, LogOut, AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
+import { Wallet, Coins, LogOut, AlertCircle, CheckCircle, Loader2, Sparkles } from 'lucide-react'
 import { base } from '@reown/appkit/networks'
 import { useFaucetClaim } from '@/hooks/use-faucet-claim'
 import { useEligibility } from '@/hooks/use-eligibility'
+import { useFarcasterMiniappContext } from '@/components/farcaster-miniapp-provider'
 import { formatAddress } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -18,10 +19,11 @@ export function FaucetCard() {
   const { disconnect } = useDisconnect()
   const { switchChain } = useSwitchChain()
   const { open } = useAppKit()
+  const { isAllowedPlatform, isInFarcaster, isFromBaseApp } = useFarcasterMiniappContext()
   
   const [claimProgress, setClaimProgress] = useState(0)
   
-  const { data: eligibility, isLoading: eligibilityLoading, refetch: refetchEligibility } = useEligibility(address)
+  const { data: eligibility, isLoading: eligibilityLoading, refetch: refetchEligibility } = useEligibility(address, isAllowedPlatform)
   const { mutate: claimTokens, isPending: isClaimPending } = useFaucetClaim()
 
   const isWrongNetwork = isConnected && chain?.id !== base.id
@@ -30,7 +32,7 @@ export function FaucetCard() {
     (eligibility?.message?.includes('Please wait') || 
      eligibility?.message?.includes('more hours before claiming') || 
      eligibility?.message?.includes('hours before claiming again'))
-  const canClaim = !isWrongNetwork && !isClaimPending && !eligibilityLoading && !hasRealCooldown
+  const canClaim = !isWrongNetwork && !isClaimPending && !eligibilityLoading && !hasRealCooldown && isAllowedPlatform
   
   const handleConnect = async () => {
     try {
@@ -166,6 +168,27 @@ export function FaucetCard() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="space-y-6"
           >
+            {/* Platform Restriction Notice */}
+            {!isAllowedPlatform && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl p-4 border-2 border-red-200"
+              >
+                <div className="flex items-start space-x-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="font-bold text-red-900 mb-1">
+                      Access Restricted
+                    </div>
+                    <div className="text-sm text-red-700">
+                      This faucet is only available for <span className="font-semibold">Farcaster</span> and <span className="font-semibold">Base app</span> users. Please access it through one of these platforms to claim your ETH.
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* Wallet Info */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-100">
               <div className="text-center">
@@ -175,6 +198,36 @@ export function FaucetCard() {
                 </div>
               </div>
             </div>
+
+            {/* Limited Time Promo Banner - Only show for allowed platforms */}
+            {isAllowedPlatform && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="relative overflow-hidden"
+            >
+              <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 rounded-2xl p-4 border-2 border-amber-200 shadow-md">
+                <div className="flex items-center justify-center space-x-2">
+                  <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />
+                  <div className="text-center">
+                    <div className="font-bold text-amber-900 text-lg">
+                      🎉 4x More ETH - Limited Time! 🎉
+                    </div>
+                    <div className="text-sm text-amber-700 mt-1">
+                      Now claiming <span className="font-semibold">$0.1</span> instead of $0.025
+                    </div>
+                    <div className="text-xs text-amber-600 mt-1 font-medium">
+                      Only for Farcaster & Base app users
+                    </div>
+                  </div>
+                  <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />
+                </div>
+              </div>
+              {/* Animated shimmer effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 animate-shimmer pointer-events-none" />
+            </motion.div>
+            )}
 
             {/* Eligibility Status */}
             {eligibilityLoading ? (
@@ -253,7 +306,12 @@ export function FaucetCard() {
               disabled={!canClaim}
               className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-trickle-blue to-trickle-blue-light hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {eligibilityLoading ? (
+              {!isAllowedPlatform ? (
+                <>
+                  <AlertCircle className="w-5 h-5 mr-2" />
+                  Platform Restricted
+                </>
+              ) : eligibilityLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                   Checking...

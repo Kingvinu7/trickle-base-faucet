@@ -36,10 +36,30 @@ export function useFarcasterMiniapp() {
     }
   }, [])
 
+  // Check if user is in Farcaster (iframe detection)
+  const isInFarcaster = typeof window !== 'undefined' && window.location !== window.parent.location
+  
+  // Check if user is from Base app (check referrer or user agent)
+  const isFromBaseApp = typeof window !== 'undefined' && (
+    window.location.hostname.includes('base.org') ||
+    document.referrer.includes('base.org') ||
+    navigator.userAgent.toLowerCase().includes('base')
+  )
+  
+  // Development mode bypass - allow access on localhost for testing
+  const isDevelopment = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.includes('vercel.app') ||
+    process.env.NODE_ENV === 'development'
+  )
+
   return {
     sdk,
     isReady,
     error,
-    isInFarcaster: typeof window !== 'undefined' && window.location !== window.parent.location
+    isInFarcaster,
+    isFromBaseApp,
+    isAllowedPlatform: isInFarcaster || isFromBaseApp || isDevelopment
   }
 }

@@ -9,6 +9,8 @@ interface FarcasterMiniappContextType {
   isReady: boolean
   error: string | null
   isInFarcaster: boolean
+  isFromBaseApp: boolean
+  isAllowedPlatform: boolean
 }
 
 const FarcasterMiniappContext = createContext<FarcasterMiniappContextType | undefined>(undefined)

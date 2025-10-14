@@ -151,7 +151,7 @@ app.get('/blockchain-stats', async (req, res) => {
         const { ethers } = require('ethers');
         
         // Your contract address (use env variable or fallback to hardcoded)
-        const FAUCET_CONTRACT_ADDRESS = process.env.FAUCET_CONTRACT_ADDRESS || "0x8D08e77837c28fB271D843d84900544cA46bA2F3";
+        const FAUCET_CONTRACT_ADDRESS = process.env.FAUCET_CONTRACT_ADDRESS || "0x52dA60097d20F5AE30a3A620095139B10a7B1734";
         
         console.log('Fetching blockchain stats for contract:', FAUCET_CONTRACT_ADDRESS);
         

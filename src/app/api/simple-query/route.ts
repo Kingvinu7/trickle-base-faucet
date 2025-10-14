@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
-const FAUCET_CONTRACT_ADDRESS = '0xED4BDAb6870B57aB80a163cEe39196cA440C25a6'
+const FAUCET_CONTRACT_ADDRESS = '0x52dA60097d20F5AE30a3A620095139B10a7B1734'
 
 export async function GET(request: NextRequest) {
   try {

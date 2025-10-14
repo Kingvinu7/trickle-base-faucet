@@ -26,7 +26,7 @@ This guide covers deployment of the Next.js web application with WalletConnect i
      WALLETCONNECT_PROJECT_ID=your_project_id
      DATABASE_URL=your_postgresql_url
      NODE_ENV=production
-     FAUCET_CONTRACT_ADDRESS=0x8D08e77837c28fB271D843d84900544cA46bA2F3
+     FAUCET_CONTRACT_ADDRESS=0x52dA60097d20F5AE30a3A620095139B10a7B1734
      ```
 
 4. **Custom Domain (Optional)**
@@ -73,7 +73,7 @@ NODE_ENV=production
 ```env
 WALLETCONNECT_PROJECT_ID=your_production_project_id
 DATABASE_URL=your_production_database_url
-FAUCET_CONTRACT_ADDRESS=0x8D08e77837c28fB271D843d84900544cA46bA2F3
+FAUCET_CONTRACT_ADDRESS=0x52dA60097d20F5AE30a3A620095139B10a7B1734
 NODE_ENV=production
 ```
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const FAUCET_CONTRACT_ADDRESS = '0xED4BDAb6870B57aB80a163cEe39196cA440C25a6'
+const FAUCET_CONTRACT_ADDRESS = '0x52dA60097d20F5AE30a3A620095139B10a7B1734'
 
 // Force dynamic to ensure this runs at request time
 export const dynamic = 'force-dynamic'

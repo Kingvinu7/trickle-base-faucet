@@ -164,7 +164,7 @@ To maximize your eligibility for weekly rewards, complete these steps:
 - Deploy your faucet contract to Base mainnet
 - Verify contract on BaseScan
 - This significantly boosts your Builder Score
-- Current contract address: `0x8D08e77837c28fB271D843d84900544cA46bA2F3`
+- Current contract address: `0x52dA60097d20F5AE30a3A620095139B10a7B1734`
 
 #### 5. ✅ Complete Human Verification (REQUIRED)
 - Install Talent Protocol App

@@ -7,12 +7,22 @@ export function useFarcasterMiniapp() {
   const [sdk, setSdk] = useState<typeof MiniappSDK | null>(null)
   const [isReady, setIsReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isInFarcaster, setIsInFarcaster] = useState(false)
 
   useEffect(() => {
     const initializeSDK = async () => {
       try {
         // Use the SDK instance directly (it's already initialized)
         setSdk(MiniappSDK)
+        
+        // Check if user is in Farcaster using the SDK's built-in method
+        // isInMiniApp can be a function or a boolean
+        if (typeof window !== 'undefined') {
+          const inMiniApp = typeof MiniappSDK.isInMiniApp === 'function' 
+            ? await MiniappSDK.isInMiniApp()
+            : Boolean(MiniappSDK.isInMiniApp)
+          setIsInFarcaster(inMiniApp)
+        }
         
         // Call the ready function to signal the miniapp is ready
         await MiniappSDK.actions.ready()
@@ -36,16 +46,6 @@ export function useFarcasterMiniapp() {
     }
   }, [])
 
-  // Check if user is in Farcaster (iframe detection)
-  const isInFarcaster = typeof window !== 'undefined' && window.location !== window.parent.location
-  
-  // Check if user is from Base app (check referrer or user agent)
-  const isFromBaseApp = typeof window !== 'undefined' && (
-    window.location.hostname.includes('base.org') ||
-    document.referrer.includes('base.org') ||
-    navigator.userAgent.toLowerCase().includes('base')
-  )
-  
   // Development mode bypass - allow access on localhost for testing
   const isDevelopment = typeof window !== 'undefined' && (
     window.location.hostname === 'localhost' ||
@@ -59,7 +59,6 @@ export function useFarcasterMiniapp() {
     isReady,
     error,
     isInFarcaster,
-    isFromBaseApp,
-    isAllowedPlatform: isInFarcaster || isFromBaseApp || isDevelopment
+    isAllowedPlatform: isInFarcaster || isDevelopment
   }
 }

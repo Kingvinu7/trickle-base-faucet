@@ -14,7 +14,7 @@ if (!projectId) {
 // Metadata for the application
 export const metadata = {
   name: 'Trickle - Base Faucet',
-  description: 'Get $0.1 worth of ETH for gas fees on Base mainnet',
+  description: 'Get $0.1 worth of ETH for gas fees on Base mainnet - only for Farcaster & Base app users',
   url: typeof window !== 'undefined' ? window.location.origin : 'https://trickle-faucet.vercel.app',
   icons: ['https://avatars.githubusercontent.com/u/37784886'],
 }

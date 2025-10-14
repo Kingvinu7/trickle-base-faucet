@@ -193,6 +193,9 @@ export function FaucetCard() {
                     <div className="text-sm text-amber-700 mt-1">
                       Now claiming <span className="font-semibold">$0.1</span> instead of $0.025
                     </div>
+                    <div className="text-xs text-amber-600 mt-1 font-medium">
+                      Only for Farcaster & Base app users
+                    </div>
                   </div>
                   <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />
                 </div>

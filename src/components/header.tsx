@@ -57,7 +57,7 @@ export function Header() {
       >
         <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-2 rounded-full shadow-lg animate-pulse">
           <div className="text-sm font-bold">⚡ 4X LIMITED TIME OFFER ⚡</div>
-          <div className="text-xs font-medium mt-0.5">For Farcaster users only</div>
+          <div className="text-xs font-medium mt-0.5">For Farcaster & Base app users</div>
         </div>
       </motion.div>
     </motion.div>

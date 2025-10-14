@@ -237,7 +237,11 @@ export const APP_CONFIG = {
   description: 'Get $0.1 worth of ETH for gas fees on Base mainnet',
   claimAmount: '0.1',
   cooldownHours: 24,
-  version: '2.0.0'
+  version: '2.0.0',
+  // Miniapp Configuration
+  // When true, claims are ONLY allowed from within the Farcaster miniapp environment
+  // When false or undefined, development mode bypass is allowed (localhost, vercel preview, etc.)
+  miniappStrictMode: process.env.NEXT_PUBLIC_MINIAPP_STRICT_MODE === 'true'
 } as const
 
 // UI Configuration

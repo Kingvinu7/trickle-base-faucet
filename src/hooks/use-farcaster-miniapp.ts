@@ -47,6 +47,9 @@ export function useFarcasterMiniapp() {
   }, [])
 
   // Development mode bypass - allow access on localhost for testing
+  // Only applied when MINIAPP_STRICT_MODE is not enabled
+  const miniappStrictMode = process.env.NEXT_PUBLIC_MINIAPP_STRICT_MODE === 'true'
+  
   const isDevelopment = typeof window !== 'undefined' && (
     window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1' ||
@@ -54,11 +57,15 @@ export function useFarcasterMiniapp() {
     process.env.NODE_ENV === 'development'
   )
 
+  // In strict mode, only allow Farcaster environment
+  // In non-strict mode, allow both Farcaster and development environments
+  const isAllowedPlatform = miniappStrictMode ? isInFarcaster : (isInFarcaster || isDevelopment)
+
   return {
     sdk,
     isReady,
     error,
     isInFarcaster,
-    isAllowedPlatform: isInFarcaster || isDevelopment
+    isAllowedPlatform
   }
 }

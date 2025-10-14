@@ -23,12 +23,17 @@ export async function POST(request: NextRequest) {
     
     const isFromFarcaster = referer.includes('farcaster') || userAgent.toLowerCase().includes('farcaster')
     
-    // Development mode bypass
-    const isDevelopment = process.env.NODE_ENV === 'development' || 
-                          host.includes('localhost') || 
-                          host.includes('127.0.0.1') ||
-                          referer.includes('localhost') ||
-                          referer.includes('vercel.app')
+    // Check if miniapp strict mode is enabled
+    const miniappStrictMode = process.env.NEXT_PUBLIC_MINIAPP_STRICT_MODE === 'true'
+    
+    // Development mode bypass - only applied when strict mode is disabled
+    const isDevelopment = !miniappStrictMode && (
+      process.env.NODE_ENV === 'development' || 
+      host.includes('localhost') || 
+      host.includes('127.0.0.1') ||
+      referer.includes('localhost') ||
+      referer.includes('vercel.app')
+    )
     
     const serverSideAllowed = isFromFarcaster || isDevelopment
     

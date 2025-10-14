@@ -15,13 +15,13 @@ export function useFarcasterMiniapp() {
         // Use the SDK instance directly (it's already initialized)
         setSdk(MiniappSDK)
         
-        // Check if user is in Farcaster using the SDK's built-in method
-        // isInMiniApp can be a function or a boolean
+        // Check if user is in Farcaster using the official SDK method
+        // isInMiniApp() is an async function that returns Promise<boolean>
+        // It uses multi-step detection including environment and communication checks
         if (typeof window !== 'undefined') {
-          const inMiniApp = typeof MiniappSDK.isInMiniApp === 'function' 
-            ? await MiniappSDK.isInMiniApp()
-            : Boolean(MiniappSDK.isInMiniApp)
+          const inMiniApp = await MiniappSDK.isInMiniApp()
           setIsInFarcaster(inMiniApp)
+          console.log('Miniapp detection result:', inMiniApp)
         }
         
         // Call the ready function to signal the miniapp is ready
@@ -33,6 +33,8 @@ export function useFarcasterMiniapp() {
       } catch (err) {
         console.error('Failed to initialize Farcaster Miniapp SDK:', err)
         setError(err instanceof Error ? err.message : 'Unknown error')
+        // Default to not in Farcaster on error
+        setIsInFarcaster(false)
       }
     }
 

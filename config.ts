@@ -53,7 +53,7 @@ export const queryClient = new QueryClient({
   },
 })
 
-// Create AppKit with analytics enabled
+// Create AppKit with analytics and user tracking enabled
 createAppKit({
   adapters: [wagmiAdapter],
   projectId,
@@ -61,7 +61,8 @@ createAppKit({
   defaultNetwork: base,
   metadata,
   features: { 
-    analytics: true,
+    analytics: true, // Enable analytics for tracking
+    allWallets: true, // Track all wallet connections (required for dashboard)
     email: false,
     socials: [],
     swaps: false,

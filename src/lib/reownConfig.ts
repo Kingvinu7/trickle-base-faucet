@@ -87,7 +87,8 @@ export const appKitConfig = hasValidProjectId ? {
   defaultNetwork: base,
   metadata,
   features: { 
-    analytics: true,
+    analytics: true, // Enable analytics for user tracking
+    allWallets: true, // Track all wallet connections in dashboard
     email: false,
     socials: [],
     emailShowWallets: true,

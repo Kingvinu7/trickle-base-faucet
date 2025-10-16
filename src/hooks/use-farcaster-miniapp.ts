@@ -63,6 +63,18 @@ export function useFarcasterMiniapp() {
   // In non-strict mode, allow both Farcaster and development environments
   const isAllowedPlatform = miniappStrictMode ? isInFarcaster : (isInFarcaster || isDevelopment)
 
+  // Debug logging to help troubleshoot
+  if (typeof window !== 'undefined') {
+    console.log('🔒 Miniapp Access Control:', {
+      isInFarcaster,
+      miniappStrictMode,
+      isDevelopment,
+      hostname: window.location.hostname,
+      isAllowedPlatform,
+      envVar: process.env.NEXT_PUBLIC_MINIAPP_STRICT_MODE
+    })
+  }
+
   return {
     sdk,
     isReady,

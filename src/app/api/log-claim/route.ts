@@ -1,56 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, readFile, mkdir } from 'fs/promises'
-import { join } from 'path'
-import { existsSync } from 'fs'
+import { saveClaim, getRecentClaims, initializeDatabase } from '@/lib/db'
 
-// In-memory storage for claims (resets on server restart)
-// In production, use a proper database
-let recentClaims: Array<{
-  address: string
-  txHash: string
-  timestamp: string
-  farcasterUser?: {
-    fid: number
-    username: string
-    displayName: string
-  }
-}> = []
+// Initialize database schema on first request
+let dbInitialized = false
 
-// Initialize from file if exists
-async function loadClaims() {
-  try {
-    const dataDir = join(process.cwd(), 'data')
-    const filePath = join(dataDir, 'claims.json')
-    
-    if (existsSync(filePath)) {
-      const data = await readFile(filePath, 'utf-8')
-      recentClaims = JSON.parse(data)
-      console.log(`Loaded ${recentClaims.length} claims from storage`)
+async function ensureDatabase() {
+  if (!dbInitialized) {
+    try {
+      await initializeDatabase()
+      dbInitialized = true
+      console.log('Database initialized')
+    } catch (error) {
+      console.error('Database initialization failed:', error)
+      // Don't throw - let the request continue and it will fail with a clear error
     }
-  } catch (error) {
-    console.error('Error loading claims:', error)
   }
 }
-
-// Save claims to file
-async function saveClaims() {
-  try {
-    const dataDir = join(process.cwd(), 'data')
-    if (!existsSync(dataDir)) {
-      await mkdir(dataDir, { recursive: true })
-    }
-    const filePath = join(dataDir, 'claims.json')
-    await writeFile(filePath, JSON.stringify(recentClaims, null, 2))
-  } catch (error) {
-    console.error('Error saving claims:', error)
-  }
-}
-
-// Initialize claims on module load
-loadClaims().catch(console.error)
 
 export async function POST(request: NextRequest) {
   try {
+    await ensureDatabase()
+    
     const body = await request.json()
     const { address, txHash, farcasterUser } = body
     
@@ -64,26 +34,27 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    const claim = {
+    // Save to database
+    const savedClaim = await saveClaim({
       address: address.toLowerCase(),
       txHash,
-      timestamp: new Date().toISOString(),
-      ...(farcasterUser && { farcasterUser })
-    }
+      farcasterUser
+    })
     
-    // Add to recent claims (keep last 100)
-    recentClaims.unshift(claim)
-    recentClaims = recentClaims.slice(0, 100)
-    
-    // Save to file for persistence
-    await saveClaims()
-    
-    console.log('Claim logged:', claim)
+    console.log('Claim logged to database:', {
+      address: address.toLowerCase(),
+      txHash,
+      farcasterUser: farcasterUser ? {
+        fid: farcasterUser.fid,
+        username: farcasterUser.username
+      } : null
+    })
     
     // Return success response
     return NextResponse.json({ 
       success: true,
-      message: 'Claim logged successfully'
+      message: 'Claim logged successfully',
+      claim: savedClaim
     })
   } catch (error) {
     console.error('Log claim API error:', error)
@@ -92,6 +63,7 @@ export async function POST(request: NextRequest) {
       {
         error: 'Failed to log claim',
         success: false,
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )
@@ -99,16 +71,22 @@ export async function POST(request: NextRequest) {
 }
 
 // GET endpoint to fetch recent claims
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Return last 20 claims with Farcaster users only
-    const farcasterClaims = recentClaims
-      .filter(claim => claim.farcasterUser)
-      .slice(0, 20)
+    await ensureDatabase()
+    
+    // Get limit from query params (default 20)
+    const { searchParams } = new URL(request.url)
+    const limit = parseInt(searchParams.get('limit') || '20', 10)
+    
+    // Get recent claims (Farcaster only)
+    const claims = await getRecentClaims(limit, true)
+    
+    console.log(`Fetched ${claims.length} Farcaster claims from database`)
     
     return NextResponse.json({
       success: true,
-      claims: farcasterClaims
+      claims
     })
   } catch (error) {
     console.error('Get claims API error:', error)
@@ -116,6 +94,7 @@ export async function GET() {
       {
         error: 'Failed to fetch claims',
         success: false,
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )

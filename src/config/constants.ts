@@ -2,7 +2,7 @@ import { base } from '@reown/appkit/networks'
 
 // Contract Configuration
 export const FAUCET_CONTRACT = {
-  address: (process.env.NEXT_PUBLIC_FAUCET_CONTRACT_ADDRESS || '0x52dA60097d20F5AE30a3A620095139B10a7B1734') as `0x${string}`,
+  address: (process.env.NEXT_PUBLIC_FAUCET_CONTRACT_ADDRESS || '0x34bB7cb2c9b5fF03D824F0C80067E3eeB6C4401d') as `0x${string}`,
   abi: [
     {
       "inputs": [

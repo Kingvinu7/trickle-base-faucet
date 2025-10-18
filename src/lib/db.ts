@@ -33,29 +33,37 @@ export async function initializeDatabase() {
   const pool = getPool()
   
   try {
-    // Create claims table if it doesn't exist
+    // Drop existing table if it exists (clean slate)
+    // Comment this out after first successful deployment
+    await pool.query(`DROP TABLE IF EXISTS claims CASCADE`)
+    console.log('Dropped existing claims table if present')
+    
+    // Create claims table with correct schema
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS claims (
+      CREATE TABLE claims (
         id SERIAL PRIMARY KEY,
         address VARCHAR(42) NOT NULL,
         tx_hash VARCHAR(66) NOT NULL UNIQUE,
-        timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        claim_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
         farcaster_fid INTEGER,
         farcaster_username VARCHAR(255),
         farcaster_display_name VARCHAR(255),
         created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
       )
     `)
+    console.log('Created claims table')
     
-    // Create index on timestamp for faster queries
+    // Create index on claim_timestamp for faster queries
     await pool.query(`
-      CREATE INDEX IF NOT EXISTS idx_claims_timestamp ON claims(timestamp DESC)
+      CREATE INDEX idx_claims_timestamp ON claims(claim_timestamp DESC)
     `)
+    console.log('Created timestamp index')
     
     // Create index on farcaster_fid for filtering
     await pool.query(`
-      CREATE INDEX IF NOT EXISTS idx_claims_farcaster_fid ON claims(farcaster_fid) WHERE farcaster_fid IS NOT NULL
+      CREATE INDEX idx_claims_farcaster_fid ON claims(farcaster_fid) WHERE farcaster_fid IS NOT NULL
     `)
+    console.log('Created farcaster_fid index')
     
     console.log('Database schema initialized successfully')
   } catch (error) {
@@ -77,7 +85,7 @@ export async function saveClaim(data: {
   const pool = getPool()
   
   const query = `
-    INSERT INTO claims (address, tx_hash, farcaster_fid, farcaster_username, farcaster_display_name, timestamp)
+    INSERT INTO claims (address, tx_hash, farcaster_fid, farcaster_username, farcaster_display_name, claim_timestamp)
     VALUES ($1, $2, $3, $4, $5, NOW())
     ON CONFLICT (tx_hash) DO NOTHING
     RETURNING *
@@ -110,13 +118,13 @@ export async function getRecentClaims(limit: number = 20, farcasterOnly: boolean
     SELECT 
       address,
       tx_hash as "txHash",
-      timestamp,
+      claim_timestamp,
       farcaster_fid as fid,
       farcaster_username as username,
       farcaster_display_name as "displayName"
     FROM claims
     ${whereClause}
-    ORDER BY timestamp DESC
+    ORDER BY claim_timestamp DESC
     LIMIT $1
   `
   
@@ -127,7 +135,7 @@ export async function getRecentClaims(limit: number = 20, farcasterOnly: boolean
     return result.rows.map(row => ({
       address: row.address,
       txHash: row.txHash,
-      timestamp: row.timestamp.toISOString(),
+      timestamp: row.claim_timestamp.toISOString(),
       ...(row.fid && {
         farcasterUser: {
           fid: row.fid,

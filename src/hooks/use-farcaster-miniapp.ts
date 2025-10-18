@@ -8,6 +8,7 @@ export function useFarcasterMiniapp() {
   const [isReady, setIsReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isInFarcaster, setIsInFarcaster] = useState(false)
+  const [farcasterUser, setFarcasterUser] = useState<{fid: number, username: string, displayName: string} | null>(null)
 
   useEffect(() => {
     const initializeSDK = async () => {
@@ -22,6 +23,24 @@ export function useFarcasterMiniapp() {
           const inMiniApp = await MiniappSDK.isInMiniApp()
           setIsInFarcaster(inMiniApp)
           console.log('Miniapp detection result:', inMiniApp)
+          
+          // Get Farcaster user context if in miniapp
+          if (inMiniApp) {
+            try {
+              const context = await MiniappSDK.context
+              console.log('Farcaster context:', context)
+              
+              if (context?.user) {
+                setFarcasterUser({
+                  fid: context.user.fid,
+                  username: context.user.username || `fid-${context.user.fid}`,
+                  displayName: context.user.displayName || context.user.username || `User ${context.user.fid}`
+                })
+              }
+            } catch (err) {
+              console.warn('Could not get Farcaster user context:', err)
+            }
+          }
         }
         
         // Call the ready function to signal the miniapp is ready

@@ -19,12 +19,12 @@ export function FaucetCard() {
   const { disconnect } = useDisconnect()
   const { switchChain } = useSwitchChain()
   const { open } = useAppKit()
-  const { isAllowedPlatform, isInFarcaster } = useFarcasterMiniappContext()
+  const { isAllowedPlatform, isInFarcaster, farcasterUser } = useFarcasterMiniappContext()
   
   const [claimProgress, setClaimProgress] = useState(0)
   
   const { data: eligibility, isLoading: eligibilityLoading, refetch: refetchEligibility } = useEligibility(address, isAllowedPlatform)
-  const { mutate: claimTokens, isPending: isClaimPending } = useFaucetClaim()
+  const { mutate: claimTokens, isPending: isClaimPending } = useFaucetClaim(farcasterUser || undefined)
 
   const isWrongNetwork = isConnected && chain?.id !== base.id
   // Allow claiming if eligibility is undefined (API issues) or true, but not when explicitly false with a real cooldown message

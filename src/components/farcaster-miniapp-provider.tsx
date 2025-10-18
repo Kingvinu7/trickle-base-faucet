@@ -10,6 +10,7 @@ interface FarcasterMiniappContextType {
   error: string | null
   isInFarcaster: boolean
   isAllowedPlatform: boolean
+  farcasterUser: {fid: number, username: string, displayName: string} | null
 }
 
 const FarcasterMiniappContext = createContext<FarcasterMiniappContextType | undefined>(undefined)
@@ -18,7 +19,7 @@ export function FarcasterMiniappProvider({ children }: { children: ReactNode }) 
   const miniappData = useFarcasterMiniapp()
 
   return (
-    <FarcasterMiniappContext.Provider value={miniappData}>
+    <FarcasterMiniappContext.Provider value={miniappData as FarcasterMiniappContextType}>
       {children}
     </FarcasterMiniappContext.Provider>
   )

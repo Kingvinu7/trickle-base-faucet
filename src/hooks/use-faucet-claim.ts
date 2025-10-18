@@ -6,7 +6,11 @@ import { FAUCET_CONTRACT, API_BASE_URL, API_ENDPOINTS } from '@/config/constants
 import { parseError } from '@/lib/utils'
 import { useState, useEffect } from 'react'
 
-async function logClaim(address: string, txHash: string): Promise<void> {
+async function logClaim(
+  address: string, 
+  txHash: string, 
+  farcasterUser?: {fid: number, username: string, displayName: string}
+): Promise<void> {
   try {
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LOG_CLAIM}`, {
       method: 'POST',
@@ -16,6 +20,7 @@ async function logClaim(address: string, txHash: string): Promise<void> {
       body: JSON.stringify({
         address: address.toLowerCase(),
         txHash,
+        ...(farcasterUser && { farcasterUser }),
       }),
     })
 
@@ -28,7 +33,7 @@ async function logClaim(address: string, txHash: string): Promise<void> {
   }
 }
 
-export function useFaucetClaim() {
+export function useFaucetClaim(farcasterUser?: {fid: number, username: string, displayName: string}) {
   const [currentTxHash, setCurrentTxHash] = useState<string | null>(null)
   const [claimAddress, setClaimAddress] = useState<string | null>(null)
   const queryClient = useQueryClient()
@@ -70,8 +75,8 @@ export function useFaucetClaim() {
                 setCurrentTxHash(txHash)
                 
                 try {
-                  // Log the claim attempt
-                  await logClaim(address, txHash)
+                  // Log the claim attempt with Farcaster user data
+                  await logClaim(address, txHash, farcasterUser)
                   resolve(txHash)
                 } catch (error) {
                   console.warn('Failed to log claim, but transaction was successful:', error)

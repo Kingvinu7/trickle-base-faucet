@@ -2,6 +2,7 @@
 
 import { FaucetCard } from '@/components/faucet-card'
 import { StatsCards } from '@/components/stats-cards'
+import { HallOfFame } from '@/components/hall-of-fame'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { useStats } from '@/hooks/use-stats'
@@ -46,6 +47,9 @@ export default function HomePage() {
 
           {/* Main Faucet Card */}
           <FaucetCard />
+
+          {/* Hall of Fame - Recent Claimers */}
+          <HallOfFame />
 
           {/* Footer */}
           <Footer />

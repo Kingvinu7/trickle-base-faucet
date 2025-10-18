@@ -2,7 +2,7 @@ import { base } from '@reown/appkit/networks'
 
 // Contract Configuration
 export const FAUCET_CONTRACT = {
-  address: '0x52dA60097d20F5AE30a3A620095139B10a7B1734' as `0x${string}`,
+  address: (process.env.NEXT_PUBLIC_FAUCET_CONTRACT_ADDRESS || '0x52dA60097d20F5AE30a3A620095139B10a7B1734') as `0x${string}`,
   abi: [
     {
       "inputs": [
@@ -83,11 +83,107 @@ export const FAUCET_CONTRACT = {
       "type": "function"
     },
     {
-      "inputs": [],
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "nonce",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "deadline",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "signature",
+          "type": "bytes"
+        }
+      ],
       "name": "requestTokens",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "nonce",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "deadline",
+          "type": "uint256"
+        }
+      ],
+      "name": "getMessageHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "messageHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getEthSignedMessageHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "usedNonces",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "nonce",
+          "type": "bytes32"
+        }
+      ],
+      "name": "NonceUsed",
+      "type": "event"
     },
     {
       "inputs": [
@@ -228,7 +324,8 @@ export const API_ENDPOINTS = {
   LOG_CLAIM: '/log-claim',
   STATS: '/stats',
   BLOCKCHAIN_STATS: '/blockchain-stats',
-  HEALTH: '/health'
+  HEALTH: '/health',
+  REQUEST_SIGNATURE: '/request-signature'
 } as const
 
 // App Configuration

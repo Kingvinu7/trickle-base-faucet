@@ -5,6 +5,7 @@ import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { FAUCET_CONTRACT, API_BASE_URL, API_ENDPOINTS } from '@/config/constants'
 import { parseError } from '@/lib/utils'
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 
 async function logClaim(
   address: string, 
@@ -58,16 +59,39 @@ export function useFaucetClaim(farcasterUser?: {fid: number, username: string, d
 
   const mutation = useMutation({
     mutationFn: async (address: string): Promise<string> => {
-      return new Promise((resolve, reject) => {
+      return new Promise(async (resolve, reject) => {
         try {
-          // Store the claim address for later query invalidation
+          // Step 1: Request signature from backend
+          toast.info('Requesting authorization...')
+          
+          const signatureResponse = await fetch('/api/request-signature', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ address }),
+          })
+          
+          if (!signatureResponse.ok) {
+            const errorData = await signatureResponse.json()
+            throw new Error(errorData.error || 'Failed to get authorization')
+          }
+          
+          const { signature, nonce, deadline } = await signatureResponse.json()
+          
+          console.log('Signature received:', { signature, nonce, deadline })
+          toast.success('Authorization received! Processing claim...')
+          
+          // Step 2: Store the claim address for later query invalidation
           setClaimAddress(address)
           
+          // Step 3: Call contract with signature
           writeContract(
             {
               address: FAUCET_CONTRACT.address,
               abi: FAUCET_CONTRACT.abi,
               functionName: 'requestTokens',
+              args: [nonce, BigInt(deadline), signature],
             },
             {
               onSuccess: async (txHash) => {

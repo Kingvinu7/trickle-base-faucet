@@ -42,24 +42,11 @@ export function Header() {
         className="text-gray-600 leading-relaxed"
       >
         Get{' '}
-        <span className="font-semibold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-          $0.1 worth of ETH
+        <span className="font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent">
+          $0.03 worth of ETH
         </span>{' '}
         for gas fees on Base mainnet
       </motion.p>
-      
-      {/* Limited Time Badge */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
-        className="inline-block"
-      >
-        <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-2 rounded-full shadow-lg animate-pulse">
-          <div className="text-sm font-bold">⚡ 4X LIMITED TIME OFFER ⚡</div>
-          <div className="text-xs font-medium mt-0.5">For Farcaster & Base app users</div>
-        </div>
-      </motion.div>
     </motion.div>
   )
 }

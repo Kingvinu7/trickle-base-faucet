@@ -41,13 +41,16 @@ export async function POST(request: NextRequest) {
       farcasterUser
     })
     
-    console.log('Claim logged to database:', {
+    console.log('✅ CLAIM LOGGED TO DATABASE:', {
       address: address.toLowerCase(),
       txHash,
+      hasFarcasterData: !!farcasterUser,
       farcasterUser: farcasterUser ? {
         fid: farcasterUser.fid,
-        username: farcasterUser.username
-      } : null
+        username: farcasterUser.username,
+        displayName: farcasterUser.displayName
+      } : null,
+      savedClaim: savedClaim ? 'Success' : 'Duplicate (already exists)'
     })
     
     // Return success response
@@ -82,7 +85,13 @@ export async function GET(request: NextRequest) {
     // Get recent claims (Farcaster only)
     const claims = await getRecentClaims(limit, true)
     
-    console.log(`Fetched ${claims.length} Farcaster claims from database`)
+    console.log(`✅ FETCHED ${claims.length} FARCASTER CLAIMS FROM DATABASE:`, 
+      claims.map(c => ({
+        fid: c.farcasterUser?.fid,
+        username: c.farcasterUser?.username,
+        timestamp: c.timestamp
+      }))
+    )
     
     return NextResponse.json({
       success: true,

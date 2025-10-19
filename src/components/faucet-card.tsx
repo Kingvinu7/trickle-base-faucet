@@ -199,33 +199,26 @@ export function FaucetCard() {
               </div>
             </div>
 
-            {/* Limited Time Promo Banner - Only show for allowed platforms */}
+            {/* Info Banner - Only show for allowed platforms */}
             {isAllowedPlatform && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
-              className="relative overflow-hidden"
+              className="bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 rounded-2xl p-4 border-2 border-blue-200 shadow-md"
             >
-              <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50 rounded-2xl p-4 border-2 border-amber-200 shadow-md">
-                <div className="flex items-center justify-center space-x-2">
-                  <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />
-                  <div className="text-center">
-                    <div className="font-bold text-amber-900 text-lg">
-                      🎉 4x More ETH - Limited Time! 🎉
-                    </div>
-                    <div className="text-sm text-amber-700 mt-1">
-                      Now claiming <span className="font-semibold">$0.1</span> instead of $0.025
-                    </div>
-                    <div className="text-xs text-amber-600 mt-1 font-medium">
-                      Only for Farcaster users
-                    </div>
+              <div className="flex items-center justify-center space-x-2">
+                <Coins className="w-5 h-5 text-blue-500" />
+                <div className="text-center">
+                  <div className="font-bold text-blue-900 text-base">
+                    Claim ETH for Gas Fees
                   </div>
-                  <Sparkles className="w-5 h-5 text-amber-500 animate-pulse" />
+                  <div className="text-sm text-blue-700 mt-1">
+                    Get <span className="font-semibold">$0.03</span> worth of ETH • Once per 24 hours
+                  </div>
                 </div>
+                <Coins className="w-5 h-5 text-blue-500" />
               </div>
-              {/* Animated shimmer effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 animate-shimmer pointer-events-none" />
             </motion.div>
             )}
 

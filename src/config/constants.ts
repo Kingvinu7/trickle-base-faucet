@@ -331,8 +331,8 @@ export const API_ENDPOINTS = {
 // App Configuration
 export const APP_CONFIG = {
   name: 'Trickle - Base Faucet',
-  description: 'Get $0.1 worth of ETH for gas fees on Base mainnet',
-  claimAmount: '0.1',
+  description: 'Get $0.03 worth of ETH for gas fees on Base mainnet',
+  claimAmount: '0.03',
   cooldownHours: 24,
   version: '2.0.0',
   // Miniapp Configuration

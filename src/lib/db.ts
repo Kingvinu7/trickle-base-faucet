@@ -33,37 +33,47 @@ export async function initializeDatabase() {
   const pool = getPool()
   
   try {
-    // Drop existing table if it exists (clean slate)
-    // Comment this out after first successful deployment
-    await pool.query(`DROP TABLE IF EXISTS claims CASCADE`)
-    console.log('Dropped existing claims table if present')
-    
-    // Create claims table with correct schema
-    await pool.query(`
-      CREATE TABLE claims (
-        id SERIAL PRIMARY KEY,
-        address VARCHAR(42) NOT NULL,
-        tx_hash VARCHAR(66) NOT NULL UNIQUE,
-        claim_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        farcaster_fid INTEGER,
-        farcaster_username VARCHAR(255),
-        farcaster_display_name VARCHAR(255),
-        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-      )
+    // Check if table exists with correct schema
+    const tableCheck = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'claims' AND column_name = 'claim_timestamp'
     `)
-    console.log('Created claims table')
     
-    // Create index on claim_timestamp for faster queries
-    await pool.query(`
-      CREATE INDEX idx_claims_timestamp ON claims(claim_timestamp DESC)
-    `)
-    console.log('Created timestamp index')
+    if (tableCheck.rows.length === 0) {
+      // Table doesn't exist or has wrong schema - drop and recreate
+      await pool.query(`DROP TABLE IF EXISTS claims CASCADE`)
+      console.log('Dropped existing claims table if present')
     
-    // Create index on farcaster_fid for filtering
-    await pool.query(`
-      CREATE INDEX idx_claims_farcaster_fid ON claims(farcaster_fid) WHERE farcaster_fid IS NOT NULL
-    `)
-    console.log('Created farcaster_fid index')
+      // Create claims table with correct schema
+      await pool.query(`
+        CREATE TABLE claims (
+          id SERIAL PRIMARY KEY,
+          address VARCHAR(42) NOT NULL,
+          tx_hash VARCHAR(66) NOT NULL UNIQUE,
+          claim_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+          farcaster_fid INTEGER,
+          farcaster_username VARCHAR(255),
+          farcaster_display_name VARCHAR(255),
+          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+      `)
+      console.log('Created claims table')
+      
+      // Create index on claim_timestamp for faster queries
+      await pool.query(`
+        CREATE INDEX idx_claims_timestamp ON claims(claim_timestamp DESC)
+      `)
+      console.log('Created timestamp index')
+      
+      // Create index on farcaster_fid for filtering
+      await pool.query(`
+        CREATE INDEX idx_claims_farcaster_fid ON claims(farcaster_fid) WHERE farcaster_fid IS NOT NULL
+      `)
+      console.log('Created farcaster_fid index')
+    } else {
+      console.log('Claims table already exists with correct schema')
+    }
     
     console.log('Database schema initialized successfully')
   } catch (error) {

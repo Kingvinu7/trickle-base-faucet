@@ -99,6 +99,7 @@ export function useFarcasterMiniapp() {
     isReady,
     error,
     isInFarcaster,
-    isAllowedPlatform
+    isAllowedPlatform,
+    farcasterUser
   }
 }

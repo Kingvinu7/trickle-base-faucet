@@ -12,6 +12,13 @@ async function logClaim(
   txHash: string, 
   farcasterUser?: {fid: number, username: string, displayName: string}
 ): Promise<void> {
+  console.log('🚀 SENDING CLAIM TO LOG API:', {
+    address: address.toLowerCase(),
+    txHash,
+    farcasterUser,
+    hasFarcasterData: !!farcasterUser
+  })
+  
   try {
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LOG_CLAIM}`, {
       method: 'POST',
@@ -26,10 +33,14 @@ async function logClaim(
     })
 
     if (!response.ok) {
-      console.warn('Failed to log claim:', response.statusText)
+      const errorText = await response.text()
+      console.error('❌ Failed to log claim:', response.statusText, errorText)
+    } else {
+      const result = await response.json()
+      console.log('✅ Claim logged successfully:', result)
     }
   } catch (error) {
-    console.warn('Failed to log claim:', error)
+    console.error('❌ Failed to log claim:', error)
     // Don't throw error for logging failures
   }
 }

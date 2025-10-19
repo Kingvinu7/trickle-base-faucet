@@ -24,6 +24,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { address, txHash, farcasterUser } = body
     
+    console.log('📥 CLAIM RECEIVED AT API:', {
+      address,
+      txHash,
+      farcasterUser,
+      hasFarcasterData: !!farcasterUser,
+      farcasterUserKeys: farcasterUser ? Object.keys(farcasterUser) : 'none'
+    })
+    
     if (!address || !txHash) {
       return NextResponse.json(
         { 
@@ -60,7 +68,7 @@ export async function POST(request: NextRequest) {
       claim: savedClaim
     })
   } catch (error) {
-    console.error('Log claim API error:', error)
+    console.error('❌ Log claim API error:', error)
     
     return NextResponse.json(
       {

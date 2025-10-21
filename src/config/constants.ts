@@ -325,7 +325,16 @@ export const API_ENDPOINTS = {
   STATS: '/stats',
   BLOCKCHAIN_STATS: '/blockchain-stats',
   HEALTH: '/health',
-  REQUEST_SIGNATURE: '/request-signature'
+  REQUEST_SIGNATURE: '/request-signature',
+  CHECK_FOLLOW: '/check-follow'
+} as const
+
+// Farcaster Configuration
+export const FARCASTER_CONFIG = {
+  targetFid: 250869, // vinu07's FID
+  targetUsername: 'vinu07',
+  targetProfileUrl: 'https://farcaster.xyz/vinu07',
+  followRequired: process.env.NEXT_PUBLIC_FOLLOW_REQUIRED !== 'false' // Default true
 } as const
 
 // App Configuration

@@ -4,15 +4,17 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
 import { useAppKit } from '@reown/appkit/react'
-import { Wallet, Coins, LogOut, AlertCircle, CheckCircle, Loader2, Sparkles } from 'lucide-react'
+import { Wallet, Coins, LogOut, AlertCircle, CheckCircle, Loader2, Sparkles, UserPlus, ExternalLink } from 'lucide-react'
 import { base } from '@reown/appkit/networks'
 import { useFaucetClaim } from '@/hooks/use-faucet-claim'
 import { useEligibility } from '@/hooks/use-eligibility'
 import { useFarcasterMiniappContext } from '@/components/farcaster-miniapp-provider'
+import { useFollowCheck } from '@/hooks/use-follow-check'
 import { formatAddress } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
+import { FARCASTER_CONFIG } from '@/config/constants'
 
 export function FaucetCard() {
   const { address, isConnected, chain } = useAccount()
@@ -25,14 +27,16 @@ export function FaucetCard() {
   
   const { data: eligibility, isLoading: eligibilityLoading, refetch: refetchEligibility } = useEligibility(address, isAllowedPlatform)
   const { mutate: claimTokens, isPending: isClaimPending } = useFaucetClaim(farcasterUser || undefined)
+  const { data: followCheck, isLoading: followCheckLoading, refetch: refetchFollow } = useFollowCheck(farcasterUser?.fid, FARCASTER_CONFIG.followRequired)
 
   const isWrongNetwork = isConnected && chain?.id !== base.id
+  const isFollowing = followCheck?.isFollowing ?? (!FARCASTER_CONFIG.followRequired) // Default to true if follow not required
   // Allow claiming if eligibility is undefined (API issues) or true, but not when explicitly false with a real cooldown message
   const hasRealCooldown = eligibility?.eligible === false && 
     (eligibility?.message?.includes('Please wait') || 
      eligibility?.message?.includes('more hours before claiming') || 
      eligibility?.message?.includes('hours before claiming again'))
-  const canClaim = !isWrongNetwork && !isClaimPending && !eligibilityLoading && !hasRealCooldown && isAllowedPlatform
+  const canClaim = !isWrongNetwork && !isClaimPending && !eligibilityLoading && !hasRealCooldown && isAllowedPlatform && isFollowing
   
   const handleConnect = async () => {
     try {
@@ -198,6 +202,72 @@ export function FaucetCard() {
                 </div>
               </div>
             </div>
+
+            {/* Follow Requirement - Only show if follow is required and user is in Farcaster */}
+            {FARCASTER_CONFIG.followRequired && isAllowedPlatform && farcasterUser && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`rounded-2xl p-4 border-2 ${
+                  isFollowing 
+                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' 
+                    : 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200'
+                }`}
+              >
+                {followCheckLoading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                    <span className="text-sm text-gray-600">Checking follow status...</span>
+                  </div>
+                ) : isFollowing ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <div className="text-sm font-semibold text-green-800">
+                      Following @{FARCASTER_CONFIG.targetUsername} ✓
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-start space-x-3">
+                      <UserPlus className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="font-bold text-purple-900 mb-1">
+                          Follow Required
+                        </div>
+                        <div className="text-sm text-purple-700 mb-3">
+                          To claim ETH, please follow <span className="font-semibold">@{FARCASTER_CONFIG.targetUsername}</span> on Farcaster
+                        </div>
+                        <Button
+                          onClick={() => {
+                            window.open(FARCASTER_CONFIG.targetProfileUrl, '_blank')
+                            toast.info('After following, come back and refresh to claim!')
+                            // Refetch after 3 seconds
+                            setTimeout(() => {
+                              refetchFollow()
+                            }, 3000)
+                          }}
+                          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                        >
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Follow @{FARCASTER_CONFIG.targetUsername}
+                          <ExternalLink className="w-3 h-3 ml-2" />
+                        </Button>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        refetchFollow()
+                        toast.info('Checking follow status...')
+                      }}
+                      variant="outline"
+                      className="w-full text-sm"
+                    >
+                      I've followed - Check again
+                    </Button>
+                  </div>
+                )}
+              </motion.div>
+            )}
 
             {/* Info Banner - Only show for allowed platforms */}
             {isAllowedPlatform && (

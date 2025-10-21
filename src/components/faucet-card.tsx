@@ -262,9 +262,18 @@ export function FaucetCard() {
                       </div>
                     </div>
                     <Button
-                      onClick={() => {
-                        refetchFollow()
+                      onClick={async () => {
                         toast.info('Checking follow status...')
+                        const result = await refetchFollow()
+                        
+                        // Check the result after refetch
+                        if (result.data?.isFollowing) {
+                          toast.success('✓ Following confirmed! You can now claim ETH.')
+                        } else if (result.data?.quotaExceeded || result.data?.apiError) {
+                          toast.warning('Follow check unavailable, but you can still claim!')
+                        } else {
+                          toast.error(`You're not following @${FARCASTER_CONFIG.targetUsername}. Please follow and try again.`)
+                        }
                       }}
                       variant="outline"
                       className="w-full text-sm"

@@ -9,6 +9,7 @@ interface FollowCheckResult {
   development?: boolean
   apiError?: boolean
   error?: boolean
+  quotaExceeded?: boolean
 }
 
 /**

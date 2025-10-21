@@ -219,6 +219,13 @@ export function FaucetCard() {
                     <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
                     <span className="text-sm text-gray-600">Checking follow status...</span>
                   </div>
+                ) : followCheck?.quotaExceeded ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <AlertCircle className="w-5 h-5 text-amber-600" />
+                    <div className="text-sm text-amber-800">
+                      Follow check temporarily unavailable - You can still claim!
+                    </div>
+                  </div>
                 ) : isFollowing ? (
                   <div className="flex items-center justify-center space-x-2">
                     <CheckCircle className="w-5 h-5 text-green-600" />

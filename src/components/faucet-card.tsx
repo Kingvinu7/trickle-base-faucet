@@ -10,6 +10,7 @@ import { useFaucetClaim } from '@/hooks/use-faucet-claim'
 import { useEligibility } from '@/hooks/use-eligibility'
 import { useFarcasterMiniappContext } from '@/components/farcaster-miniapp-provider'
 import { useFollowCheck } from '@/hooks/use-follow-check'
+import { useSpamLabelCheck } from '@/hooks/use-spam-label-check'
 import { formatAddress } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -28,15 +29,17 @@ export function FaucetCard() {
   const { data: eligibility, isLoading: eligibilityLoading, refetch: refetchEligibility } = useEligibility(address, isAllowedPlatform)
   const { mutate: claimTokens, isPending: isClaimPending } = useFaucetClaim(farcasterUser || undefined)
   const { data: followCheck, isLoading: followCheckLoading, refetch: refetchFollow } = useFollowCheck(farcasterUser?.fid, FARCASTER_CONFIG.followRequired)
+  const { data: spamLabelCheck, isLoading: spamLabelCheckLoading, refetch: refetchSpamLabel } = useSpamLabelCheck(farcasterUser?.fid, FARCASTER_CONFIG.spamLabelRequired)
 
   const isWrongNetwork = isConnected && chain?.id !== base.id
   const isFollowing = followCheck?.isFollowing ?? (!FARCASTER_CONFIG.followRequired) // Default to true if follow not required
+  const hasSpamLabel2 = spamLabelCheck?.hasSpamLabel2 ?? (!FARCASTER_CONFIG.spamLabelRequired) // Default to true if spam label not required
   // Allow claiming if eligibility is undefined (API issues) or true, but not when explicitly false with a real cooldown message
   const hasRealCooldown = eligibility?.eligible === false && 
     (eligibility?.message?.includes('Please wait') || 
      eligibility?.message?.includes('more hours before claiming') || 
      eligibility?.message?.includes('hours before claiming again'))
-  const canClaim = !isWrongNetwork && !isClaimPending && !eligibilityLoading && !hasRealCooldown && isAllowedPlatform && isFollowing
+  const canClaim = !isWrongNetwork && !isClaimPending && !eligibilityLoading && !hasRealCooldown && isAllowedPlatform && isFollowing && hasSpamLabel2
   
   const handleConnect = async () => {
     try {
@@ -202,6 +205,65 @@ export function FaucetCard() {
                 </div>
               </div>
             </div>
+
+            {/* Spam Label Requirement - Only show if spam label is required and user is in Farcaster */}
+            {FARCASTER_CONFIG.spamLabelRequired && isAllowedPlatform && farcasterUser && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`rounded-2xl p-4 border-2 ${
+                  hasSpamLabel2 
+                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' 
+                    : 'bg-gradient-to-r from-red-50 to-orange-50 border-red-200'
+                }`}
+              >
+                {spamLabelCheckLoading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                    <span className="text-sm text-gray-600">Checking spam label...</span>
+                  </div>
+                ) : spamLabelCheck?.apiError ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <AlertCircle className="w-5 h-5 text-amber-600" />
+                    <div className="text-sm text-amber-800">
+                      Spam label check temporarily unavailable - You can still claim!
+                    </div>
+                  </div>
+                ) : hasSpamLabel2 ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <div className="text-sm font-semibold text-green-800">
+                      Verified User ✓
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-start space-x-3">
+                      <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="font-bold text-red-900 mb-1">
+                          Verification Required
+                        </div>
+                        <div className="text-sm text-red-700 mb-3">
+                          Your account needs spam label 2 to claim ETH. This helps us prevent abuse and ensure fair distribution.
+                        </div>
+                        <div className="text-xs text-red-600">
+                          Learn more about{' '}
+                          <a 
+                            href="https://github.com/merkle-team/labels" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="underline hover:text-red-800"
+                          >
+                            Merkle Team labels
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
 
             {/* Follow Requirement - Only show if follow is required and user is in Farcaster */}
             {FARCASTER_CONFIG.followRequired && isAllowedPlatform && farcasterUser && (

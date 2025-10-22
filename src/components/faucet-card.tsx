@@ -206,7 +206,7 @@ export function FaucetCard() {
               </div>
             </div>
 
-            {/* Spam Label Requirement - Only show if spam label is required and user is in Farcaster */}
+            {/* Neynar Score Requirement - Only show if score check is required and user is in Farcaster */}
             {FARCASTER_CONFIG.spamLabelRequired && isAllowedPlatform && farcasterUser && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -220,20 +220,25 @@ export function FaucetCard() {
                 {spamLabelCheckLoading ? (
                   <div className="flex items-center justify-center space-x-2">
                     <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
-                    <span className="text-sm text-gray-600">Checking spam label...</span>
+                    <span className="text-sm text-gray-600">Checking account reputation...</span>
                   </div>
-                ) : spamLabelCheck?.apiError ? (
+                ) : spamLabelCheck?.apiError || spamLabelCheck?.quotaExceeded ? (
                   <div className="flex items-center justify-center space-x-2">
                     <AlertCircle className="w-5 h-5 text-amber-600" />
                     <div className="text-sm text-amber-800">
-                      Spam label check temporarily unavailable - You can still claim!
+                      Reputation check temporarily unavailable - You can still claim!
                     </div>
                   </div>
                 ) : hasSpamLabel2 ? (
                   <div className="flex items-center justify-center space-x-2">
                     <CheckCircle className="w-5 h-5 text-green-600" />
                     <div className="text-sm font-semibold text-green-800">
-                      Verified User ✓
+                      Verified Account ✓
+                      {spamLabelCheck?.score && (
+                        <span className="text-xs ml-1 text-green-600">
+                          (Score: {spamLabelCheck.score.toFixed(2)})
+                        </span>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -242,21 +247,18 @@ export function FaucetCard() {
                       <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
                       <div className="flex-1">
                         <div className="font-bold text-red-900 mb-1">
-                          Verification Required
+                          Reputation Too Low
                         </div>
-                        <div className="text-sm text-red-700 mb-3">
-                          Your account needs spam label 2 to claim ETH. This helps us prevent abuse and ensure fair distribution.
+                        <div className="text-sm text-red-700 mb-2">
+                          Your account needs a minimum Neynar score of {spamLabelCheck?.minimumScore || 0.5} to claim ETH.
+                          {spamLabelCheck?.score !== undefined && (
+                            <span className="block mt-1">
+                              Current score: <span className="font-semibold">{spamLabelCheck.score.toFixed(2)}</span>
+                            </span>
+                          )}
                         </div>
                         <div className="text-xs text-red-600">
-                          Learn more about{' '}
-                          <a 
-                            href="https://github.com/merkle-team/labels" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="underline hover:text-red-800"
-                          >
-                            Merkle Team labels
-                          </a>
+                          Neynar score reflects your account's activity and reputation. Active engagement on Farcaster will improve your score over time.
                         </div>
                       </div>
                     </div>

@@ -1,8 +1,18 @@
 # Spam Label 2 Requirement Implementation
 
+## ⚠️ Current Status: NOT FULLY IMPLEMENTED
+
+**Important:** This feature is currently **disabled by default** because spam labels are not available via a public API.
+
 ## Summary
 
-Added a new criteria requiring claimers to have **spam label 2** from the [Merkle Team labels](https://github.com/merkle-team/labels) system. This helps prevent abuse and ensures fair distribution of faucet funds to verified, non-spam users.
+This implementation provides the **framework** for requiring claimers to have **spam label 2** from Warpcast's spam labels (published by [Merkle Team](https://github.com/merkle-team/labels)). However, the actual spam checking is currently a **placeholder** that allows all users.
+
+### Why It's Not Fully Implemented
+
+Warpcast spam labels are stored in an **84MB Git LFS file** (`spam.jsonl`) with **no public API**. This makes it impractical to fetch and parse on every request. The file is updated weekly and contains millions of FID entries.
+
+**File location:** https://github.com/warpcast/labels/blob/main/spam.jsonl
 
 ## Changes Made
 
@@ -147,13 +157,67 @@ This ensures legitimate users can still claim even if there are temporary API is
 ## Dependencies
 
 - No new npm packages required
-- Uses existing Merkle Team labels API (free, public)
+- **No external API dependency** (labels are in Git LFS file)
 - Integrates seamlessly with existing Farcaster miniapp context
+
+## How to Fully Implement This Feature
+
+To make spam label checking actually work, you need to implement a custom backend solution:
+
+### Option 1: Database-Backed Solution (Recommended)
+
+1. **Download the spam labels file:**
+   ```bash
+   git lfs clone https://github.com/warpcast/labels.git
+   ```
+
+2. **Parse and store in database:**
+   ```javascript
+   // Parse spam.jsonl and insert into database
+   // Schema: { fid: number, label: number, updated_at: timestamp }
+   ```
+
+3. **Set up weekly updates:**
+   ```javascript
+   // Cron job to fetch and update labels weekly
+   ```
+
+4. **Update the API endpoint:**
+   ```javascript
+   // Query your database instead of external API
+   const result = await db.query('SELECT label FROM spam_labels WHERE fid = $1', [fid])
+   const hasSpamLabel2 = result.rows[0]?.label === 2
+   ```
+
+5. **Enable the feature:**
+   ```env
+   NEXT_PUBLIC_SPAM_LABEL_REQUIRED=true
+   ```
+
+### Option 2: In-Memory Cache Solution
+
+1. Download and parse the JSONL file
+2. Load into Redis or similar cache on startup
+3. Update weekly via background job
+4. Query the cache in the API endpoint
+
+### Option 3: Third-Party Service
+
+If a third-party service emerges that indexes Warpcast spam labels with an API, integrate with that service.
+
+## Current Behavior
+
+- **Feature is DISABLED by default** (`NEXT_PUBLIC_SPAM_LABEL_REQUIRED=false`)
+- When disabled, the spam label check always returns `true` (passes)
+- No users are blocked due to spam labels
+- The UI component is hidden when disabled
 
 ## Future Improvements
 
-1. Add retry mechanism with exponential backoff for failed API calls
-2. Display label information (which labels the user has)
-3. Add admin dashboard to see spam label statistics
-4. Cache label checks in database for better performance
+1. ✅ Implement database-backed label storage and lookup
+2. Add retry mechanism with exponential backoff for failed DB queries
+3. Display label information (which labels the user has)
+4. Add admin dashboard to see spam label statistics
 5. Support for other label types (not just label 2)
+6. Automated weekly updates of spam labels
+7. Metrics and monitoring for label distribution

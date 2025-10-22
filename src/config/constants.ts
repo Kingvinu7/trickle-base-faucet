@@ -336,7 +336,12 @@ export const FARCASTER_CONFIG = {
   targetUsername: 'vinu07',
   targetProfileUrl: 'https://farcaster.xyz/vinu07',
   followRequired: process.env.NEXT_PUBLIC_FOLLOW_REQUIRED !== 'false', // Default true
-  spamLabelRequired: process.env.NEXT_PUBLIC_SPAM_LABEL_REQUIRED !== 'false' // Default true
+  // Spam label checking is disabled by default because labels are stored in an 84MB Git LFS file
+  // and there's no public API. To enable, you'd need to implement a custom solution:
+  // 1. Download and cache the spam.jsonl file periodically
+  // 2. Store in a database for quick lookups
+  // 3. Or use a third-party indexing service
+  spamLabelRequired: process.env.NEXT_PUBLIC_SPAM_LABEL_REQUIRED === 'true' // Default false
 } as const
 
 // App Configuration

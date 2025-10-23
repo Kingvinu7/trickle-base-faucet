@@ -15,7 +15,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { MON_CONFIG, FARCASTER_CONFIG } from '@/config/constants'
-import { monadTestnet } from '@/lib/reownConfig'
+import { monadTestnet } from '@/lib/wagmiConfig'
 
 export function MonFaucetCard() {
   const { address, isConnected, chain } = useAccount()

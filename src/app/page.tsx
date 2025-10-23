@@ -14,7 +14,7 @@ import { useState, useEffect } from 'react'
 import { MON_CONFIG } from '@/config/constants'
 import { Coins, Sparkles } from 'lucide-react'
 import { base } from '@reown/appkit/networks'
-import { monadTestnet } from '@/lib/reownConfig'
+import { monadTestnet } from '@/lib/wagmiConfig'
 import { useSwitchChain } from 'wagmi'
 import { toast } from 'sonner'
 
@@ -107,9 +107,8 @@ export default function HomePage() {
           <Header />
           
           
-          {/* Wallet Connection & Network Selector */}
+          {/* Network Selector */}
           <div className="flex justify-center items-center gap-3 flex-wrap">
-            <appkit-button />
             <NetworkSelector />
           </div>
 

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useAccount, useSwitchChain } from 'wagmi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Check, Network } from 'lucide-react'
-import { networks, getNetworkName } from '@/lib/reownConfig'
+import { networks, getNetworkName } from '@/lib/wagmiConfig'
 import { Button } from './ui/button'
 import { toast } from 'sonner'
 

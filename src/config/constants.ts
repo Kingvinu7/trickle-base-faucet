@@ -685,8 +685,8 @@ export const MON_FAUCET_CONTRACT = {
 export const SUPPORTED_CHAINS = [base]
 export const DEFAULT_CHAIN = base
 
-// Monad Testnet - Imported from reownConfig to avoid circular dependency
-// Access via: import { monadTestnet } from '@/lib/reownConfig'
+// Monad Testnet - Imported from wagmiConfig to avoid circular dependency
+// Access via: import { monadTestnet } from '@/lib/wagmiConfig'
 
 // Environment validation
 function validateEnvironment() {

@@ -110,7 +110,7 @@ export { wagmiAdapter }
 export const appKitConfig = hasValidProjectId ? {
   adapters: [wagmiAdapter],
   projectId: projectId!,
-  networks,
+  networks, // Includes Base, Monad Testnet, Mainnet, Arbitrum
   defaultNetwork: base,
   metadata,
   features: { 
@@ -129,6 +129,9 @@ export const appKitConfig = hasValidProjectId ? {
     '--w3m-border-radius-master': '12px',
     '--w3m-accent': '#0052FF',
   },
+  // Enable all networks including custom ones
+  enableNetworkView: true,
+  enableAccountView: true,
 } : null
 
 // Initialize AppKit (call this once in your app)

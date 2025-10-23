@@ -29,7 +29,7 @@ console.log('🔧 Reown AppKit Configuration:', {
 export const isReownInitialized = hasValidProjectId
 
 // Define supported networks (consolidated single source of truth)
-export const networks: [Chain, ...Chain[]] = [base, mainnet, arbitrum]
+export const networks: [Chain, ...Chain[]] = [base, monadTestnet, mainnet, arbitrum]
 
 // App metadata
 export const metadata = {

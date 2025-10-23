@@ -681,30 +681,8 @@ export const MON_FAUCET_CONTRACT = {
   ] as const
 } as const
 
-// Monad Testnet Configuration
-// Based on https://chainlist.org/chain/10143
-export const monadTestnet = {
-  id: 10143, // Monad Testnet chain ID
-  name: 'Monad Testnet',
-  network: 'monad-testnet',
-  nativeCurrency: {
-    decimals: 18,
-    name: 'MON',
-    symbol: 'MON',
-  },
-  rpcUrls: {
-    default: {
-      http: ['https://testnet-rpc.monad.xyz'],
-    },
-    public: {
-      http: ['https://testnet-rpc.monad.xyz'],
-    },
-  },
-  blockExplorers: {
-    default: { name: 'Monad Explorer', url: 'https://explorer.monad.xyz' },
-  },
-  testnet: true,
-} as const
+// Import monadTestnet from reownConfig (single source of truth)
+export { monadTestnet } from '../lib/reownConfig'
 
 // Network Configuration
 export const SUPPORTED_CHAINS = [base, monadTestnet]

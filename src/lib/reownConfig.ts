@@ -6,7 +6,33 @@ import { mainnet, arbitrum, base } from '@reown/appkit/networks'
 import { injected, coinbaseWallet } from 'wagmi/connectors'
 import type { Chain } from 'viem'
 import type { AppKit } from '@reown/appkit'
-import { monadTestnet } from '../config/constants'
+
+// Monad Testnet configuration (AppKit format)
+// Based on https://chainlist.org/chain/10143
+export const monadTestnet = {
+  id: 10143,
+  name: 'Monad Testnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'MON',
+    symbol: 'MON',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://testnet-rpc.monad.xyz'],
+    },
+    public: {
+      http: ['https://testnet-rpc.monad.xyz'],
+    },
+  },
+  blockExplorers: {
+    default: { 
+      name: 'Monad Explorer', 
+      url: 'https://explorer.monad.xyz' 
+    },
+  },
+  testnet: true,
+} as const satisfies Chain
 
 // Project configuration
 export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID

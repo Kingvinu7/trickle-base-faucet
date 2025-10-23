@@ -29,17 +29,30 @@ export function MonFaucetCard() {
   const isFollowing = followCheck?.isFollowing ?? (!FARCASTER_CONFIG.followRequired)
   const hasSpamLabel2 = spamLabelCheck?.hasSpamLabel2 ?? (!FARCASTER_CONFIG.spamLabelRequired)
   
+  // Allow claim if all requirements met, even if contract is not deployed yet
+  // Contract will handle the actual claim validation
   const canClaim = isConnected && 
                    !isClaimPending && 
                    !statsLoading && 
                    isAllowedPlatform && 
                    isFollowing && 
                    hasSpamLabel2 &&
-                   monStats?.canClaimNow
+                   (monStats?.canClaimNow ?? true) // Default to true if stats not available
 
   const handleClaim = async () => {
     if (!address || !canClaim) {
-      console.log('Cannot claim MON:', { address, canClaim, monStats })
+      console.log('Cannot claim MON:', { 
+        address, 
+        canClaim, 
+        isConnected,
+        isClaimPending,
+        statsLoading,
+        isAllowedPlatform,
+        isFollowing,
+        hasSpamLabel2,
+        monStatsCanClaim: monStats?.canClaimNow,
+        monStats 
+      })
       return
     }
 
@@ -302,13 +315,15 @@ export function MonFaucetCard() {
             )}
 
             {/* MON Stats Display */}
-            {statsLoading ? (
-              <div className="flex items-center justify-center p-4">
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                <span className="text-gray-600">Loading MON stats...</span>
-              </div>
-            ) : monStats ? (
-              <div className="grid grid-cols-2 gap-4">
+            {isAllowedPlatform && isFollowing && hasSpamLabel2 && (
+              <>
+                {statsLoading ? (
+                  <div className="flex items-center justify-center p-4">
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    <span className="text-gray-600">Loading MON stats...</span>
+                  </div>
+                ) : monStats ? (
+                  <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-4 border border-purple-100">
                   <div className="text-xs text-purple-600 font-medium mb-1">Claims Today</div>
                   <div className="text-2xl font-bold text-purple-900">
@@ -327,9 +342,20 @@ export function MonFaucetCard() {
                   <div className="text-xs text-pink-600 mt-1">
                     {monStats.remainingMON.toFixed(1)} MON left
                   </div>
+                  </div>
                 </div>
-              </div>
-            ) : null}
+              ) : (
+                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                  <div className="flex items-center justify-center">
+                    <AlertCircle className="w-5 h-5 text-blue-500 mr-2" />
+                    <div className="text-center text-sm text-blue-700">
+                      Contract stats unavailable. You can still try claiming!
+                    </div>
+                  </div>
+                </div>
+              )}
+              </>
+            )}
 
             {/* Daily Limit Reached Message - Only show if user actually reached the limit */}
             {monStats && !monStats.canClaimNow && monStats.remainingClaims === 0 && (

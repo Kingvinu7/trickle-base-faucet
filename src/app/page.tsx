@@ -57,8 +57,20 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.7 }}
-              className="glass rounded-2xl p-2 shadow-lg"
+              className="space-y-3"
             >
+              {/* Instruction Text */}
+              <div className="text-center">
+                <h3 className="text-lg font-bold text-gray-800">
+                  Select Your Preferred Token
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Choose which token you'd like to claim
+                </p>
+              </div>
+
+              {/* Tab Selector */}
+              <div className="glass rounded-2xl p-2 shadow-lg">
               <div className="grid grid-cols-2 gap-2">
                 {/* Base ETH Tab */}
                 <button
@@ -113,6 +125,7 @@ export default function HomePage() {
                     />
                   )}
                 </button>
+              </div>
               </div>
             </motion.div>
           )}

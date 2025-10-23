@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAccount } from 'wagmi'
-import { Coins, Loader2, CheckCircle, AlertCircle, Sparkles } from 'lucide-react'
+import { Coins, Loader2, CheckCircle, AlertCircle, Sparkles, UserPlus, ExternalLink } from 'lucide-react'
 import { useMonClaim } from '@/hooks/use-mon-claim'
 import { useMonStats } from '@/hooks/use-mon-stats'
 import { useFarcasterMiniappContext } from '@/components/farcaster-miniapp-provider'
@@ -23,8 +23,8 @@ export function MonFaucetCard() {
   
   const { data: monStats, isLoading: statsLoading, refetch: refetchStats } = useMonStats(address)
   const { mutate: claimMon, isPending: isClaimPending } = useMonClaim(farcasterUser || undefined)
-  const { data: followCheck } = useFollowCheck(farcasterUser?.fid, FARCASTER_CONFIG.followRequired)
-  const { data: spamLabelCheck } = useSpamLabelCheck(farcasterUser?.fid, FARCASTER_CONFIG.spamLabelRequired)
+  const { data: followCheck, isLoading: followCheckLoading, refetch: refetchFollow } = useFollowCheck(farcasterUser?.fid, FARCASTER_CONFIG.followRequired)
+  const { data: spamLabelCheck, isLoading: spamLabelCheckLoading } = useSpamLabelCheck(farcasterUser?.fid, FARCASTER_CONFIG.spamLabelRequired)
 
   const isFollowing = followCheck?.isFollowing ?? (!FARCASTER_CONFIG.followRequired)
   const hasSpamLabel2 = spamLabelCheck?.hasSpamLabel2 ?? (!FARCASTER_CONFIG.spamLabelRequired)
@@ -139,6 +139,168 @@ export function MonFaucetCard() {
               </div>
             </motion.div>
 
+            {/* Platform Restriction Notice */}
+            {!isAllowedPlatform && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl p-4 border-2 border-red-200"
+              >
+                <div className="flex items-start space-x-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="font-bold text-red-900 mb-1">
+                      Access Restricted
+                    </div>
+                    <div className="text-sm text-red-700">
+                      This faucet is only available for <span className="font-semibold">Farcaster</span> users. Please access it through the Farcaster app to claim MON.
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Neynar Score Requirement */}
+            {FARCASTER_CONFIG.spamLabelRequired && isAllowedPlatform && farcasterUser && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`rounded-2xl p-4 border-2 ${
+                  hasSpamLabel2 
+                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' 
+                    : 'bg-gradient-to-r from-red-50 to-orange-50 border-red-200'
+                }`}
+              >
+                {spamLabelCheckLoading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                    <span className="text-sm text-gray-600">Checking account reputation...</span>
+                  </div>
+                ) : spamLabelCheck?.apiError || spamLabelCheck?.quotaExceeded ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <AlertCircle className="w-5 h-5 text-amber-600" />
+                    <div className="text-sm text-amber-800">
+                      Reputation check temporarily unavailable - You can still claim!
+                    </div>
+                  </div>
+                ) : hasSpamLabel2 ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <div className="text-sm font-semibold text-green-800">
+                      Verified Account ✓
+                      {spamLabelCheck?.score && (
+                        <span className="text-xs ml-1 text-green-600">
+                          (Score: {spamLabelCheck.score.toFixed(2)})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-start space-x-3">
+                      <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="font-bold text-red-900 mb-1">
+                          Reputation Too Low
+                        </div>
+                        <div className="text-sm text-red-700 mb-2">
+                          Your account needs a minimum Neynar score of {spamLabelCheck?.minimumScore || 0.5} to claim MON.
+                          {spamLabelCheck?.score !== undefined && (
+                            <span className="block mt-1">
+                              Current score: <span className="font-semibold">{spamLabelCheck.score.toFixed(2)}</span>
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-red-600">
+                          Neynar score reflects your account's activity and reputation. Active engagement on Farcaster will improve your score over time.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* Follow Requirement */}
+            {FARCASTER_CONFIG.followRequired && isAllowedPlatform && farcasterUser && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`rounded-2xl p-4 border-2 ${
+                  isFollowing 
+                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' 
+                    : 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200'
+                }`}
+              >
+                {followCheckLoading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                    <span className="text-sm text-gray-600">Checking follow status...</span>
+                  </div>
+                ) : followCheck?.quotaExceeded ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <AlertCircle className="w-5 h-5 text-amber-600" />
+                    <div className="text-sm text-amber-800">
+                      Follow check temporarily unavailable - You can still claim!
+                    </div>
+                  </div>
+                ) : isFollowing ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <div className="text-sm font-semibold text-green-800">
+                      Following @{FARCASTER_CONFIG.targetUsername} ✓
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-start space-x-3">
+                      <UserPlus className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="font-bold text-purple-900 mb-1">
+                          Follow Required
+                        </div>
+                        <div className="text-sm text-purple-700 mb-3">
+                          To claim MON, please follow <span className="font-semibold">@{FARCASTER_CONFIG.targetUsername}</span> on Farcaster
+                        </div>
+                        <Button
+                          onClick={() => {
+                            window.open(FARCASTER_CONFIG.targetProfileUrl, '_blank')
+                            toast.info('After following, come back and refresh to claim!')
+                            setTimeout(() => {
+                              refetchFollow()
+                            }, 3000)
+                          }}
+                          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                        >
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Follow @{FARCASTER_CONFIG.targetUsername}
+                          <ExternalLink className="w-3 h-3 ml-2" />
+                        </Button>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={async () => {
+                        toast.info('Checking follow status...')
+                        const result = await refetchFollow()
+                        
+                        if (result.data?.isFollowing) {
+                          toast.success('✓ Following confirmed! You can now claim MON.')
+                        } else if (result.data?.quotaExceeded || result.data?.apiError) {
+                          toast.warning('Follow check unavailable, but you can still claim!')
+                        } else {
+                          toast.error(`You're not following @${FARCASTER_CONFIG.targetUsername}. Please follow and try again.`)
+                        }
+                      }}
+                      variant="outline"
+                      className="w-full text-sm"
+                    >
+                      I've followed - Check again
+                    </Button>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
             {/* MON Stats Display */}
             {statsLoading ? (
               <div className="flex items-center justify-center p-4">
@@ -169,8 +331,8 @@ export function MonFaucetCard() {
               </div>
             ) : null}
 
-            {/* Daily Limit Reached Message */}
-            {monStats && !monStats.canClaimNow && (
+            {/* Daily Limit Reached Message - Only show if user actually reached the limit */}
+            {monStats && !monStats.canClaimNow && monStats.remainingClaims === 0 && (
               <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
                 <div className="flex items-center justify-center">
                   <AlertCircle className="w-5 h-5 text-amber-500 mr-2" />
@@ -211,6 +373,16 @@ export function MonFaucetCard() {
                   <AlertCircle className="w-5 h-5 mr-2" />
                   Platform Restricted
                 </>
+              ) : !isFollowing ? (
+                <>
+                  <UserPlus className="w-5 h-5 mr-2" />
+                  Follow Required
+                </>
+              ) : !hasSpamLabel2 ? (
+                <>
+                  <AlertCircle className="w-5 h-5 mr-2" />
+                  Low Reputation Score
+                </>
               ) : statsLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
@@ -221,7 +393,7 @@ export function MonFaucetCard() {
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                   Claiming...
                 </>
-              ) : !monStats?.canClaimNow ? (
+              ) : monStats && !monStats.canClaimNow && monStats.remainingClaims === 0 ? (
                 <>
                   <AlertCircle className="w-5 h-5 mr-2" />
                   Daily Limit Reached

@@ -31,6 +31,16 @@ export function MonFaucetCard() {
   const hasSpamLabel2 = spamLabelCheck?.hasSpamLabel2 ?? (!FARCASTER_CONFIG.spamLabelRequired)
   const isWrongNetwork = isConnected && chain?.id !== monadTestnet.id
   
+  // Debug logging
+  console.log('MON Faucet Network Check:', {
+    isConnected,
+    currentChainId: chain?.id,
+    currentChainName: chain?.name,
+    expectedChainId: monadTestnet.id,
+    expectedChainName: monadTestnet.name,
+    isWrongNetwork
+  })
+  
   // Allow claim if all requirements met, even if contract is not deployed yet
   // Contract will handle the actual claim validation
   const canClaim = isConnected && 

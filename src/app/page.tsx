@@ -56,8 +56,8 @@ export default function HomePage() {
             
             // Try to add the network to wallet
             try {
-              if (window.ethereum) {
-                await window.ethereum.request({
+              if (typeof window !== 'undefined' && (window as any).ethereum) {
+                await (window as any).ethereum.request({
                   method: 'wallet_addEthereumChain',
                   params: [{
                     chainId: '0x279f', // 10143 in hex

@@ -63,8 +63,8 @@ export function MonFaucetCard() {
       // If network not found, try to add it
       if (error?.code === 4902 || error?.message?.includes('Unrecognized chain')) {
         try {
-          if (window.ethereum) {
-            await window.ethereum.request({
+          if (typeof window !== 'undefined' && (window as any).ethereum) {
+            await (window as any).ethereum.request({
               method: 'wallet_addEthereumChain',
               params: [{
                 chainId: '0x279f', // 10143 in hex

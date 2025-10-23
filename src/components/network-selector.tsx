@@ -6,11 +6,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Check, Network } from 'lucide-react'
 import { networks, getNetworkName } from '@/lib/reownConfig'
 import { Button } from './ui/button'
+import { toast } from 'sonner'
 
 export function NetworkSelector() {
   const { chain, isConnected } = useAccount()
   const { switchChain, isPending } = useSwitchChain()
   const [isOpen, setIsOpen] = useState(false)
+  const [isSwitching, setIsSwitching] = useState(false)
 
   if (!isConnected) return null
 
@@ -19,11 +21,57 @@ export function NetworkSelector() {
     : null
 
   const handleSwitch = async (chainId: number) => {
+    const targetNetwork = networks.find(n => n.id === chainId)
+    if (!targetNetwork) return
+
+    setIsSwitching(true)
+    
     try {
+      console.log('🔄 Attempting to switch to:', targetNetwork.name, `(${chainId})`)
       await switchChain({ chainId })
       setIsOpen(false)
-    } catch (error) {
+      toast.success(`Switched to ${targetNetwork.name}`)
+    } catch (error: any) {
       console.error('Failed to switch network:', error)
+      
+      // If network doesn't exist in wallet (error 4902), try to add it
+      if (error.code === 4902 || error.message?.includes('Unrecognized chain')) {
+        console.log('🔧 Network not found in wallet, attempting to add...')
+        
+        try {
+          // Add the network to wallet
+          if (typeof window !== 'undefined' && (window as any).ethereum) {
+            await (window as any).ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: `0x${chainId.toString(16)}`,
+                chainName: targetNetwork.name,
+                nativeCurrency: targetNetwork.nativeCurrency,
+                rpcUrls: [targetNetwork.rpcUrls.default.http[0]],
+                blockExplorerUrls: targetNetwork.blockExplorers 
+                  ? [targetNetwork.blockExplorers.default.url]
+                  : undefined,
+              }],
+            })
+            
+            console.log('✅ Network added successfully, switching...')
+            
+            // Try switching again after adding
+            await switchChain({ chainId })
+            setIsOpen(false)
+            toast.success(`Added and switched to ${targetNetwork.name}`)
+          } else {
+            toast.error('Please add the network manually in your wallet')
+          }
+        } catch (addError: any) {
+          console.error('Failed to add network:', addError)
+          toast.error(`Failed to add ${targetNetwork.name}. Please add it manually.`)
+        }
+      } else {
+        toast.error(error.message || `Failed to switch to ${targetNetwork.name}`)
+      }
+    } finally {
+      setIsSwitching(false)
     }
   }
 
@@ -66,7 +114,7 @@ export function NetworkSelector() {
                   <button
                     key={network.id}
                     onClick={() => handleSwitch(network.id)}
-                    disabled={isActive || isPending}
+                    disabled={isActive || isPending || isSwitching}
                     className={`
                       w-full flex items-center justify-between px-3 py-2.5 rounded-lg
                       transition-all duration-150
@@ -74,7 +122,7 @@ export function NetworkSelector() {
                         ? 'bg-blue-50 text-blue-700 cursor-default' 
                         : 'hover:bg-gray-50 text-gray-700'
                       }
-                      ${isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                      ${(isPending || isSwitching) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                     `}
                   >
                     <div className="flex items-center gap-3">

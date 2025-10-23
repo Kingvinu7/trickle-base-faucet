@@ -48,11 +48,10 @@ export function MonFaucetCard() {
   
   // Allow claim if all requirements met, even if contract is not deployed yet
   // Contract will handle the actual claim validation
-  // NOTE: Disable claims in Farcaster since it doesn't support custom networks like Monad
   const canClaim = isConnected && 
                    !isClaimPending && 
                    !statsLoading && 
-                   !isAllowedPlatform && // MON only works OUTSIDE Farcaster (opposite of ETH)
+                   isAllowedPlatform && 
                    isFollowing && 
                    hasSpamLabel2 &&
                    !isWrongNetwork &&
@@ -209,43 +208,29 @@ export function MonFaucetCard() {
               </div>
             </motion.div>
 
-            {/* Farcaster Limitation Notice */}
-            {isAllowedPlatform && (
+            {/* Platform Restriction Notice */}
+            {!isAllowedPlatform && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border-2 border-blue-200"
+                className="bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl p-4 border-2 border-red-200"
               >
                 <div className="flex items-start space-x-3">
-                  <AlertCircle className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="font-bold text-blue-900 mb-1">
-                      Farcaster Wallet Limitation
+                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="font-bold text-red-900 mb-1">
+                      Access Restricted
                     </div>
-                    <div className="text-sm text-blue-700 mb-3">
-                      Farcaster's embedded wallet only supports <strong>Base, Ethereum, and Arbitrum</strong>. 
-                      To claim MON on Monad Testnet, please use:
-                    </div>
-                    <ul className="text-sm text-blue-700 mb-3 list-disc list-inside space-y-1">
-                      <li>MetaMask</li>
-                      <li>Coinbase Wallet</li>
-                      <li>Rainbow Wallet</li>
-                      <li>Or any wallet that supports custom networks</li>
-                    </ul>
-                    <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded">
-                      <strong>How to claim MON:</strong><br/>
-                      1. Open this site in a regular browser<br/>
-                      2. Connect MetaMask or Coinbase Wallet<br/>
-                      3. Add Monad Testnet (Chain ID: 10143)<br/>
-                      4. Come back and claim MON tokens
+                    <div className="text-sm text-red-700">
+                      This faucet is only available for <span className="font-semibold">Farcaster</span> users. Please access it through the Farcaster app to claim MON.
                     </div>
                   </div>
                 </div>
               </motion.div>
             )}
 
-            {/* Wrong Network Notice - Only for non-Farcaster users */}
-            {!isAllowedPlatform && isWrongNetwork && (
+            {/* Wrong Network Notice */}
+            {isWrongNetwork && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -272,8 +257,8 @@ export function MonFaucetCard() {
             )}
 
 
-            {/* Neynar Score Requirement - Only check for non-Farcaster users */}
-            {FARCASTER_CONFIG.spamLabelRequired && !isAllowedPlatform && farcasterUser && (
+            {/* Neynar Score Requirement */}
+            {FARCASTER_CONFIG.spamLabelRequired && isAllowedPlatform && farcasterUser && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -333,8 +318,8 @@ export function MonFaucetCard() {
               </motion.div>
             )}
 
-            {/* Follow Requirement - Only check for non-Farcaster users */}
-            {FARCASTER_CONFIG.followRequired && !isAllowedPlatform && farcasterUser && (
+            {/* Follow Requirement */}
+            {FARCASTER_CONFIG.followRequired && isAllowedPlatform && farcasterUser && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -413,8 +398,8 @@ export function MonFaucetCard() {
               </motion.div>
             )}
 
-            {/* MON Stats Display - Only show for non-Farcaster users */}
-            {!isAllowedPlatform && isFollowing && hasSpamLabel2 && (
+            {/* MON Stats Display */}
+            {isAllowedPlatform && isFollowing && hasSpamLabel2 && (
               <>
                 {statsLoading ? (
                   <div className="flex items-center justify-center p-4">
@@ -493,15 +478,15 @@ export function MonFaucetCard() {
               disabled={!canClaim}
               className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isAllowedPlatform ? (
-                <>
-                  <AlertCircle className="w-5 h-5 mr-2" />
-                  Use Regular Wallet
-                </>
-              ) : isWrongNetwork ? (
+              {isWrongNetwork ? (
                 <>
                   <AlertCircle className="w-5 h-5 mr-2" />
                   Wrong Network
+                </>
+              ) : !isAllowedPlatform ? (
+                <>
+                  <AlertCircle className="w-5 h-5 mr-2" />
+                  Platform Restricted
                 </>
               ) : !isFollowing ? (
                 <>

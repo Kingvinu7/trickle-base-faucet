@@ -1,26 +1,30 @@
 {
-  "frame": {
-    "name": "Trickle Base Faucet",
-    "version": "1",
-    "iconUrl": "https://trickle-base-faucet.vercel.app/ti.png",
-    "homeUrl": "https://trickle-base-faucet.vercel.app",
-    "imageUrl": "https://trickle-base-faucet.vercel.app/tp.png",
-    "buttonTitle": "Get ETH",
-    "splashImageUrl": "https://trickle-base-faucet.vercel.app/ts.png",
-    "splashBackgroundColor": "#0052FF",
-    "subtitle": "Base Faucet",
-    "description": "Get $0.03 worth of ETH for gas fees on Base mainnet. A Farcaster miniapp for seamless crypto transactions.",
-    "primaryCategory": "utility",
-    "tags": ["Base", "faucet", "ETH", "gas", "web3"],
-    "tagline": "Free ETH for Base transactions",
-    "ogTitle": "Trickle - Base Faucet",
-    "ogDescription": "Get $0.03 worth of ETH for gas fees on Base mainnet. A Farcaster miniapp for seamless crypto transactions.",
-    "ogImageUrl": "https://trickle-base-faucet.vercel.app/tp.png",
-    "castShareUrl": "https://trickle-base-faucet.vercel.app"
-  },
   "accountAssociation": {
-    "header": "eyJmaWQiOjI1MDg2OSwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDQwZUY3Qzc1YjRlRDBkQjY3N0MzN2VjODkxODM0QjI1MDk1ODI1ZDYifQ",
-    "payload": "eyJkb21haW4iOiJ0cmlja2xlLWJhc2UtZmF1Y2V0LnZlcmNlbC5hcHAifQ",
-    "signature": "MHgzZmZjODlkYmUwYzUwNzI1ZmU4NmRjMzgxNDNiYWM2ZjE0NDhmZGU2M2UxNzdkMzQ5M2UyM2E5NzkwMGQ2ZGQ4NDVhYmRlMDI5ZDk1YzZmOGU5MDA2YmYzOGE5NGNkYjYwZTc5NWMxNDg1MWY5NTU4OWJkMTBkOGZlOWM0MWM4NzFi"
+    "header": "farcaster-miniapp-v1"
+  },
+  "frame": {
+    "version": "next",
+    "name": "Trickle - Multi-Chain Faucet",
+    "iconUrl": "https://trickle-faucet.vercel.app/ti.png",
+    "homeUrl": "https://trickle-faucet.vercel.app",
+    "imageUrl": "https://trickle-faucet.vercel.app/tp.png",
+    "buttonTitle": "Get Free Tokens",
+    "splashImageUrl": "https://trickle-faucet.vercel.app/th.png",
+    "splashBackgroundColor": "#000000",
+    "webhookUrl": "https://trickle-faucet.vercel.app/api/webhook"
+  },
+  "miniapp": {
+    "name": "Trickle Faucet",
+    "description": "Get free Base ETH and Monad Testnet MON tokens",
+    "url": "https://trickle-faucet.vercel.app",
+    "iconUrl": "https://trickle-faucet.vercel.app/ti.png",
+    "version": "1.0.0",
+    "requiredChains": [
+      "eip155:8453",
+      "eip155:10143"
+    ],
+    "requiredCapabilities": [
+      "wallet.getEthereumProvider"
+    ]
   }
 }

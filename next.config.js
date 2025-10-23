@@ -21,6 +21,18 @@ const nextConfig = {
     NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
+  async headers() {
+    return [
+      {
+        // Serve Farcaster miniapp manifest with proper headers
+        source: '/.well-known/farcaster.json',
+        headers: [
+          { key: 'Content-Type', value: 'application/json' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+        ],
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig

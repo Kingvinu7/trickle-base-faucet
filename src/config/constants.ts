@@ -682,8 +682,9 @@ export const MON_FAUCET_CONTRACT = {
 } as const
 
 // Monad Testnet Configuration
+// Based on https://chainlist.org/chain/10143
 export const monadTestnet = {
-  id: 41454, // Monad Testnet chain ID
+  id: 10143, // Monad Testnet chain ID
   name: 'Monad Testnet',
   network: 'monad-testnet',
   nativeCurrency: {
@@ -693,14 +694,14 @@ export const monadTestnet = {
   },
   rpcUrls: {
     default: {
-      http: ['https://testnet.monad.xyz'],
+      http: ['https://testnet-rpc.monad.xyz'],
     },
     public: {
-      http: ['https://testnet.monad.xyz'],
+      http: ['https://testnet-rpc.monad.xyz'],
     },
   },
   blockExplorers: {
-    default: { name: 'Monad Explorer', url: 'https://explorer.testnet.monad.xyz' },
+    default: { name: 'Monad Explorer', url: 'https://explorer.monad.xyz' },
   },
   testnet: true,
 } as const

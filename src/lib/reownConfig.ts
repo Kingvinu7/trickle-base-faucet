@@ -48,7 +48,13 @@ console.log('🔧 Reown AppKit Configuration:', {
   projectId: projectId ? `${projectId.substring(0, 8)}...` : 'Not set',
   hasValidProjectId,
   mode: hasValidProjectId ? 'Reown AppKit' : 'Fallback wagmi',
-  environment: process.env.NODE_ENV || 'development'
+  environment: process.env.NODE_ENV || 'development',
+  supportedNetworks: [
+    `Base (${base.id})`,
+    `Monad Testnet (${monadTestnet.id})`,
+    `Ethereum (${mainnet.id})`,
+    `Arbitrum (${arbitrum.id})`
+  ]
 })
 
 // Export initialization flag
@@ -191,6 +197,10 @@ export const isBaseNetwork = (chainId?: number) => {
   return chainId === base.id
 }
 
+export const isMonadTestnet = (chainId?: number) => {
+  return chainId === monadTestnet.id
+}
+
 export const getSupportedNetworkById = (chainId: number) => {
   return networks.find(network => network.id === chainId)
 }
@@ -200,11 +210,19 @@ export const isSupportedNetwork = (chainId?: number) => {
   return networks.some(network => network.id === chainId)
 }
 
+export const getNetworkName = (chainId?: number) => {
+  if (!chainId) return 'Unknown'
+  const network = networks.find(n => n.id === chainId)
+  return network?.name || 'Unknown'
+}
+
 // Export network constants for easy access
 export { base, mainnet, arbitrum }
+// monadTestnet already exported at line 12
 export const BASE_CHAIN_ID = base.id
 export const MAINNET_CHAIN_ID = mainnet.id
 export const ARBITRUM_CHAIN_ID = arbitrum.id
+export const MONAD_TESTNET_CHAIN_ID = monadTestnet.id
 
 // Default export for convenience
 export default {
@@ -218,11 +236,14 @@ export default {
   openAppKit,
   closeAppKit,
   isBaseNetwork,
+  isMonadTestnet,
   getSupportedNetworkById,
   isSupportedNetwork,
+  getNetworkName,
   isReownInitialized,
   appKitInstance,
   BASE_CHAIN_ID,
   MAINNET_CHAIN_ID,
   ARBITRUM_CHAIN_ID,
+  MONAD_TESTNET_CHAIN_ID,
 }

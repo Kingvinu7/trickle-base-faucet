@@ -681,12 +681,12 @@ export const MON_FAUCET_CONTRACT = {
   ] as const
 } as const
 
-// Import monadTestnet from reownConfig (single source of truth)
-export { monadTestnet } from '../lib/reownConfig'
-
 // Network Configuration
-export const SUPPORTED_CHAINS = [base, monadTestnet]
+export const SUPPORTED_CHAINS = [base]
 export const DEFAULT_CHAIN = base
+
+// Monad Testnet - Imported from reownConfig to avoid circular dependency
+// Access via: import { monadTestnet } from '@/lib/reownConfig'
 
 // Environment validation
 function validateEnvironment() {

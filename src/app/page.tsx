@@ -87,7 +87,7 @@ export default function HomePage() {
                   )}
                 </button>
 
-                {/* MON Token Tab */}
+                {/* Monad Testnet Tab */}
                 <button
                   onClick={() => setSelectedFaucet('mon')}
                   className={`relative px-6 py-4 rounded-xl font-semibold transition-all duration-300 ${
@@ -99,7 +99,7 @@ export default function HomePage() {
                   <div className="flex flex-col items-center space-y-2">
                     <Sparkles className={`w-6 h-6 ${selectedFaucet === 'mon' ? 'text-white' : 'text-purple-500'}`} />
                     <div>
-                      <div className="text-sm font-bold">MON Token</div>
+                      <div className="text-sm font-bold">Monad Testnet</div>
                       <div className={`text-xs ${selectedFaucet === 'mon' ? 'text-purple-100' : 'text-gray-500'}`}>
                         0.1 MON • 10x/day
                       </div>

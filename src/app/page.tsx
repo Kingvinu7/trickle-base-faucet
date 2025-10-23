@@ -1,6 +1,7 @@
 'use client'
 
 import { FaucetCard } from '@/components/faucet-card'
+import { MonFaucetCard } from '@/components/mon-faucet-card'
 import { StatsCards } from '@/components/stats-cards'
 import { HallOfFame } from '@/components/hall-of-fame'
 import { Header } from '@/components/header'
@@ -9,6 +10,7 @@ import { useStats } from '@/hooks/use-stats'
 import { motion } from 'framer-motion'
 import { useAccount } from 'wagmi'
 import { useEffect } from 'react'
+import { MON_CONFIG } from '@/config/constants'
 
 export default function HomePage() {
   const { data: stats, isLoading: statsLoading } = useStats()
@@ -45,8 +47,24 @@ export default function HomePage() {
             isLoading={statsLoading}
           />
 
-          {/* Main Faucet Card */}
+          {/* Claim Options Header */}
+          {MON_CONFIG.enabled && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.7 }}
+              className="text-center"
+            >
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Choose Your Claim</h2>
+              <p className="text-sm text-gray-600">Select which token you'd like to claim</p>
+            </motion.div>
+          )}
+
+          {/* Base ETH Faucet Card */}
           <FaucetCard />
+
+          {/* MON Token Faucet Card */}
+          {MON_CONFIG.enabled && <MonFaucetCard />}
 
           {/* Hall of Fame - Recent Claimers */}
           <HallOfFame />

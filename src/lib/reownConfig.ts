@@ -6,6 +6,7 @@ import { mainnet, arbitrum, base } from '@reown/appkit/networks'
 import { injected, coinbaseWallet } from 'wagmi/connectors'
 import type { Chain } from 'viem'
 import type { AppKit } from '@reown/appkit'
+import { monadTestnet } from '../config/constants'
 
 // Project configuration
 export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID

@@ -5,6 +5,7 @@ import { MonFaucetCard } from '@/components/mon-faucet-card'
 import { StatsCards } from '@/components/stats-cards'
 import { HallOfFame } from '@/components/hall-of-fame'
 import { Header } from '@/components/header'
+import { NetworkSelector } from '@/components/network-selector'
 import { Footer } from '@/components/footer'
 import { useStats } from '@/hooks/use-stats'
 import { motion } from 'framer-motion'
@@ -106,9 +107,10 @@ export default function HomePage() {
           <Header />
           
           
-          {/* AppKit Button Example */}
-          <div className="text-center">
+          {/* Wallet Connection & Network Selector */}
+          <div className="flex justify-center items-center gap-3 flex-wrap">
             <appkit-button />
+            <NetworkSelector />
           </div>
 
           {/* Stats */}

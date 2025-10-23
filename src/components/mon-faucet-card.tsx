@@ -54,10 +54,39 @@ export function MonFaucetCard() {
   
   const handleSwitchNetwork = async () => {
     try {
+      console.log('Manual switch to Monad Testnet (10143)...')
       await switchChain({ chainId: monadTestnet.id })
       toast.success('Switched to Monad Testnet')
-    } catch (error) {
-      toast.error('Failed to switch network')
+    } catch (error: any) {
+      console.error('Manual switch failed:', error)
+      
+      // If network not found, try to add it
+      if (error?.code === 4902 || error?.message?.includes('Unrecognized chain')) {
+        try {
+          if (window.ethereum) {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0x279f', // 10143 in hex
+                chainName: 'Monad Testnet',
+                nativeCurrency: {
+                  name: 'MON',
+                  symbol: 'MON',
+                  decimals: 18
+                },
+                rpcUrls: ['https://testnet-rpc.monad.xyz'],
+                blockExplorerUrls: ['https://explorer.monad.xyz']
+              }]
+            })
+            toast.success('Added Monad Testnet! Please switch to it.')
+          }
+        } catch (addError) {
+          console.error('Failed to add network:', addError)
+          toast.error('Please add Monad Testnet manually:\nChain ID: 10143\nRPC: https://testnet-rpc.monad.xyz')
+        }
+      } else {
+        toast.error('Failed to switch network. Please switch manually in your wallet.')
+      }
     }
   }
 

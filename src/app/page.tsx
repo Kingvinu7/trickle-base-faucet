@@ -41,12 +41,54 @@ export default function HomePage() {
         await switchChain({ chainId: base.id })
         toast.success('Switched to Base network')
       } else if (faucet === 'mon' && chain?.id !== monadTestnet.id) {
-        await switchChain({ chainId: monadTestnet.id })
-        toast.success('Switched to Monad Testnet')
+        console.log('Attempting to switch to Monad Testnet (10143)...')
+        
+        // Try to switch to Monad Testnet
+        try {
+          await switchChain({ chainId: monadTestnet.id })
+          toast.success('Switched to Monad Testnet')
+        } catch (switchError: any) {
+          console.error('Switch failed:', switchError)
+          
+          // If network not found, try to add it first
+          if (switchError?.code === 4902 || switchError?.message?.includes('Unrecognized chain')) {
+            console.log('Network not in wallet, attempting to add...')
+            
+            // Try to add the network to wallet
+            try {
+              if (window.ethereum) {
+                await window.ethereum.request({
+                  method: 'wallet_addEthereumChain',
+                  params: [{
+                    chainId: '0x279f', // 10143 in hex
+                    chainName: 'Monad Testnet',
+                    nativeCurrency: {
+                      name: 'MON',
+                      symbol: 'MON',
+                      decimals: 18
+                    },
+                    rpcUrls: ['https://testnet-rpc.monad.xyz'],
+                    blockExplorerUrls: ['https://explorer.monad.xyz']
+                  }]
+                })
+                toast.success('Added Monad Testnet! Switching now...')
+                
+                // Try switching again after adding
+                await switchChain({ chainId: monadTestnet.id })
+                toast.success('Switched to Monad Testnet')
+              }
+            } catch (addError) {
+              console.error('Failed to add network:', addError)
+              toast.error('Please add Monad Testnet to your wallet manually')
+            }
+          } else {
+            throw switchError
+          }
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to switch chain:', error)
-      toast.error('Failed to switch network. Please switch manually.')
+      toast.error('Failed to switch network. Please add and switch to Monad Testnet manually in your wallet.')
     }
   }
 

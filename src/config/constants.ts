@@ -681,8 +681,32 @@ export const MON_FAUCET_CONTRACT = {
   ] as const
 } as const
 
+// Monad Testnet Configuration
+export const monadTestnet = {
+  id: 41454, // Monad Testnet chain ID
+  name: 'Monad Testnet',
+  network: 'monad-testnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'MON',
+    symbol: 'MON',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://testnet.monad.xyz'],
+    },
+    public: {
+      http: ['https://testnet.monad.xyz'],
+    },
+  },
+  blockExplorers: {
+    default: { name: 'Monad Explorer', url: 'https://explorer.testnet.monad.xyz' },
+  },
+  testnet: true,
+} as const
+
 // Network Configuration
-export const SUPPORTED_CHAINS = [base]
+export const SUPPORTED_CHAINS = [base, monadTestnet]
 export const DEFAULT_CHAIN = base
 
 // Environment validation

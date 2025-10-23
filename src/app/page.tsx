@@ -10,14 +10,18 @@ import { useStats } from '@/hooks/use-stats'
 import { motion } from 'framer-motion'
 import { useAccount } from 'wagmi'
 import { useState, useEffect } from 'react'
-import { MON_CONFIG } from '@/config/constants'
+import { MON_CONFIG, monadTestnet } from '@/config/constants'
 import { Coins, Sparkles } from 'lucide-react'
+import { base } from '@reown/appkit/networks'
+import { useSwitchChain } from 'wagmi'
+import { toast } from 'sonner'
 
 type FaucetType = 'base' | 'mon'
 
 export default function HomePage() {
   const { data: stats, isLoading: statsLoading } = useStats()
-  const { address, isConnected } = useAccount()
+  const { address, isConnected, chain } = useAccount()
+  const { switchChain } = useSwitchChain()
   const [selectedFaucet, setSelectedFaucet] = useState<FaucetType>('base')
 
   useEffect(() => {
@@ -25,6 +29,26 @@ export default function HomePage() {
       console.log('User connected:', address)
     }
   }, [isConnected, address])
+
+  // Handle faucet selection and chain switching
+  const handleFaucetSelect = async (faucet: FaucetType) => {
+    setSelectedFaucet(faucet)
+    
+    if (!isConnected) return
+    
+    try {
+      if (faucet === 'base' && chain?.id !== base.id) {
+        await switchChain({ chainId: base.id })
+        toast.success('Switched to Base network')
+      } else if (faucet === 'mon' && chain?.id !== monadTestnet.id) {
+        await switchChain({ chainId: monadTestnet.id })
+        toast.success('Switched to Monad Testnet')
+      }
+    } catch (error) {
+      console.error('Failed to switch chain:', error)
+      toast.error('Failed to switch network. Please switch manually.')
+    }
+  }
 
   return (
     <div className="min-h-screen animated-gradient">
@@ -74,7 +98,7 @@ export default function HomePage() {
               <div className="grid grid-cols-2 gap-2">
                 {/* Base ETH Tab */}
                 <button
-                  onClick={() => setSelectedFaucet('base')}
+                  onClick={() => handleFaucetSelect('base')}
                   className={`relative px-6 py-4 rounded-xl font-semibold transition-all duration-300 ${
                     selectedFaucet === 'base'
                       ? 'bg-gradient-to-r from-trickle-blue to-trickle-blue-light text-white shadow-lg scale-105'
@@ -101,7 +125,7 @@ export default function HomePage() {
 
                 {/* Monad Testnet Tab */}
                 <button
-                  onClick={() => setSelectedFaucet('mon')}
+                  onClick={() => handleFaucetSelect('mon')}
                   className={`relative px-6 py-4 rounded-xl font-semibold transition-all duration-300 ${
                     selectedFaucet === 'mon'
                       ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg scale-105'

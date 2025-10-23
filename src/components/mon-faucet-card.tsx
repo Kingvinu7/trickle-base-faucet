@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAccount } from 'wagmi'
+import { useAccount, useSwitchChain } from 'wagmi'
 import { Coins, Loader2, CheckCircle, AlertCircle, Sparkles, UserPlus, ExternalLink } from 'lucide-react'
 import { useMonClaim } from '@/hooks/use-mon-claim'
 import { useMonStats } from '@/hooks/use-mon-stats'
@@ -13,10 +13,11 @@ import { formatAddress } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { MON_CONFIG, FARCASTER_CONFIG } from '@/config/constants'
+import { MON_CONFIG, FARCASTER_CONFIG, monadTestnet } from '@/config/constants'
 
 export function MonFaucetCard() {
-  const { address, isConnected } = useAccount()
+  const { address, isConnected, chain } = useAccount()
+  const { switchChain } = useSwitchChain()
   const { isAllowedPlatform, farcasterUser } = useFarcasterMiniappContext()
   
   const [claimProgress, setClaimProgress] = useState(0)
@@ -28,6 +29,7 @@ export function MonFaucetCard() {
 
   const isFollowing = followCheck?.isFollowing ?? (!FARCASTER_CONFIG.followRequired)
   const hasSpamLabel2 = spamLabelCheck?.hasSpamLabel2 ?? (!FARCASTER_CONFIG.spamLabelRequired)
+  const isWrongNetwork = isConnected && chain?.id !== monadTestnet.id
   
   // Allow claim if all requirements met, even if contract is not deployed yet
   // Contract will handle the actual claim validation
@@ -37,7 +39,17 @@ export function MonFaucetCard() {
                    isAllowedPlatform && 
                    isFollowing && 
                    hasSpamLabel2 &&
+                   !isWrongNetwork &&
                    (monStats?.canClaimNow ?? true) // Default to true if stats not available
+  
+  const handleSwitchNetwork = async () => {
+    try {
+      await switchChain({ chainId: monadTestnet.id })
+      toast.success('Switched to Monad Testnet')
+    } catch (error) {
+      toast.error('Failed to switch network')
+    }
+  }
 
   const handleClaim = async () => {
     if (!address || !canClaim) {
@@ -151,6 +163,33 @@ export function MonFaucetCard() {
                 <Sparkles className="w-5 h-5 text-purple-500" />
               </div>
             </motion.div>
+
+            {/* Wrong Network Notice */}
+            {isWrongNetwork && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-4 border-2 border-orange-200"
+              >
+                <div className="flex items-start space-x-3">
+                  <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="font-bold text-orange-900 mb-1">
+                      Wrong Network
+                    </div>
+                    <div className="text-sm text-orange-700 mb-3">
+                      Please switch to <span className="font-semibold">Monad Testnet</span> to claim MON tokens
+                    </div>
+                    <Button
+                      onClick={handleSwitchNetwork}
+                      className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white"
+                    >
+                      Switch to Monad Testnet
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             {/* Platform Restriction Notice */}
             {!isAllowedPlatform && (
@@ -394,7 +433,12 @@ export function MonFaucetCard() {
               disabled={!canClaim}
               className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {!isAllowedPlatform ? (
+              {isWrongNetwork ? (
+                <>
+                  <AlertCircle className="w-5 h-5 mr-2" />
+                  Wrong Network
+                </>
+              ) : !isAllowedPlatform ? (
                 <>
                   <AlertCircle className="w-5 h-5 mr-2" />
                   Platform Restricted

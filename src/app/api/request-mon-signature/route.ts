@@ -57,18 +57,27 @@ export async function POST(request: NextRequest) {
     // Generate a unique nonce (prevents replay attacks)
     const nonce = ethers.hexlify(ethers.randomBytes(32))
     
-    // Set deadline to 5 minutes from now (signatures expire)
-    const deadline = Math.floor(Date.now() / 1000) + (5 * 60)
+    // Set deadline to 30 minutes from now (Monad testnet can be slow)
+    // Increased from 5 minutes to handle potential block delays
+    const deadline = Math.floor(Date.now() / 1000) + (30 * 60)
     
     // Create the message hash (same as contract's getMessageHash)
+    // getMessageHash(user, nonce, deadline) returns keccak256(abi.encodePacked(user, nonce, deadline, address(this)))
     const messageHash = ethers.solidityPackedKeccak256(
       ['address', 'bytes32', 'uint256', 'address'],
       [address, nonce, deadline, contractAddress]
     )
     
-    // Sign the message hash with owner's private key
+    // Sign the Ethereum signed message hash (adds "\x19Ethereum Signed Message:\n32" prefix)
+    // This matches what the contract expects in getEthSignedMessageHash
     const wallet = new ethers.Wallet(privateKey)
     const signature = await wallet.signMessage(ethers.getBytes(messageHash))
+    
+    console.log('MON signature generation details:', {
+      messageHash,
+      signerAddress: wallet.address,
+      signatureLength: signature.length
+    })
     
     console.log('MON signature generated for:', {
       address,

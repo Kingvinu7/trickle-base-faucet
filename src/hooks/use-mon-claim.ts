@@ -64,6 +64,13 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
           setClaimAddress(address)
           
           // Step 3: Call contract with signature
+          console.log('Calling MON contract requestTokens with:', {
+            contract: MON_FAUCET_CONTRACT.address,
+            nonce,
+            deadline,
+            signaturePreview: signature.substring(0, 20) + '...'
+          })
+          
           writeContract(
             {
               address: MON_FAUCET_CONTRACT.address,
@@ -74,14 +81,30 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
             {
               onSuccess: async (txHash) => {
                 console.log('MON transaction sent:', txHash)
+                toast.info('Transaction submitted! Waiting for confirmation...')
                 setCurrentTxHash(txHash)
                 resolve(txHash)
               },
               onError: (error) => {
                 console.error('MON transaction failed:', error)
+                console.error('Error details:', {
+                  message: error.message,
+                  name: error.name
+                })
                 setCurrentTxHash(null)
                 setClaimAddress(null)
-                reject(new Error(parseError(error)))
+                
+                // Check for specific error messages
+                const errorMsg = error.message.toLowerCase()
+                if (errorMsg.includes('deadline') || errorMsg.includes('expired')) {
+                  reject(new Error('Signature expired. Please try again.'))
+                } else if (errorMsg.includes('signature')) {
+                  reject(new Error('Invalid signature. Please try again.'))
+                } else if (errorMsg.includes('already claimed')) {
+                  reject(new Error('You have already claimed today. Try again later.'))
+                } else {
+                  reject(new Error(parseError(error)))
+                }
               },
             }
           )

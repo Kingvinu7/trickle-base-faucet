@@ -118,21 +118,37 @@ export function MonFaucetCard() {
     try {
       claimMon(address, {
         onSuccess: (txHash) => {
-          console.log('MON claim successful:', txHash)
+          console.log('MON claim transaction sent:', txHash)
+          console.log('View on Monad Explorer: https://explorer.monad.xyz/tx/' + txHash)
           setClaimProgress(100)
+          
+          // Show success with link to explorer
           toast.success(
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <div>
-                <div className="font-medium">MON claimed successfully!</div>
-                <div className="text-sm text-gray-500">
-                  Transaction: {formatAddress(txHash)}
-                </div>
+            <div className="flex flex-col space-y-1">
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <div className="font-medium">Transaction Submitted!</div>
               </div>
-            </div>
+              <div className="text-xs text-gray-500">
+                TX: {formatAddress(txHash)}
+              </div>
+              <a 
+                href={`https://explorer.monad.xyz/tx/${txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-600 hover:text-blue-700 underline"
+              >
+                View on Monad Explorer →
+              </a>
+            </div>,
+            { duration: 10000 }
           )
-          refetchStats()
-          setTimeout(() => setClaimProgress(0), 3000)
+          
+          // Refresh stats after a delay
+          setTimeout(() => {
+            refetchStats()
+            setClaimProgress(0)
+          }, 5000)
         },
         onError: (error) => {
           console.error('MON claim failed:', error)

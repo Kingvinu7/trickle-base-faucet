@@ -18,9 +18,25 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
   
   const { writeContract, isPending: isWritePending, error: writeError } = useWriteContract()
   
-  const { isLoading: isReceiptLoading, isSuccess: isReceiptSuccess } = useWaitForTransactionReceipt({
+  const { 
+    isLoading: isReceiptLoading, 
+    isSuccess: isReceiptSuccess,
+    isError: isReceiptError,
+    error: receiptError
+  } = useWaitForTransactionReceipt({
     hash: currentTxHash as `0x${string}` | undefined,
+    timeout: 60_000, // 60 seconds timeout
   })
+
+  // Handle receipt errors
+  useEffect(() => {
+    if (isReceiptError && receiptError) {
+      console.error('Transaction receipt error:', receiptError)
+      toast.error('Transaction failed. Please check Monad Explorer and try again.')
+      setCurrentTxHash(null)
+      setClaimAddress(null)
+    }
+  }, [isReceiptError, receiptError])
 
   // Invalidate queries when transaction is confirmed
   useEffect(() => {

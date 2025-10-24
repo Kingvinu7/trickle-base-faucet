@@ -80,12 +80,24 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
           setClaimAddress(address)
           
           // Step 3: Call contract with signature
-          console.log('Calling MON contract requestTokens with:', {
+          console.log('🚀 Calling MON contract requestTokens with:', {
             contract: MON_FAUCET_CONTRACT.address,
+            functionName: 'requestTokens',
             nonce,
+            nonceType: typeof nonce,
             deadline,
-            signaturePreview: signature.substring(0, 20) + '...'
+            deadlineType: typeof deadline,
+            deadlineBigInt: BigInt(deadline).toString(),
+            signature,
+            signatureLength: signature.length,
+            signaturePreview: signature.substring(0, 20) + '...',
+            address: address
           })
+          
+          // Verify contract address is set
+          if (!MON_FAUCET_CONTRACT.address || MON_FAUCET_CONTRACT.address.length === 0) {
+            throw new Error('MON_FAUCET_CONTRACT.address is not configured! Please set NEXT_PUBLIC_MON_FAUCET_CONTRACT_ADDRESS')
+          }
           
           writeContract(
             {

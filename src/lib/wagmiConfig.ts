@@ -95,16 +95,6 @@ export const MAINNET_CHAIN_ID = mainnet.id
 export const ARBITRUM_CHAIN_ID = arbitrum.id
 export const MONAD_TESTNET_CHAIN_ID = monadTestnet.id
 
-// Console logging for debugging
-console.log('🔧 Wagmi Configuration (Farcaster only):', {
-  mode: 'Farcaster embedded wallet',
-  supportedNetworks: [
-    `Base (${base.id})`,
-    `Monad Testnet (${monadTestnet.id})`,
-    `Ethereum (${mainnet.id})`,
-    `Arbitrum (${arbitrum.id})`
-  ]
-})
 
 // Default export
 export default {

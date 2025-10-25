@@ -68,21 +68,6 @@ export async function POST(request: NextRequest) {
       [address, nonce, deadline, contractAddress]
     )
     
-    console.log('MON message hash generated for client signing:', {
-      messageHash,
-      userAddress: address,
-      nonce,
-      deadline: new Date(deadline * 1000).toISOString(),
-      contractAddress
-    })
-    
-    console.log('MON message hash generated for:', {
-      address,
-      nonce,
-      deadline: new Date(deadline * 1000).toISOString(),
-      ip,
-      contractAddress
-    })
     
     // Return the message hash and parameters for client-side signing
     return NextResponse.json({

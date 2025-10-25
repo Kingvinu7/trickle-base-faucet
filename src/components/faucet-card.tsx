@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
-import { useAppKit } from '@reown/appkit/react'
+// import { useAppKit } from '@reown/appkit/react' // Disabled for Monad testnet support
 import { Wallet, Coins, LogOut, AlertCircle, CheckCircle, Loader2, Sparkles, UserPlus, ExternalLink } from 'lucide-react'
-import { base } from '@reown/appkit/networks'
+// import { base } from '@reown/appkit/networks' // Disabled for Monad testnet support
+import { base } from '@/lib/wagmiConfig' // Use wagmi config instead
 import { useFaucetClaim } from '@/hooks/use-faucet-claim'
 import { useEligibility } from '@/hooks/use-eligibility'
 import { useFarcasterMiniappContext } from '@/components/farcaster-miniapp-provider'
@@ -21,7 +22,10 @@ export function FaucetCard() {
   const { address, isConnected, chain } = useAccount()
   const { disconnect } = useDisconnect()
   const { switchChain } = useSwitchChain()
-  const { open } = useAppKit()
+  // const { open } = useAppKit() // Disabled for Monad testnet support
+  const open = () => {
+    console.warn('AppKit disabled for Monad testnet support. Use wallet connection directly.')
+  }
   const { isAllowedPlatform, isInFarcaster, farcasterUser } = useFarcasterMiniappContext()
   
   const [claimProgress, setClaimProgress] = useState(0)

@@ -1,4 +1,5 @@
-import { base } from '@reown/appkit/networks'
+// import { base } from '@reown/appkit/networks' // Disabled for Monad testnet support
+import { base } from '@/lib/wagmiConfig' // Use wagmi config instead
 
 // Contract Configuration
 export const FAUCET_CONTRACT = {

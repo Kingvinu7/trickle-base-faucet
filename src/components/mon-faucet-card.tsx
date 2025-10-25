@@ -26,25 +26,15 @@ export function MonFaucetCard() {
   const [claimProgress, setClaimProgress] = useState(0)
   
   const { data: monStats, isLoading: statsLoading, refetch: refetchStats } = useMonStats(address)
-  const { mutate: claimMon, isPending: isClaimPending } = useMonClaim(farcasterUser || undefined)
+  const { claim: claimMon, isClaimPending } = useMonClaim()
   const { data: followCheck, isLoading: followCheckLoading, refetch: refetchFollow } = useFollowCheck(farcasterUser?.fid, FARCASTER_CONFIG.followRequired)
   const { data: spamLabelCheck, isLoading: spamLabelCheckLoading } = useSpamLabelCheck(farcasterUser?.fid, FARCASTER_CONFIG.spamLabelRequired)
 
   const isFollowing = followCheck?.isFollowing ?? (!FARCASTER_CONFIG.followRequired)
   const hasSpamLabel2 = spamLabelCheck?.hasSpamLabel2 ?? (!FARCASTER_CONFIG.spamLabelRequired)
+  
   const isWrongNetwork = isConnected && chain?.id !== monadTestnet.id
   
-  // Debug logging
-  console.log('MON Faucet Network Check:', {
-    isConnected,
-    currentChainId: chain?.id,
-    currentChainName: chain?.name,
-    expectedChainId: monadTestnet.id,
-    expectedChainName: monadTestnet.name,
-    isWrongNetwork,
-    isInFarcaster,
-    canUseCustomNetworks
-  })
   
   // Allow claim if all requirements met, even if contract is not deployed yet
   // Contract will handle the actual claim validation
@@ -97,65 +87,19 @@ export function MonFaucetCard() {
 
   const handleClaim = async () => {
     if (!address || !canClaim) {
-      console.log('Cannot claim MON:', { 
-        address, 
-        canClaim, 
-        isConnected,
-        isClaimPending,
-        statsLoading,
-        isAllowedPlatform,
-        isFollowing,
-        hasSpamLabel2,
-        monStatsCanClaim: monStats?.canClaimNow,
-        monStats 
-      })
       return
     }
-
-    console.log('Starting MON claim process for address:', address)
     setClaimProgress(25)
 
     try {
-      claimMon(address, {
-        onSuccess: (txHash) => {
-          console.log('MON claim transaction sent:', txHash)
-          console.log('View on Monad Explorer: https://explorer.monad.xyz/tx/' + txHash)
-          setClaimProgress(100)
-          
-          // Show success with link to explorer
-          toast.success(
-            <div className="flex flex-col space-y-1">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <div className="font-medium">Transaction Submitted!</div>
-              </div>
-              <div className="text-xs text-gray-500">
-                TX: {formatAddress(txHash)}
-              </div>
-              <a 
-                href={`https://explorer.monad.xyz/tx/${txHash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:text-blue-700 underline"
-              >
-                View on Monad Explorer →
-              </a>
-            </div>,
-            { duration: 10000 }
-          )
-          
-          // Refresh stats after a delay
-          setTimeout(() => {
-            refetchStats()
-            setClaimProgress(0)
-          }, 5000)
-        },
-        onError: (error) => {
-          console.error('MON claim failed:', error)
-          toast.error(error.message || 'MON claim failed. Please try again.')
-          setClaimProgress(0)
-        }
-      })
+      claimMon(address)
+      setClaimProgress(100)
+      
+      // Refresh stats after a delay
+      setTimeout(() => {
+        refetchStats()
+        setClaimProgress(0)
+      }, 5000)
       
       setClaimProgress(50)
     } catch (error) {
@@ -177,6 +121,8 @@ export function MonFaucetCard() {
       transition={{ duration: 0.5, delay: 0.9 }}
       className="glass rounded-3xl p-6 shadow-xl space-y-6"
     >
+      {/* Vercel Preview Mode Notice */}
+
       <AnimatePresence mode="wait">
         {!isConnected ? (
           // Not Connected State

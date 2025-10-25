@@ -68,33 +68,14 @@ export async function POST(request: NextRequest) {
       [address, nonce, deadline, contractAddress]
     )
     
-    // Sign the Ethereum signed message hash (adds "\x19Ethereum Signed Message:\n32" prefix)
-    // This matches what the contract expects in getEthSignedMessageHash
-    const wallet = new ethers.Wallet(privateKey)
-    const signature = await wallet.signMessage(ethers.getBytes(messageHash))
     
-    console.log('MON signature generation details:', {
-      messageHash,
-      signerAddress: wallet.address,
-      signatureLength: signature.length
-    })
-    
-    console.log('MON signature generated for:', {
-      address,
-      nonce,
-      deadline: new Date(deadline * 1000).toISOString(),
-      ip,
-      signer: wallet.address,
-      contractAddress
-    })
-    
-    // Return the signature and parameters
+    // Return the message hash and parameters for client-side signing
     return NextResponse.json({
       success: true,
-      signature,
+      messageHash,
       nonce,
       deadline,
-      message: 'MON signature generated successfully'
+      message: 'Message hash generated for client signing'
     })
     
   } catch (error) {

@@ -1,4 +1,5 @@
-import { base } from '@reown/appkit/networks'
+// import { base } from '@reown/appkit/networks' // Disabled for Monad testnet support
+import { base } from '@/lib/wagmiConfig' // Use wagmi config instead
 
 // Contract Configuration
 export const FAUCET_CONTRACT = {
@@ -724,10 +725,12 @@ export const FARCASTER_CONFIG = {
   targetFid: 250869, // vinu07's FID
   targetUsername: 'vinu07',
   targetProfileUrl: 'https://farcaster.xyz/vinu07',
+  // Follow requirement - can be disabled via environment variable
   followRequired: process.env.NEXT_PUBLIC_FOLLOW_REQUIRED !== 'false', // Default true
   // Neynar score requirement (minimum 0.5 score to claim)
   // Neynar score ranges from 0 to 1, where higher scores indicate more reputable accounts
   // This helps prevent spam and ensures fair distribution to legitimate users
+  // Can be disabled via environment variable
   spamLabelRequired: process.env.NEXT_PUBLIC_SPAM_LABEL_REQUIRED !== 'false' // Default true
 } as const
 

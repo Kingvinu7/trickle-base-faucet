@@ -1,6 +1,7 @@
 // src/lib/wagmiConfig.ts - Simplified wagmi config for Farcaster only
 import { http, cookieStorage, createConfig, createStorage } from 'wagmi'
 import { base, mainnet, arbitrum } from 'wagmi/chains'
+import { injected, coinbaseWallet, walletConnect } from 'wagmi/connectors'
 import type { Chain } from 'viem'
 
 // Monad Testnet configuration
@@ -32,9 +33,25 @@ export const monadTestnet = {
 // All supported networks
 export const networks: [Chain, ...Chain[]] = [base, monadTestnet, mainnet, arbitrum]
 
-// Create wagmi config (no AppKit, Farcaster wallet only)
+// Create wagmi config with connectors for browser access
 export const config = createConfig({
   chains: networks,
+  connectors: [
+    injected(), // MetaMask, Brave, etc.
+    coinbaseWallet({
+      appName: 'Trickle Base Faucet',
+      appLogoUrl: 'https://trickle-base-faucet.vercel.app/ti.png',
+    }),
+    walletConnect({
+      projectId: process.env.NEXT_PUBLIC_PROJECT_ID || 'placeholder',
+      metadata: {
+        name: 'Trickle Base Faucet',
+        description: 'Get ETH for gas fees on Base mainnet',
+        url: 'https://trickle-base-faucet.vercel.app',
+        icons: ['https://trickle-base-faucet.vercel.app/ti.png'],
+      },
+    }),
+  ],
   ssr: true,
   storage: createStorage({
     storage: cookieStorage,
@@ -78,16 +95,6 @@ export const MAINNET_CHAIN_ID = mainnet.id
 export const ARBITRUM_CHAIN_ID = arbitrum.id
 export const MONAD_TESTNET_CHAIN_ID = monadTestnet.id
 
-// Console logging for debugging
-console.log('🔧 Wagmi Configuration (Farcaster only):', {
-  mode: 'Farcaster embedded wallet',
-  supportedNetworks: [
-    `Base (${base.id})`,
-    `Monad Testnet (${monadTestnet.id})`,
-    `Ethereum (${mainnet.id})`,
-    `Arbitrum (${arbitrum.id})`
-  ]
-})
 
 // Default export
 export default {

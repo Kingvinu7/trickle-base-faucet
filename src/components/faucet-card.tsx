@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAccount, useDisconnect, useSwitchChain } from 'wagmi'
-import { useAppKit } from '@reown/appkit/react'
+import { useAccount, useConnect, useDisconnect, useSwitchChain } from 'wagmi'
+// import { useAppKit } from '@reown/appkit/react' // Disabled for Monad testnet support
 import { Wallet, Coins, LogOut, AlertCircle, CheckCircle, Loader2, Sparkles, UserPlus, ExternalLink } from 'lucide-react'
-import { base } from '@reown/appkit/networks'
+// import { base } from '@reown/appkit/networks' // Disabled for Monad testnet support
+import { base } from '@/lib/wagmiConfig' // Use wagmi config instead
 import { useFaucetClaim } from '@/hooks/use-faucet-claim'
 import { useEligibility } from '@/hooks/use-eligibility'
 import { useFarcasterMiniappContext } from '@/components/farcaster-miniapp-provider'
@@ -19,9 +20,9 @@ import { FARCASTER_CONFIG } from '@/config/constants'
 
 export function FaucetCard() {
   const { address, isConnected, chain } = useAccount()
+  const { connect, connectors, isPending: isConnecting } = useConnect()
   const { disconnect } = useDisconnect()
   const { switchChain } = useSwitchChain()
-  const { open } = useAppKit()
   const { isAllowedPlatform, isInFarcaster, farcasterUser } = useFarcasterMiniappContext()
   
   const [claimProgress, setClaimProgress] = useState(0)
@@ -41,12 +42,18 @@ export function FaucetCard() {
      eligibility?.message?.includes('hours before claiming again'))
   const canClaim = !isWrongNetwork && !isClaimPending && !eligibilityLoading && !hasRealCooldown && isAllowedPlatform && isFollowing && hasSpamLabel2
   
-  const handleConnect = async () => {
+  const handleConnect = async (connectorIndex = 0) => {
     try {
-      open()
+      const connector = connectors[connectorIndex]
+      if (connector) {
+        console.log('Connecting with:', connector.name)
+        connect({ connector })
+      } else {
+        toast.error('No wallet connectors available. Please install MetaMask or another wallet.')
+      }
     } catch (error) {
       console.error('Wallet connection error:', error)
-      toast.error('Failed to open wallet modal. Please try again.')
+      toast.error('Failed to connect wallet. Please try again.')
     }
   }
 
@@ -125,13 +132,31 @@ export function FaucetCard() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="text-center space-y-4"
           >
-            <Button
-              onClick={handleConnect}
-              className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-trickle-blue to-trickle-blue-light hover:shadow-lg transition-all duration-300"
-            >
-              <Wallet className="w-5 h-5 mr-2" />
-              Connect Wallet
-            </Button>
+            <div className="space-y-2">
+              <Button
+                onClick={() => handleConnect(0)}
+                disabled={isConnecting}
+                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-trickle-blue to-trickle-blue-light hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+              >
+                {isConnecting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Wallet className="w-5 h-5 mr-2" />
+                    Connect Wallet
+                  </>
+                )}
+              </Button>
+              
+              {connectors.length > 1 && (
+                <div className="text-xs text-gray-500 text-center">
+                  Available: {connectors.map(c => c.name).join(', ')}
+                </div>
+              )}
+            </div>
           </motion.div>
         ) : isWrongNetwork ? (
           // Wrong Network State

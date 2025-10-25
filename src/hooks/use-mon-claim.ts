@@ -1,47 +1,37 @@
-'use client'
-
+import React, { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { MON_FAUCET_CONTRACT, API_BASE_URL, API_ENDPOINTS } from '@/config/constants'
-import { parseError } from '@/lib/utils'
-import { useState, useEffect } from 'react'
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { toast } from 'sonner'
+import { MON_FAUCET_CONTRACT, MON_CONFIG, API_BASE_URL, API_ENDPOINTS } from '@/config/constants'
 
-/**
- * Hook to claim MON tokens from the faucet
- * Supports multiple claims per day (up to 10)
- */
-export function useMonClaim(farcasterUser?: {fid: number, username: string, displayName: string}) {
+export function useMonClaim() {
+  const { address } = useAccount()
+  const queryClient = useQueryClient()
   const [currentTxHash, setCurrentTxHash] = useState<string | null>(null)
   const [claimAddress, setClaimAddress] = useState<string | null>(null)
-  const queryClient = useQueryClient()
-  
-  const { writeContract, isPending: isWritePending, error: writeError } = useWriteContract()
-  
-  const { 
-    isLoading: isReceiptLoading, 
-    isSuccess: isReceiptSuccess,
-    isError: isReceiptError,
-    error: receiptError
-  } = useWaitForTransactionReceipt({
-    hash: currentTxHash as `0x${string}` | undefined,
-    timeout: 60_000, // 60 seconds timeout
+  const [isManuallyConfirmed, setIsManuallyConfirmed] = useState(false)
+
+  const { writeContract } = useWriteContract()
+
+  const { data: receipt, isSuccess: isReceiptSuccess, isError: isReceiptError } = useWaitForTransactionReceipt({
+    hash: currentTxHash as `0x${string}`,
+    timeout: 300000, // 5 minutes
+    retryCount: 3,
   })
 
-  // Handle receipt errors
-  useEffect(() => {
-    if (isReceiptError && receiptError) {
-      console.error('Transaction receipt error:', receiptError)
-      toast.error('Transaction failed. Please check Monad Explorer and try again.')
+  // Handle successful transaction receipt
+  React.useEffect(() => {
+    if (isReceiptSuccess && receipt && claimAddress) {
+      setIsManuallyConfirmed(false)
       setCurrentTxHash(null)
       setClaimAddress(null)
-    }
-  }, [isReceiptError, receiptError])
-
-  // Invalidate queries when transaction is confirmed
-  useEffect(() => {
-    if (isReceiptSuccess && claimAddress) {
-      console.log('MON transaction confirmed! Invalidating queries...')
+      
+      // Show success message
+      toast.success(
+        `MON Claim Successful! TX: ${currentTxHash ? formatAddress(currentTxHash) : 'Unknown'}\\nView on Monad Explorer: https://explorer.monad.xyz/tx/${currentTxHash}`,
+        { duration: 10000 }
+      )
+      
       // Wait a brief moment for the blockchain to process the event
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['monStats', claimAddress] })
@@ -49,16 +39,29 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
         queryClient.invalidateQueries({ queryKey: ['readContract'] })
       }, 2000)
     }
-  }, [isReceiptSuccess, claimAddress, queryClient])
+  }, [isReceiptSuccess, claimAddress, queryClient, currentTxHash])
 
   const mutation = useMutation({
     mutationFn: async (address: string): Promise<string> => {
       return new Promise(async (resolve, reject) => {
         try {
-          // Step 1: Request signature from backend
+          // Check if we're on the right network
+          if (typeof window !== 'undefined' && (window as any).ethereum) {
+            try {
+              const chainId = await (window as any).ethereum.request({ method: 'eth_chainId' })
+              if (chainId !== '0x279f') {
+                reject(new Error('Please switch to Monad testnet to claim MON tokens.'))
+                return
+              }
+            } catch (error) {
+              console.error('Failed to check network:', error)
+            }
+          }
+
+          // Step 1: Request message hash from backend for client-side signing
           toast.info('Requesting MON authorization...')
           
-          const signatureResponse = await fetch(`${API_BASE_URL}${API_ENDPOINTS.REQUEST_MON_SIGNATURE}`, {
+          const messageHashResponse = await fetch(`${API_BASE_URL}${API_ENDPOINTS.REQUEST_MON_SIGNATURE}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -66,102 +69,144 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
             body: JSON.stringify({ address }),
           })
           
-          if (!signatureResponse.ok) {
-            const errorData = await signatureResponse.json()
+          if (!messageHashResponse.ok) {
+            const errorData = await messageHashResponse.json()
             throw new Error(errorData.error || 'Failed to get MON authorization')
           }
           
-          const { signature, nonce, deadline } = await signatureResponse.json()
+          const { messageHash, nonce, deadline } = await messageHashResponse.json()
           
-          console.log('MON signature received:', { signature, nonce, deadline })
-          toast.success('Authorization received! Claiming MON...')
-          
-          // Step 2: Store the claim address for later query invalidation
-          setClaimAddress(address)
-          
-          // Step 3: Call contract with signature
-          console.log('🚀 Calling MON contract requestTokens with:', {
-            contract: MON_FAUCET_CONTRACT.address,
-            functionName: 'requestTokens',
-            nonce,
-            nonceType: typeof nonce,
-            deadline,
-            deadlineType: typeof deadline,
-            deadlineBigInt: BigInt(deadline).toString(),
-            signature,
-            signatureLength: signature.length,
-            signaturePreview: signature.substring(0, 20) + '...',
-            address: address
-          })
-          
-          // Verify contract address is set
-          if (!MON_FAUCET_CONTRACT.address || MON_FAUCET_CONTRACT.address.length === 0) {
-            throw new Error('MON_FAUCET_CONTRACT.address is not configured! Please set NEXT_PUBLIC_MON_FAUCET_CONTRACT_ADDRESS')
+          // Step 2: Sign the message with the user's wallet
+          if (typeof window === 'undefined' || !(window as any).ethereum) {
+            throw new Error('Wallet not available for signing')
           }
           
-          writeContract(
-            {
-              address: MON_FAUCET_CONTRACT.address,
-              abi: MON_FAUCET_CONTRACT.abi,
-              functionName: 'requestTokens',
-              args: [nonce, BigInt(deadline), signature],
-            },
-            {
-              onSuccess: async (txHash) => {
-                console.log('MON transaction sent:', txHash)
-                toast.info('Transaction submitted! Waiting for confirmation...')
-                setCurrentTxHash(txHash)
-                resolve(txHash)
+          toast.info('Please sign the message in your wallet...')
+          
+          const signature = await (window as any).ethereum.request({
+            method: 'personal_sign',
+            params: [messageHash, address],
+          })
+          
+          toast.success('Authorization received! Claiming MON...')
+          
+          // Step 3: Store the claim address for later query invalidation
+          setClaimAddress(address)
+          
+          // Step 4: Call contract with signature
+          if (!MON_FAUCET_CONTRACT.address || MON_FAUCET_CONTRACT.address.length === 0) {
+            throw new Error('MON faucet contract address is not configured! Please set NEXT_PUBLIC_MON_FAUCET_CONTRACT_ADDRESS in Vercel environment variables.')
+          }
+          
+          try {
+            writeContract(
+              {
+                address: MON_FAUCET_CONTRACT.address,
+                abi: MON_FAUCET_CONTRACT.abi,
+                functionName: 'requestTokens',
+                args: [nonce, BigInt(deadline), signature],
               },
-              onError: (error) => {
-                console.error('MON transaction failed:', error)
-                console.error('Error details:', {
-                  message: error.message,
-                  name: error.name
-                })
-                setCurrentTxHash(null)
-                setClaimAddress(null)
-                
-                // Check for specific error messages
-                const errorMsg = error.message.toLowerCase()
-                if (errorMsg.includes('deadline') || errorMsg.includes('expired')) {
-                  reject(new Error('Signature expired. Please try again.'))
-                } else if (errorMsg.includes('signature')) {
-                  reject(new Error('Invalid signature. Please try again.'))
-                } else if (errorMsg.includes('already claimed')) {
-                  reject(new Error('You have already claimed today. Try again later.'))
-                } else {
-                  reject(new Error(parseError(error)))
+              {
+                onSuccess: async (txHash) => {
+                  toast.info('Transaction submitted! Waiting for confirmation on Monad testnet...')
+                  setCurrentTxHash(txHash)
+                  
+                  // Set a fallback timeout for Monad testnet
+                  // If receipt doesn't come back in 2 minutes, assume success
+                  setTimeout(() => {
+                    if (currentTxHash === txHash && !isReceiptSuccess && !isReceiptError && !isManuallyConfirmed) {
+                      setIsManuallyConfirmed(true)
+                      
+                      toast.success(
+                        `Transaction Submitted! TX: ${formatAddress(txHash)}\\n⚠️ Monad testnet confirmation delayed - check explorer: https://explorer.monad.xyz/tx/${txHash}`,
+                        { duration: 15000 }
+                      )
+                      
+                      // Invalidate queries
+                      if (claimAddress) {
+                        queryClient.invalidateQueries({ queryKey: ['monStats', claimAddress] })
+                        queryClient.invalidateQueries({ queryKey: ['readContract'] })
+                      }
+                      
+                      // Reset after showing success
+                      setTimeout(() => {
+                        setIsManuallyConfirmed(false)
+                        setCurrentTxHash(null)
+                        setClaimAddress(null)
+                      }, 5000)
+                    }
+                  }, 120000) // 2 minutes timeout
+                  
+                  resolve(txHash)
+                },
+                onError: (error) => {
+                  setCurrentTxHash(null)
+                  setClaimAddress(null)
+                  
+                  // Check for specific error messages
+                  const errorMsg = error.message?.toLowerCase() || ''
+                  
+                  if (errorMsg.includes('deadline') || errorMsg.includes('expired')) {
+                    reject(new Error('Signature expired. Please try again.'))
+                  } else if (errorMsg.includes('signature')) {
+                    reject(new Error('Invalid signature. Please try again.'))
+                  } else if (errorMsg.includes('already claimed')) {
+                    reject(new Error('You have already claimed today. Try again later.'))
+                  } else if (errorMsg.includes('insufficient funds')) {
+                    reject(new Error('Insufficient funds for gas. Please add MON to your wallet.'))
+                  } else if (errorMsg.includes('user rejected') || errorMsg.includes('denied')) {
+                    reject(new Error('Transaction was cancelled by user.'))
+                  } else if (errorMsg.includes('network') || errorMsg.includes('connection')) {
+                    reject(new Error('Network error. Please check your connection and try again.'))
+                  } else if (errorMsg.includes('gas') || errorMsg.includes('execution reverted')) {
+                    reject(new Error('Transaction failed. Please try again or contact support.'))
+                  } else {
+                    reject(new Error(`Transaction failed: ${error.message || 'Unknown error'}`))
+                  }
                 }
-              },
-            }
-          )
-        } catch (error) {
-          console.error('Failed to initiate MON transaction:', error)
+              }
+            )
+          } catch (writeError: any) {
+            setCurrentTxHash(null)
+            setClaimAddress(null)
+            reject(new Error(`Failed to submit transaction: ${writeError.message || 'Unknown error'}`))
+          }
+        } catch (error: any) {
+          setCurrentTxHash(null)
           setClaimAddress(null)
-          reject(new Error(parseError(error)))
+          reject(error)
         }
       })
     },
-    onError: (error) => {
-      console.error('MON claim failed:', error)
-      setCurrentTxHash(null)
-      setClaimAddress(null)
+    onSuccess: () => {
+      // Additional success handling if needed
     },
-    onSuccess: (txHash) => {
-      console.log('MON claim successful:', txHash)
-      // Reset transaction hash and address after successful completion
-      setTimeout(() => {
-        setCurrentTxHash(null)
-        setClaimAddress(null)
-      }, 5000)
+    onError: (error: Error) => {
+      toast.error(error.message)
     },
   })
 
-  return {
-    ...mutation,
-    isPending: mutation.isPending || isWritePending || isReceiptLoading,
-    isSuccess: mutation.isSuccess && isReceiptSuccess,
-    currentTxHash,
+  const claim = (address: string) => {
+    if (!address) {
+      toast.error('Please connect your wallet first')
+      return
+    }
+    mutation.mutate(address)
   }
+
+  return {
+    claim,
+    isClaimPending: mutation.isPending,
+    isClaimSuccess: mutation.isSuccess,
+    isClaimError: mutation.isError,
+    claimError: mutation.error,
+    currentTxHash,
+    isManuallyConfirmed,
+  }
+}
+
+// Helper function to format addresses
+function formatAddress(address: string): string {
+  if (!address) return 'Unknown'
+  return `${address.slice(0, 6)}...${address.slice(-4)}`
 }

@@ -13,7 +13,8 @@ import { useAccount } from 'wagmi'
 import { useState, useEffect } from 'react'
 import { MON_CONFIG } from '@/config/constants'
 import { Coins, Sparkles } from 'lucide-react'
-import { base } from '@reown/appkit/networks'
+// import { base } from '@reown/appkit/networks' // Disabled for Monad testnet support
+import { base } from '@/lib/wagmiConfig' // Use wagmi config instead
 import { monadTestnet } from '@/lib/wagmiConfig'
 import { useSwitchChain } from 'wagmi'
 import { toast } from 'sonner'

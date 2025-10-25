@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { MON_FAUCET_CONTRACT, API_BASE_URL, API_ENDPOINTS } from '@/config/constants'
+import { MON_FAUCET_CONTRACT, MON_CONFIG, API_BASE_URL, API_ENDPOINTS } from '@/config/constants'
 import { parseError, formatAddress } from '@/lib/utils'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
@@ -96,6 +96,55 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
     mutationFn: async (address: string): Promise<string> => {
       return new Promise(async (resolve, reject) => {
         try {
+          console.log('🚀 Starting MON claim process for address:', address)
+          console.log('🔍 Current wallet state:', {
+            address,
+            isConnected: !!address,
+            contractAddress: MON_FAUCET_CONTRACT.address,
+            contractEnabled: MON_CONFIG.enabled
+          })
+          
+          // Check if we're on the right network
+          if (typeof window !== 'undefined' && (window as any).ethereum) {
+            try {
+              const chainId = await (window as any).ethereum.request({ method: 'eth_chainId' })
+              console.log('🔗 Current chain ID:', chainId, 'Expected: 0x279f (10143)')
+              if (chainId !== '0x279f') {
+                console.warn('⚠️ Wallet is not on Monad testnet! Current chain:', chainId)
+                reject(new Error('Please switch to Monad testnet to claim MON tokens.'))
+                return
+              }
+              
+              // Check wallet balance
+              const balance = await (window as any).ethereum.request({ 
+                method: 'eth_getBalance', 
+                params: [address, 'latest'] 
+              })
+              console.log('💰 Wallet balance:', balance, 'wei')
+              const balanceEth = parseInt(balance, 16) / 1e18
+              console.log('💰 Wallet balance:', balanceEth, 'MON')
+              
+              if (balanceEth < 0.001) {
+                console.warn('⚠️ Low wallet balance, might not have enough gas')
+              }
+              
+              // Check contract balance
+              const contractBalance = await (window as any).ethereum.request({ 
+                method: 'eth_getBalance', 
+                params: [MON_FAUCET_CONTRACT.address, 'latest'] 
+              })
+              console.log('🏦 Contract balance:', contractBalance, 'wei')
+              const contractBalanceEth = parseInt(contractBalance, 16) / 1e18
+              console.log('🏦 Contract balance:', contractBalanceEth, 'MON')
+              
+              if (contractBalanceEth < 0.1) {
+                console.warn('⚠️ Contract has low MON balance, might not be able to distribute')
+              }
+            } catch (error) {
+              console.error('❌ Failed to check wallet state:', error)
+            }
+          }
+          
           // Step 1: Request signature from backend
           toast.info('Requesting MON authorization...')
           
@@ -132,7 +181,15 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
             signature,
             signatureLength: signature.length,
             signaturePreview: signature.substring(0, 20) + '...',
-            address: address
+            address: address,
+            chainId: 10143, // Monad testnet
+            network: 'Monad Testnet'
+          })
+          
+          console.log('🔍 Contract ABI check:', {
+            hasAbi: !!MON_FAUCET_CONTRACT.abi,
+            abiLength: MON_FAUCET_CONTRACT.abi?.length,
+            requestTokensFunction: MON_FAUCET_CONTRACT.abi?.find((fn: any) => fn.name === 'requestTokens')
           })
           
           // Verify contract address is set
@@ -143,7 +200,21 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
           
           console.log('MON faucet contract address:', MON_FAUCET_CONTRACT.address)
           
-          writeContract(
+          console.log('📝 About to call writeContract with params:', {
+            address: MON_FAUCET_CONTRACT.address,
+            abi: MON_FAUCET_CONTRACT.abi?.length + ' functions',
+            functionName: 'requestTokens',
+            args: [nonce, BigInt(deadline), signature],
+            argsTypes: [
+              typeof nonce,
+              typeof BigInt(deadline),
+              typeof signature
+            ]
+          })
+          
+          try {
+            console.log('🔄 Calling writeContract...')
+            writeContract(
             {
               address: MON_FAUCET_CONTRACT.address,
               abi: MON_FAUCET_CONTRACT.abi,
@@ -152,8 +223,8 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
             },
             {
               onSuccess: async (txHash) => {
-                console.log('MON transaction sent:', txHash)
-                console.log('View on Monad Explorer: https://explorer.monad.xyz/tx/' + txHash)
+                console.log('✅ MON transaction sent successfully:', txHash)
+                console.log('🔗 View on Monad Explorer: https://explorer.monad.xyz/tx/' + txHash)
                 toast.info('Transaction submitted! Waiting for confirmation on Monad testnet...')
                 setCurrentTxHash(txHash)
                 
@@ -161,7 +232,7 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
                 // If receipt doesn't come back in 2 minutes, assume success
                 setTimeout(() => {
                   if (currentTxHash === txHash && !isReceiptSuccess && !isReceiptError && !isManuallyConfirmed) {
-                    console.log('Monad testnet timeout fallback - assuming transaction succeeded')
+                    console.log('⏰ Monad testnet timeout fallback - assuming transaction succeeded')
                     setIsManuallyConfirmed(true)
                     
                     toast.success(
@@ -187,19 +258,21 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
                 resolve(txHash)
               },
               onError: (error) => {
-                console.error('MON transaction failed:', error)
-                console.error('Error details:', {
+                console.error('❌ MON transaction failed:', error)
+                console.error('🔍 Error details:', {
                   message: error.message,
-                  name: error.name
+                  name: error.name,
+                  stack: error.stack
                 })
                 setCurrentTxHash(null)
                 setClaimAddress(null)
                 
                 // Check for specific error messages
                 const errorMsg = error.message.toLowerCase()
-                console.error('MON transaction error details:', {
+                console.error('🔍 MON transaction error analysis:', {
                   message: error.message,
-                  name: error.name
+                  name: error.name,
+                  errorMsg: errorMsg
                 })
                 
                 if (errorMsg.includes('deadline') || errorMsg.includes('expired')) {
@@ -216,12 +289,20 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
                   reject(new Error('Network error on Monad testnet. Please try again in a few moments.'))
                 } else if (errorMsg.includes('gas') || errorMsg.includes('fee')) {
                   reject(new Error('Gas estimation failed. Please try again.'))
+                } else if (errorMsg.includes('execution reverted')) {
+                  reject(new Error('Transaction reverted. Check contract requirements and try again.'))
                 } else {
                   reject(new Error(parseError(error)))
                 }
               },
             }
           )
+          console.log('✅ writeContract call initiated')
+          } catch (writeError: any) {
+            console.error('❌ writeContract call failed immediately:', writeError)
+            reject(new Error(`Failed to initiate transaction: ${writeError.message || 'Unknown error'}`))
+            return
+          }
         } catch (error) {
           console.error('Failed to initiate MON transaction:', error)
           setClaimAddress(null)

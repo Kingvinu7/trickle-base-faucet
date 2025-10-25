@@ -163,6 +163,13 @@ export function useMonClaim() {
                   resolve(txHash)
                 },
                 onError: (error) => {
+                  console.error('❌ ============ CONTRACT CALL FAILED ============')
+                  console.error('   Error:', error)
+                  console.error('   Error Message:', error.message)
+                  console.error('   Error Name:', error.name)
+                  console.error('   Full Error Object:', JSON.stringify(error, null, 2))
+                  console.error('================================================')
+                  
                   setCurrentTxHash(null)
                   setClaimAddress(null)
                   

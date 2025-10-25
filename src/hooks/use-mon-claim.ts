@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { toast } from 'sonner'
@@ -11,7 +11,33 @@ export function useMonClaim() {
   const [claimAddress, setClaimAddress] = useState<string | null>(null)
   const [isManuallyConfirmed, setIsManuallyConfirmed] = useState(false)
 
-  const { writeContract } = useWriteContract()
+  const { writeContract, data: writeTxHash, isPending: isWritePending, error: writeError } = useWriteContract()
+  
+  // MOBILE DEBUG: Watch for txHash changes from writeContract
+  useEffect(() => {
+    if (writeTxHash) {
+      console.log('🎉 TX HASH DETECTED:', writeTxHash)
+      toast.success(`🎉 TX HASH RECEIVED!\n${writeTxHash.slice(0, 20)}...\nTransaction was sent!`, { duration: 10000 })
+      setCurrentTxHash(writeTxHash)
+    }
+  }, [writeTxHash])
+  
+  // MOBILE DEBUG: Watch for write errors
+  useEffect(() => {
+    if (writeError) {
+      console.error('❌ WRITE ERROR:', writeError)
+      const errorMsg = writeError.message?.slice(0, 100) || 'Unknown error'
+      toast.error(`❌ WRITE ERROR!\n${errorMsg}`, { duration: 10000 })
+    }
+  }, [writeError])
+  
+  // MOBILE DEBUG: Watch for write pending state
+  useEffect(() => {
+    console.log('📊 Write Pending State:', isWritePending)
+    if (isWritePending) {
+      toast.info(`⏳ Transaction Pending...\nWaiting for Monad network...`, { duration: 8000 })
+    }
+  }, [isWritePending])
 
   const { data: receipt, isSuccess: isReceiptSuccess, isError: isReceiptError } = useWaitForTransactionReceipt({
     hash: currentTxHash as `0x${string}`,

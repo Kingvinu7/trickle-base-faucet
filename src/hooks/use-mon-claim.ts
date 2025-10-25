@@ -225,6 +225,10 @@ export function useMonClaim() {
                 }
               }
             )
+            
+            // MOBILE DEBUG: writeContract was called
+            toast.warning(`⚠️ Step 7: writeContract executed!\n\n📱 CHECK YOUR WALLET for transaction approval!\n\nIf you don't see a popup, the transaction might be stuck.`, { duration: 15000 })
+            
           } catch (writeError: any) {
             setCurrentTxHash(null)
             setClaimAddress(null)

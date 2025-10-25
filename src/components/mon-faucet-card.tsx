@@ -50,6 +50,7 @@ export function MonFaucetCard() {
     isInFarcaster,
     canUseCustomNetworks,
     isVercelPreview,
+    isAllowedPlatform,
     followRequired: FARCASTER_CONFIG.followRequired,
     spamLabelRequired: FARCASTER_CONFIG.spamLabelRequired,
     isFollowing,
@@ -197,7 +198,7 @@ export function MonFaucetCard() {
           <div className="flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 text-blue-600" />
             <span className="text-sm text-blue-800 font-medium">
-              🧪 Preview Mode: Follow and Neynar score requirements bypassed for testing
+              🧪 Preview Mode: Platform restrictions, follow, and Neynar score requirements bypassed for testing
             </span>
           </div>
         </motion.div>

@@ -78,9 +78,15 @@ export function useFarcasterMiniapp() {
     process.env.NODE_ENV === 'development'
   )
 
+  // Check if we're in a Vercel preview deployment (always allow for testing)
+  const isVercelPreview = typeof window !== 'undefined' && 
+    window.location.hostname.includes('vercel.app') && 
+    !window.location.hostname.includes('trickle-base-faucet.vercel.app')
+
   // In strict mode, only allow Farcaster environment
   // In non-strict mode, allow both Farcaster and development environments
-  const isAllowedPlatform = miniappStrictMode ? isInFarcaster : (isInFarcaster || isDevelopment)
+  // Always allow Vercel preview deployments for testing
+  const isAllowedPlatform = isVercelPreview ? true : (miniappStrictMode ? isInFarcaster : (isInFarcaster || isDevelopment))
 
   // Debug logging to help troubleshoot
   if (typeof window !== 'undefined') {
@@ -88,6 +94,7 @@ export function useFarcasterMiniapp() {
       isInFarcaster,
       miniappStrictMode,
       isDevelopment,
+      isVercelPreview,
       hostname: window.location.hostname,
       isAllowedPlatform,
       envVar: process.env.NEXT_PUBLIC_MINIAPP_STRICT_MODE

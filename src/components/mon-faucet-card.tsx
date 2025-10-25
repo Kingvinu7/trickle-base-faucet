@@ -32,6 +32,11 @@ export function MonFaucetCard() {
 
   const isFollowing = followCheck?.isFollowing ?? (!FARCASTER_CONFIG.followRequired)
   const hasSpamLabel2 = spamLabelCheck?.hasSpamLabel2 ?? (!FARCASTER_CONFIG.spamLabelRequired)
+  
+  // Check if we're in Vercel preview mode (requirements bypassed for testing)
+  const isVercelPreview = typeof window !== 'undefined' && 
+    window.location.hostname.includes('vercel.app') && 
+    !window.location.hostname.includes('trickle-base-faucet.vercel.app')
   const isWrongNetwork = isConnected && chain?.id !== monadTestnet.id
   
   // Debug logging
@@ -43,7 +48,12 @@ export function MonFaucetCard() {
     expectedChainName: monadTestnet.name,
     isWrongNetwork,
     isInFarcaster,
-    canUseCustomNetworks
+    canUseCustomNetworks,
+    isVercelPreview,
+    followRequired: FARCASTER_CONFIG.followRequired,
+    spamLabelRequired: FARCASTER_CONFIG.spamLabelRequired,
+    isFollowing,
+    hasSpamLabel2
   })
   
   // Allow claim if all requirements met, even if contract is not deployed yet
@@ -177,6 +187,22 @@ export function MonFaucetCard() {
       transition={{ duration: 0.5, delay: 0.9 }}
       className="glass rounded-3xl p-6 shadow-xl space-y-6"
     >
+      {/* Vercel Preview Mode Notice */}
+      {isVercelPreview && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg"
+        >
+          <div className="flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-blue-600" />
+            <span className="text-sm text-blue-800 font-medium">
+              🧪 Preview Mode: Follow and Neynar score requirements bypassed for testing
+            </span>
+          </div>
+        </motion.div>
+      )}
+
       <AnimatePresence mode="wait">
         {!isConnected ? (
           // Not Connected State

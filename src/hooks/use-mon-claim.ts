@@ -104,6 +104,9 @@ export function useMonClaim() {
           console.log('🖊️ Requesting signature for message hash:', messageHash)
           console.log('   Message format: 32-byte hash (will display as hex in wallet)')
           
+          // MOBILE DEBUG: Show signature request details
+          toast.info(`🔍 DEBUG: Signing\nHash: ${messageHash.slice(0, 20)}...\nLength: ${messageHash.length}\nConnector: ${connector.name}`, { duration: 8000 })
+          
           const signature = await (provider as any).request({
             method: 'personal_sign',
             params: [messageHash, address],
@@ -111,7 +114,8 @@ export function useMonClaim() {
           
           console.log('✅ Signature received:', signature)
           
-          toast.success('Authorization received! Claiming MON...')
+          // MOBILE DEBUG: Show signature received
+          toast.success(`✅ Sig Received!\n${signature.slice(0, 20)}...${signature.slice(-10)}\nLength: ${signature.length}`, { duration: 8000 })
           
           // Step 3: Store the claim address for later query invalidation
           setClaimAddress(address)
@@ -131,7 +135,9 @@ export function useMonClaim() {
               },
               {
                 onSuccess: async (txHash) => {
-                  toast.info('Transaction submitted! Waiting for confirmation on Monad testnet...')
+                  console.log('✅ Transaction successful!', txHash)
+                  toast.success(`✅ TX SUCCESS!\n${txHash.slice(0, 20)}...`, { duration: 5000 })
+                  toast.info('Waiting for confirmation on Monad testnet...')
                   setCurrentTxHash(txHash)
                   
                   // Set a fallback timeout for Monad testnet
@@ -170,6 +176,10 @@ export function useMonClaim() {
                   console.error('   Full Error Object:', JSON.stringify(error, null, 2))
                   console.error('================================================')
                   
+                  // MOBILE DEBUG: Show error details
+                  const errorPreview = error.message?.slice(0, 100) || 'Unknown error'
+                  toast.error(`❌ CONTRACT FAILED\nError: ${errorPreview}\nName: ${error.name || 'N/A'}`, { duration: 10000 })
+                  
                   setCurrentTxHash(null)
                   setClaimAddress(null)
                   
@@ -202,6 +212,17 @@ export function useMonClaim() {
             reject(new Error(`Failed to submit transaction: ${writeError.message || 'Unknown error'}`))
           }
         } catch (error: any) {
+          console.error('❌ CLAIM PROCESS FAILED:', error)
+          
+          // MOBILE DEBUG: Show failure stage
+          const failStage = error.message?.includes('signature') || error.message?.includes('sign') 
+            ? 'SIGNATURE' 
+            : error.message?.includes('contract') 
+            ? 'CONTRACT' 
+            : 'UNKNOWN'
+          const errorPreview = error.message?.slice(0, 80) || 'Unknown error'
+          toast.error(`❌ FAILED: ${failStage}\n${errorPreview}`, { duration: 12000 })
+          
           setCurrentTxHash(null)
           setClaimAddress(null)
           reject(error)

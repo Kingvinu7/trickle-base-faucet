@@ -96,13 +96,20 @@ export function useMonClaim() {
             throw new Error('Wallet provider not available. Please ensure your wallet is connected.')
           }
           
-          // Sign using personal_sign - universal method
-          console.log('Requesting signature for messageHash:', messageHash)
+          // Show user-friendly message before signature request
+          toast.info('Please approve the signature request in your wallet. The message will appear as a hash (this is normal for security).', { duration: 5000 })
+          
+          // Sign using personal_sign - this is what the contract expects
+          // Note: The message will display as hex/binary in the wallet (expected behavior)
+          console.log('🖊️ Requesting signature for message hash:', messageHash)
+          console.log('   Message format: 32-byte hash (will display as hex in wallet)')
+          
           const signature = await (provider as any).request({
             method: 'personal_sign',
             params: [messageHash, address],
           }) as `0x${string}`
-          console.log('Signature received:', signature)
+          
+          console.log('✅ Signature received:', signature)
           
           toast.success('Authorization received! Claiming MON...')
           

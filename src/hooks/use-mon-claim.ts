@@ -117,15 +117,25 @@ export function useMonClaim() {
           // MOBILE DEBUG: Show signature received
           toast.success(`✅ Sig Received!\n${signature.slice(0, 20)}...${signature.slice(-10)}\nLength: ${signature.length}`, { duration: 8000 })
           
-          // Step 3: Store the claim address for later query invalidation
+          // MOBILE DEBUG: Step 3
+          toast.info(`📍 Step 3: Storing address...`, { duration: 5000 })
           setClaimAddress(address)
           
-          // Step 4: Call contract with signature
+          // MOBILE DEBUG: Step 4
+          toast.info(`📍 Step 4: Checking contract...`, { duration: 5000 })
           if (!MON_FAUCET_CONTRACT.address || MON_FAUCET_CONTRACT.address.length === 0) {
+            toast.error(`❌ CONTRACT NOT CONFIGURED!\nAddress is missing!`, { duration: 10000 })
             throw new Error('MON faucet contract address is not configured! Please set NEXT_PUBLIC_MON_FAUCET_CONTRACT_ADDRESS in Vercel environment variables.')
           }
           
+          // MOBILE DEBUG: Contract address OK
+          toast.success(`✅ Contract OK: ${MON_FAUCET_CONTRACT.address.slice(0, 12)}...`, { duration: 5000 })
+          
+          // MOBILE DEBUG: About to call writeContract
+          toast.info(`📍 Step 5: Preparing transaction...\nFunction: requestTokens\nArgs ready!`, { duration: 5000 })
+          
           try {
+            toast.info(`📍 Step 6: Calling writeContract NOW!`, { duration: 5000 })
             writeContract(
               {
                 address: MON_FAUCET_CONTRACT.address,

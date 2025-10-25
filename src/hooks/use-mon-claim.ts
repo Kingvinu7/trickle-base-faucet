@@ -25,14 +25,22 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
     error: receiptError
   } = useWaitForTransactionReceipt({
     hash: currentTxHash as `0x${string}` | undefined,
-    timeout: 60_000, // 60 seconds timeout
+    timeout: 300_000, // 5 minutes timeout for Monad testnet
   })
 
   // Handle receipt errors
   useEffect(() => {
     if (isReceiptError && receiptError) {
       console.error('Transaction receipt error:', receiptError)
-      toast.error('Transaction failed. Please check Monad Explorer and try again.')
+      
+      // Check if it's a timeout error
+      const errorMsg = receiptError.message?.toLowerCase() || ''
+      if (errorMsg.includes('timeout') || errorMsg.includes('expired')) {
+        toast.error('Transaction is taking longer than expected. Please check Monad Explorer to see if it was successful.')
+      } else {
+        toast.error('Transaction failed. Please check Monad Explorer and try again.')
+      }
+      
       setCurrentTxHash(null)
       setClaimAddress(null)
     }
@@ -96,8 +104,11 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
           
           // Verify contract address is set
           if (!MON_FAUCET_CONTRACT.address || MON_FAUCET_CONTRACT.address.length === 0) {
-            throw new Error('MON_FAUCET_CONTRACT.address is not configured! Please set NEXT_PUBLIC_MON_FAUCET_CONTRACT_ADDRESS')
+            console.error('MON_FAUCET_CONTRACT.address is empty:', MON_FAUCET_CONTRACT.address)
+            throw new Error('MON faucet contract address is not configured! Please set NEXT_PUBLIC_MON_FAUCET_CONTRACT_ADDRESS in Vercel environment variables.')
           }
+          
+          console.log('MON faucet contract address:', MON_FAUCET_CONTRACT.address)
           
           writeContract(
             {
@@ -109,7 +120,8 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
             {
               onSuccess: async (txHash) => {
                 console.log('MON transaction sent:', txHash)
-                toast.info('Transaction submitted! Waiting for confirmation...')
+                console.log('View on Monad Explorer: https://explorer.monad.xyz/tx/' + txHash)
+                toast.info('Transaction submitted! Waiting for confirmation on Monad testnet...')
                 setCurrentTxHash(txHash)
                 resolve(txHash)
               },
@@ -124,12 +136,23 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
                 
                 // Check for specific error messages
                 const errorMsg = error.message.toLowerCase()
+                console.error('MON transaction error details:', {
+                  message: error.message,
+                  name: error.name,
+                  code: error.code,
+                  cause: error.cause
+                })
+                
                 if (errorMsg.includes('deadline') || errorMsg.includes('expired')) {
                   reject(new Error('Signature expired. Please try again.'))
                 } else if (errorMsg.includes('signature')) {
                   reject(new Error('Invalid signature. Please try again.'))
                 } else if (errorMsg.includes('already claimed')) {
                   reject(new Error('You have already claimed today. Try again later.'))
+                } else if (errorMsg.includes('insufficient funds')) {
+                  reject(new Error('Contract has insufficient MON balance. Please contact support.'))
+                } else if (errorMsg.includes('user rejected') || errorMsg.includes('rejected')) {
+                  reject(new Error('Transaction was rejected by user.'))
                 } else {
                   reject(new Error(parseError(error)))
                 }

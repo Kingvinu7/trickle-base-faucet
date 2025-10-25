@@ -6,7 +6,6 @@ import { MON_FAUCET_CONTRACT, API_BASE_URL, API_ENDPOINTS } from '@/config/const
 import { parseError, formatAddress } from '@/lib/utils'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { CheckCircle } from 'lucide-react'
 
 /**
  * Hook to claim MON tokens from the faucet
@@ -46,28 +45,7 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
         setIsManuallyConfirmed(true)
         
         toast.success(
-          <div className="flex flex-col space-y-1">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <div className="font-medium">Transaction Submitted!</div>
-            </div>
-            <div className="text-xs text-gray-500">
-              TX: {currentTxHash ? formatAddress(currentTxHash) : 'Unknown'}
-            </div>
-            <div className="text-xs text-amber-600">
-              ⚠️ Monad testnet is slow - transaction may still be processing
-            </div>
-            {currentTxHash && (
-              <a 
-                href={`https://explorer.monad.xyz/tx/${currentTxHash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:text-blue-700 underline"
-              >
-                Check on Monad Explorer →
-              </a>
-            )}
-          </div>,
+          `Transaction Submitted! TX: ${currentTxHash ? formatAddress(currentTxHash) : 'Unknown'}\n⚠️ Monad testnet is slow - check explorer: https://explorer.monad.xyz/tx/${currentTxHash}`,
           { duration: 15000 }
         )
         
@@ -101,25 +79,7 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
       
       // Show success message
       toast.success(
-        <div className="flex flex-col space-y-1">
-          <div className="flex items-center space-x-2">
-            <CheckCircle className="w-4 h-4 text-green-500" />
-            <div className="font-medium">MON Claim Successful!</div>
-          </div>
-          <div className="text-xs text-gray-500">
-            TX: {currentTxHash ? formatAddress(currentTxHash) : 'Unknown'}
-          </div>
-          {currentTxHash && (
-            <a 
-              href={`https://explorer.monad.xyz/tx/${currentTxHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-blue-600 hover:text-blue-700 underline"
-            >
-              View on Monad Explorer →
-            </a>
-          )}
-        </div>,
+        `MON Claim Successful! TX: ${currentTxHash ? formatAddress(currentTxHash) : 'Unknown'}\nView on Monad Explorer: https://explorer.monad.xyz/tx/${currentTxHash}`,
         { duration: 10000 }
       )
       
@@ -205,26 +165,7 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
                     setIsManuallyConfirmed(true)
                     
                     toast.success(
-                      <div className="flex flex-col space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                          <div className="font-medium">Transaction Submitted!</div>
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          TX: {formatAddress(txHash)}
-                        </div>
-                        <div className="text-xs text-amber-600">
-                          ⚠️ Monad testnet confirmation delayed - check explorer
-                        </div>
-                        <a 
-                          href={`https://explorer.monad.xyz/tx/${txHash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:text-blue-700 underline"
-                        >
-                          Check on Monad Explorer →
-                        </a>
-                      </div>,
+                      `Transaction Submitted! TX: ${formatAddress(txHash)}\n⚠️ Monad testnet confirmation delayed - check explorer: https://explorer.monad.xyz/tx/${txHash}`,
                       { duration: 15000 }
                     )
                     
@@ -258,9 +199,7 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
                 const errorMsg = error.message.toLowerCase()
                 console.error('MON transaction error details:', {
                   message: error.message,
-                  name: error.name,
-                  code: error.code,
-                  cause: error.cause
+                  name: error.name
                 })
                 
                 if (errorMsg.includes('deadline') || errorMsg.includes('expired')) {

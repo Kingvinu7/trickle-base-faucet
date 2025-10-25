@@ -720,25 +720,18 @@ export const API_ENDPOINTS = {
   CHECK_SPAM_LABEL: '/check-spam-label'
 } as const
 
-// Helper function to detect Vercel preview deployments
-function isVercelPreview(): boolean {
-  if (typeof window === 'undefined') return false
-  return window.location.hostname.includes('vercel.app') && 
-         !window.location.hostname.includes('trickle-base-faucet.vercel.app')
-}
-
 // Farcaster Configuration
 export const FARCASTER_CONFIG = {
   targetFid: 250869, // vinu07's FID
   targetUsername: 'vinu07',
   targetProfileUrl: 'https://farcaster.xyz/vinu07',
-  // Exclude Vercel preview deployments from follow requirement for testing
-  followRequired: process.env.NEXT_PUBLIC_FOLLOW_REQUIRED !== 'false' && !isVercelPreview(), // Default true, false in preview
+  // Follow requirement - can be disabled via environment variable
+  followRequired: process.env.NEXT_PUBLIC_FOLLOW_REQUIRED !== 'false', // Default true
   // Neynar score requirement (minimum 0.5 score to claim)
   // Neynar score ranges from 0 to 1, where higher scores indicate more reputable accounts
   // This helps prevent spam and ensures fair distribution to legitimate users
-  // Exclude Vercel preview deployments from spam label requirement for testing
-  spamLabelRequired: process.env.NEXT_PUBLIC_SPAM_LABEL_REQUIRED !== 'false' && !isVercelPreview() // Default true, false in preview
+  // Can be disabled via environment variable
+  spamLabelRequired: process.env.NEXT_PUBLIC_SPAM_LABEL_REQUIRED !== 'false' // Default true
 } as const
 
 // App Configuration

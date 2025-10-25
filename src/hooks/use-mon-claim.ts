@@ -145,10 +145,10 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
             }
           }
           
-          // Step 1: Request signature from backend
+          // Step 1: Request message hash from backend for client-side signing
           toast.info('Requesting MON authorization...')
           
-          const signatureResponse = await fetch(`${API_BASE_URL}${API_ENDPOINTS.REQUEST_MON_SIGNATURE}`, {
+          const messageHashResponse = await fetch(`${API_BASE_URL}${API_ENDPOINTS.REQUEST_MON_SIGNATURE}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -156,14 +156,28 @@ export function useMonClaim(farcasterUser?: {fid: number, username: string, disp
             body: JSON.stringify({ address }),
           })
           
-          if (!signatureResponse.ok) {
-            const errorData = await signatureResponse.json()
+          if (!messageHashResponse.ok) {
+            const errorData = await messageHashResponse.json()
             throw new Error(errorData.error || 'Failed to get MON authorization')
           }
           
-          const { signature, nonce, deadline } = await signatureResponse.json()
+          const { messageHash, nonce, deadline } = await messageHashResponse.json()
           
-          console.log('MON signature received:', { signature, nonce, deadline })
+          console.log('MON message hash received:', { messageHash, nonce, deadline })
+          
+          // Step 2: Sign the message with the user's wallet
+          if (typeof window === 'undefined' || !(window as any).ethereum) {
+            throw new Error('Wallet not available for signing')
+          }
+          
+          toast.info('Please sign the message in your wallet...')
+          
+          const signature = await (window as any).ethereum.request({
+            method: 'personal_sign',
+            params: [messageHash, address],
+          })
+          
+          console.log('MON signature created by user wallet:', { signature })
           toast.success('Authorization received! Claiming MON...')
           
           // Step 2: Store the claim address for later query invalidation

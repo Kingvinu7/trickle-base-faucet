@@ -6,6 +6,7 @@ import { StatsCards } from '@/components/stats-cards'
 import { HallOfFame } from '@/components/hall-of-fame'
 import { Header } from '@/components/header'
 import { NetworkSelector } from '@/components/network-selector'
+import { WalletConnectButton } from '@/components/wallet-connect-button'
 import { Footer } from '@/components/footer'
 import { useStats } from '@/hooks/use-stats'
 import { motion } from 'framer-motion'
@@ -108,9 +109,10 @@ export default function HomePage() {
           <Header />
           
           
-          {/* Network Selector */}
-          <div className="flex justify-center items-center gap-3 flex-wrap">
-            <NetworkSelector />
+          {/* Wallet Connection & Network Selector */}
+          <div className="flex flex-col items-center gap-3">
+            <WalletConnectButton />
+            {isConnected && <NetworkSelector />}
           </div>
 
           {/* Stats */}

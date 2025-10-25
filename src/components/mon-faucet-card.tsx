@@ -9,7 +9,6 @@ import { useMonStats } from '@/hooks/use-mon-stats'
 import { useFarcasterMiniappContext } from '@/components/farcaster-miniapp-provider'
 import { useFollowCheck } from '@/hooks/use-follow-check'
 import { useSpamLabelCheck } from '@/hooks/use-spam-label-check'
-import { useFarcasterWalletCapabilities } from '@/hooks/use-farcaster-wallet-capabilities'
 import { formatAddress } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -21,7 +20,6 @@ export function MonFaucetCard() {
   const { address, isConnected, chain } = useAccount()
   const { switchChain } = useSwitchChain()
   const { isAllowedPlatform, farcasterUser } = useFarcasterMiniappContext()
-  const { canUseCustomNetworks, isInFarcaster } = useFarcasterWalletCapabilities()
   
   const [claimProgress, setClaimProgress] = useState(0)
   

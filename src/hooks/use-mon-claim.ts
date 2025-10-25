@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { MON_FAUCET_CONTRACT, MON_CONFIG, API_BASE_URL, API_ENDPOINTS } from '@/config/constants'
 
 export function useMonClaim() {
-  const { address } = useAccount()
+  const { address, connector } = useAccount()
   const queryClient = useQueryClient()
   const [currentTxHash, setCurrentTxHash] = useState<string | null>(null)
   const [claimAddress, setClaimAddress] = useState<string | null>(null)
@@ -77,16 +77,32 @@ export function useMonClaim() {
           const { messageHash, nonce, deadline } = await messageHashResponse.json()
           
           // Step 2: Sign the message with the user's wallet
-          if (typeof window === 'undefined' || !(window as any).ethereum) {
-            throw new Error('Wallet not available for signing')
+          // Get provider from wagmi connector - works with Farcaster and all wallets
+          if (!connector || !address) {
+            throw new Error('Wallet not connected. Please connect your wallet first.')
           }
           
           toast.info('Please sign the message in your wallet...')
           
-          const signature = await (window as any).ethereum.request({
+          // Get provider from connector - this works with Farcaster!
+          const provider = await connector.getProvider()
+          console.log('Provider obtained:', { 
+            hasProvider: !!provider, 
+            hasRequest: provider && typeof provider === 'object' && 'request' in provider,
+            connectorName: connector.name 
+          })
+          
+          if (!provider || typeof provider !== 'object' || !('request' in provider)) {
+            throw new Error('Wallet provider not available. Please ensure your wallet is connected.')
+          }
+          
+          // Sign using personal_sign - universal method
+          console.log('Requesting signature for messageHash:', messageHash)
+          const signature = await (provider as any).request({
             method: 'personal_sign',
             params: [messageHash, address],
-          })
+          }) as `0x${string}`
+          console.log('Signature received:', signature)
           
           toast.success('Authorization received! Claiming MON...')
           

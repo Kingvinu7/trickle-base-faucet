@@ -176,16 +176,25 @@ export function useMonClaim() {
                   console.error('   Full Error Object:', JSON.stringify(error, null, 2))
                   console.error('================================================')
                   
-                  // MOBILE DEBUG: Show error details
-                  const errorPreview = error.message?.slice(0, 100) || 'Unknown error'
-                  toast.error(`❌ CONTRACT FAILED\nError: ${errorPreview}\nName: ${error.name || 'N/A'}`, { duration: 10000 })
+                  // MOBILE DEBUG: Show error details with specific checks
+                  const errorMsg = error.message?.toLowerCase() || 'unknown error'
+                  const errorPreview = (error.message || 'Unknown error').slice(0, 100)
+                  
+                  // Check for specific issues and show user-friendly toast
+                  if (errorMsg.includes('user rejected') || errorMsg.includes('denied') || errorMsg.includes('cancelled')) {
+                    toast.error(`❌ USER CANCELLED\nYou rejected the transaction`, { duration: 8000 })
+                  } else if (errorMsg.includes('insufficient funds') || errorMsg.includes('gas')) {
+                    toast.error(`❌ GAS ERROR\n${errorPreview}`, { duration: 10000 })
+                  } else if (errorMsg.includes('invalid signature') || errorMsg.includes('signature')) {
+                    toast.error(`❌ SIGNATURE INVALID\n${errorPreview}\n\nFarcaster wallet may use different signing!`, { duration: 12000 })
+                  } else {
+                    toast.error(`❌ TX FAILED\nError: ${errorPreview}\nName: ${error.name || 'N/A'}`, { duration: 10000 })
+                  }
                   
                   setCurrentTxHash(null)
                   setClaimAddress(null)
                   
-                  // Check for specific error messages
-                  const errorMsg = error.message?.toLowerCase() || ''
-                  
+                  // Reject with specific error messages for mutation handling
                   if (errorMsg.includes('deadline') || errorMsg.includes('expired')) {
                     reject(new Error('Signature expired. Please try again.'))
                   } else if (errorMsg.includes('signature')) {

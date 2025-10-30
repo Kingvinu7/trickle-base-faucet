@@ -3,7 +3,7 @@ import { ethers } from 'ethers'
 
 // Environment variables needed:
 // MON_FAUCET_OWNER_PRIVATE_KEY - The private key that owns the MON faucet contract
-// MON_FAUCET_CONTRACT_ADDRESS - The deployed MON faucet contract address
+// NEXT_PUBLIC_MON_FAUCET_CONTRACT_ADDRESS - The deployed MON faucet contract address
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,10 +33,10 @@ export async function POST(request: NextRequest) {
 
     // Check for required environment variables
     const privateKey = process.env.MON_FAUCET_OWNER_PRIVATE_KEY || process.env.FAUCET_OWNER_PRIVATE_KEY
-    const contractAddress = process.env.MON_FAUCET_CONTRACT_ADDRESS
+    const contractAddress = process.env.NEXT_PUBLIC_MON_FAUCET_CONTRACT_ADDRESS
     
     if (!privateKey || !contractAddress) {
-      console.error('Missing environment variables: MON_FAUCET_OWNER_PRIVATE_KEY or MON_FAUCET_CONTRACT_ADDRESS')
+      console.error('Missing environment variables: MON_FAUCET_OWNER_PRIVATE_KEY or NEXT_PUBLIC_MON_FAUCET_CONTRACT_ADDRESS')
       return NextResponse.json(
         { 
           error: 'Server configuration error',
@@ -52,30 +52,40 @@ export async function POST(request: NextRequest) {
                 'unknown'
     
     // TODO: Implement IP-based rate limiting with Redis or similar
-    // For now, we rely on the contract's daily claim mechanism
+    // For now, we rely on the contract's cooldown mechanism
     
     // Generate a unique nonce (prevents replay attacks)
     const nonce = ethers.hexlify(ethers.randomBytes(32))
     
-    // Set deadline to 30 minutes from now (Monad testnet can be slow)
-    // Increased from 5 minutes to handle potential block delays
+    // Set deadline to 30 minutes from now (signatures expire)
+    // Longer deadline for Monad testnet which can have delays
     const deadline = Math.floor(Date.now() / 1000) + (30 * 60)
     
     // Create the message hash (same as contract's getMessageHash)
-    // getMessageHash(user, nonce, deadline) returns keccak256(abi.encodePacked(user, nonce, deadline, address(this)))
     const messageHash = ethers.solidityPackedKeccak256(
       ['address', 'bytes32', 'uint256', 'address'],
       [address, nonce, deadline, contractAddress]
     )
     
+    // Sign the message hash with owner's private key
+    const wallet = new ethers.Wallet(privateKey)
+    const signature = await wallet.signMessage(ethers.getBytes(messageHash))
     
-    // Return the message hash and parameters for client-side signing
+    console.log('MON Signature generated for:', {
+      address,
+      nonce,
+      deadline: new Date(deadline * 1000).toISOString(),
+      ip,
+      signer: wallet.address
+    })
+    
+    // Return the signature and parameters
     return NextResponse.json({
       success: true,
-      messageHash,
+      signature,
       nonce,
       deadline,
-      message: 'Message hash generated for client signing'
+      message: 'Signature generated successfully'
     })
     
   } catch (error) {

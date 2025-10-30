@@ -33,19 +33,16 @@ export async function initializeDatabase() {
   const pool = getPool()
   
   try {
-    // Check if table exists with correct schema
-    const tableCheck = await pool.query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'claims' AND column_name = 'claim_timestamp'
+    // Check if table exists
+    const tableExists = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'claims'
+      )
     `)
     
-    if (tableCheck.rows.length === 0) {
-      // Table doesn't exist or has wrong schema - drop and recreate
-      await pool.query(`DROP TABLE IF EXISTS claims CASCADE`)
-      console.log('Dropped existing claims table if present')
-    
-      // Create claims table with correct schema
+    if (!tableExists.rows[0].exists) {
+      // Table doesn't exist - create it with full schema
       await pool.query(`
         CREATE TABLE claims (
           id SERIAL PRIMARY KEY,
@@ -59,26 +56,53 @@ export async function initializeDatabase() {
           created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
         )
       `)
-      console.log('Created claims table')
+      console.log('✅ Created claims table')
       
       // Create index on claim_timestamp for faster queries
       await pool.query(`
         CREATE INDEX idx_claims_timestamp ON claims(claim_timestamp DESC)
       `)
-      console.log('Created timestamp index')
+      console.log('✅ Created timestamp index')
       
       // Create index on farcaster_fid for filtering
       await pool.query(`
         CREATE INDEX idx_claims_farcaster_fid ON claims(farcaster_fid) WHERE farcaster_fid IS NOT NULL
       `)
-      console.log('Created farcaster_fid index')
+      console.log('✅ Created farcaster_fid index')
     } else {
-      console.log('Claims table already exists with correct schema')
+      console.log('✅ Claims table already exists')
+      
+      // Run migrations for existing table
+      // Migration 1: Add network column if it doesn't exist
+      const networkColumnExists = await pool.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns 
+          WHERE table_name = 'claims' AND column_name = 'network'
+        )
+      `)
+      
+      if (!networkColumnExists.rows[0].exists) {
+        await pool.query(`
+          ALTER TABLE claims 
+          ADD COLUMN network VARCHAR(50) DEFAULT 'base'
+        `)
+        console.log('✅ Migration: Added network column')
+        
+        // Backfill existing rows to have 'base' as default
+        await pool.query(`
+          UPDATE claims 
+          SET network = 'base' 
+          WHERE network IS NULL
+        `)
+        console.log('✅ Migration: Backfilled network column with "base"')
+      } else {
+        console.log('✅ Network column already exists')
+      }
     }
     
-    console.log('Database schema initialized successfully')
+    console.log('✅ Database schema initialized successfully')
   } catch (error) {
-    console.error('Failed to initialize database:', error)
+    console.error('❌ Failed to initialize database:', error)
     throw error
   }
 }

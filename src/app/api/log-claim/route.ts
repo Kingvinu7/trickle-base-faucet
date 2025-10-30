@@ -98,6 +98,7 @@ export async function POST(request: NextRequest) {
     const claim = await saveClaim({
       address,
       txHash,
+      network,
       farcasterUser
     })
     

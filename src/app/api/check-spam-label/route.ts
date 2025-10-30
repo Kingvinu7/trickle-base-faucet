@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY || ''
-const MINIMUM_SCORE = 0.5 // Minimum Neynar score required to claim
+const MINIMUM_SCORE = 0.2 // Minimum Neynar score required to claim
 
 /**
  * Check if a user meets the minimum Neynar score requirement

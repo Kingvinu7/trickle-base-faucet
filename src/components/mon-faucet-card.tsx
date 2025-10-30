@@ -6,6 +6,7 @@ import { useAccount, useConnect, useDisconnect, useSwitchChain } from 'wagmi'
 import { Wallet, Coins, LogOut, AlertCircle, CheckCircle, Loader2, Sparkles, UserPlus, ExternalLink } from 'lucide-react'
 import { monadTestnet } from '@/lib/wagmiConfig'
 import { useMonClaim } from '@/hooks/use-mon-claim'
+import { useMonStats } from '@/hooks/use-mon-stats'
 import { useEligibility } from '@/hooks/use-eligibility'
 import { useFarcasterMiniappContext } from '@/components/farcaster-miniapp-provider'
 import { useFollowCheck } from '@/hooks/use-follow-check'
@@ -27,6 +28,7 @@ export function MonFaucetCard() {
   
   const { data: eligibility, isLoading: eligibilityLoading, refetch: refetchEligibility } = useEligibility(address, isAllowedPlatform)
   const { mutate: claimTokens, isPending: isClaimPending } = useMonClaim(farcasterUser || undefined)
+  const { data: monStats, isLoading: monStatsLoading } = useMonStats(address)
   const { data: followCheck, isLoading: followCheckLoading, refetch: refetchFollow } = useFollowCheck(farcasterUser?.fid, FARCASTER_CONFIG.followRequired)
   const { data: spamLabelCheck, isLoading: spamLabelCheckLoading, refetch: refetchSpamLabel } = useSpamLabelCheck(farcasterUser?.fid, FARCASTER_CONFIG.spamLabelRequired)
 
@@ -420,6 +422,11 @@ export function MonFaucetCard() {
                   </div>
                   <div className="text-sm text-purple-700 mt-1">
                     Get <span className="font-semibold">{MON_CONFIG.claimAmount} MON</span> per claim • Up to {MON_CONFIG.maxClaimsPerDay} claims ({MON_CONFIG.dailyLimit} MON/day)
+                    {monStats && !monStatsLoading && (
+                      <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-200 text-purple-900">
+                        {monStats.claimsMadeToday}/{MON_CONFIG.maxClaimsPerDay} claims used
+                      </span>
+                    )}
                   </div>
                 </div>
                 <Sparkles className="w-5 h-5 text-purple-500" />

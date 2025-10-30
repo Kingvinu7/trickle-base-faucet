@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAccount, useSwitchChain } from 'wagmi'
-import { Coins, Loader2, CheckCircle, AlertCircle, Sparkles, UserPlus, ExternalLink } from 'lucide-react'
+import { useAccount, useConnect, useDisconnect, useSwitchChain } from 'wagmi'
+import { Wallet, Coins, LogOut, AlertCircle, CheckCircle, Loader2, Sparkles, UserPlus, ExternalLink } from 'lucide-react'
+import { monadTestnet } from '@/lib/wagmiConfig'
 import { useMonClaim } from '@/hooks/use-mon-claim'
-import { useMonStats } from '@/hooks/use-mon-stats'
+import { useEligibility } from '@/hooks/use-eligibility'
 import { useFarcasterMiniappContext } from '@/components/farcaster-miniapp-provider'
 import { useFollowCheck } from '@/hooks/use-follow-check'
 import { useSpamLabelCheck } from '@/hooks/use-spam-label-check'
@@ -14,45 +15,57 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { MON_CONFIG, FARCASTER_CONFIG } from '@/config/constants'
-import { monadTestnet } from '@/lib/wagmiConfig'
 
 export function MonFaucetCard() {
   const { address, isConnected, chain } = useAccount()
+  const { connect, connectors, isPending: isConnecting } = useConnect()
+  const { disconnect } = useDisconnect()
   const { switchChain } = useSwitchChain()
-  const { isAllowedPlatform, farcasterUser } = useFarcasterMiniappContext()
+  const { isAllowedPlatform, isInFarcaster, farcasterUser } = useFarcasterMiniappContext()
   
   const [claimProgress, setClaimProgress] = useState(0)
   
-  const { data: monStats, isLoading: statsLoading, refetch: refetchStats } = useMonStats(address)
-  const { claim: claimMon, isClaimPending } = useMonClaim()
+  const { data: eligibility, isLoading: eligibilityLoading, refetch: refetchEligibility } = useEligibility(address, isAllowedPlatform)
+  const { mutate: claimTokens, isPending: isClaimPending } = useMonClaim(farcasterUser || undefined)
   const { data: followCheck, isLoading: followCheckLoading, refetch: refetchFollow } = useFollowCheck(farcasterUser?.fid, FARCASTER_CONFIG.followRequired)
-  const { data: spamLabelCheck, isLoading: spamLabelCheckLoading } = useSpamLabelCheck(farcasterUser?.fid, FARCASTER_CONFIG.spamLabelRequired)
+  const { data: spamLabelCheck, isLoading: spamLabelCheckLoading, refetch: refetchSpamLabel } = useSpamLabelCheck(farcasterUser?.fid, FARCASTER_CONFIG.spamLabelRequired)
 
+  const isWrongNetwork = isConnected && chain?.id !== monadTestnet.id
   const isFollowing = followCheck?.isFollowing ?? (!FARCASTER_CONFIG.followRequired)
   const hasSpamLabel2 = spamLabelCheck?.hasSpamLabel2 ?? (!FARCASTER_CONFIG.spamLabelRequired)
   
-  const isWrongNetwork = isConnected && chain?.id !== monadTestnet.id
+  // Allow claiming if eligibility is undefined (API issues) or true, but not when explicitly false with a real cooldown message
+  const hasRealCooldown = eligibility?.eligible === false && 
+    (eligibility?.message?.includes('Please wait') || 
+     eligibility?.message?.includes('more hours before claiming') || 
+     eligibility?.message?.includes('hours before claiming again'))
+  const canClaim = !isWrongNetwork && !isClaimPending && !eligibilityLoading && !hasRealCooldown && isAllowedPlatform && isFollowing && hasSpamLabel2
   
-  
-  // Allow claim if all requirements met, even if contract is not deployed yet
-  // Contract will handle the actual claim validation
-  const canClaim = isConnected && 
-                   !isClaimPending && 
-                   !statsLoading && 
-                   isAllowedPlatform && 
-                   isFollowing && 
-                   hasSpamLabel2 &&
-                   !isWrongNetwork &&
-                   (monStats?.canClaimNow ?? true) // Default to true if stats not available
-  
+  const handleConnect = async (connectorIndex = 0) => {
+    try {
+      const connector = connectors[connectorIndex]
+      if (connector) {
+        console.log('Connecting with:', connector.name)
+        connect({ connector })
+      } else {
+        toast.error('No wallet connectors available. Please install MetaMask or another wallet.')
+      }
+    } catch (error) {
+      console.error('Wallet connection error:', error)
+      toast.error('Failed to connect wallet. Please try again.')
+    }
+  }
+
+  const handleDisconnect = () => {
+    disconnect()
+    toast.success('Wallet disconnected')
+  }
+
   const handleSwitchNetwork = async () => {
     try {
-      console.log('Manual switch to Monad Testnet (10143)...')
       await switchChain({ chainId: monadTestnet.id })
       toast.success('Switched to Monad Testnet')
     } catch (error: any) {
-      console.error('Manual switch failed:', error)
-      
       // If network not found, try to add it
       if (error?.code === 4902 || error?.message?.includes('Unrecognized chain')) {
         try {
@@ -78,31 +91,51 @@ export function MonFaucetCard() {
           toast.error('Please add Monad Testnet manually:\nChain ID: 10143\nRPC: https://testnet-rpc.monad.xyz')
         }
       } else {
-        toast.error('Failed to switch network. Please switch manually in your wallet.')
+        toast.error('Failed to switch network')
       }
     }
   }
 
   const handleClaim = async () => {
     if (!address || !canClaim) {
+      console.log('Cannot claim:', { address, canClaim, eligibility })
       return
     }
+
+    console.log('Starting claim process for address:', address)
     setClaimProgress(25)
 
     try {
-      claimMon(address)
-      setClaimProgress(100)
+      claimTokens(address, {
+        onSuccess: (txHash) => {
+          console.log('Claim successful:', txHash)
+          setClaimProgress(100)
+          toast.success(
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <div>
+                <div className="font-medium">Claim successful!</div>
+                <div className="text-sm text-gray-500">
+                  Transaction: {formatAddress(txHash)}
+                </div>
+              </div>
+            </div>
+          )
+          refetchEligibility()
+          setTimeout(() => setClaimProgress(0), 3000)
+        },
+        onError: (error) => {
+          console.error('Claim failed:', error)
+          toast.error(error.message || 'Claim failed. Please try again.')
+          setClaimProgress(0)
+        }
+      })
       
-      // Refresh stats after a delay
-      setTimeout(() => {
-        refetchStats()
-        setClaimProgress(0)
-      }, 5000)
-      
+      // Update progress to show transaction is being prepared
       setClaimProgress(50)
     } catch (error) {
-      console.error('Failed to initiate MON claim:', error)
-      toast.error('Failed to initiate MON claim. Please try again.')
+      console.error('Failed to initiate claim:', error)
+      toast.error('Failed to initiate claim. Please try again.')
       setClaimProgress(0)
     }
   }
@@ -119,24 +152,74 @@ export function MonFaucetCard() {
       transition={{ duration: 0.5, delay: 0.9 }}
       className="glass rounded-3xl p-6 shadow-xl space-y-6"
     >
-      {/* Vercel Preview Mode Notice */}
-
       <AnimatePresence mode="wait">
         {!isConnected ? (
-          // Not Connected State
+          // Connect Wallet State
           <motion.div
-            key="not-connected"
+            key="connect"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             className="text-center space-y-4"
           >
-            <div className="flex items-center justify-center p-4 bg-purple-50 rounded-2xl">
-              <Sparkles className="w-5 h-5 text-purple-500 mr-2" />
-              <span className="text-purple-700 font-medium">
-                Connect wallet to claim MON
+            <div className="space-y-2">
+              <Button
+                onClick={() => handleConnect(0)}
+                disabled={isConnecting}
+                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+              >
+                {isConnecting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Wallet className="w-5 h-5 mr-2" />
+                    Connect Wallet
+                  </>
+                )}
+              </Button>
+              
+              {connectors.length > 1 && (
+                <div className="text-xs text-gray-500 text-center">
+                  Available: {connectors.map(c => c.name).join(', ')}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        ) : isWrongNetwork ? (
+          // Wrong Network State
+          <motion.div
+            key="wrong-network"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="text-center space-y-4"
+          >
+            <div className="flex items-center justify-center p-4 bg-orange-50 rounded-2xl">
+              <AlertCircle className="w-5 h-5 text-orange-500 mr-2" />
+              <span className="text-orange-700 font-medium">
+                Please switch to Monad Testnet
               </span>
             </div>
+            
+            <Button
+              onClick={handleSwitchNetwork}
+              variant="outline"
+              className="w-full h-12"
+            >
+              Switch to Monad Testnet
+            </Button>
+            
+            <Button
+              onClick={handleDisconnect}
+              variant="ghost"
+              className="w-full"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Disconnect
+            </Button>
           </motion.div>
         ) : (
           // Connected State
@@ -147,27 +230,6 @@ export function MonFaucetCard() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="space-y-6"
           >
-            {/* MON Info Banner */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              className="bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 rounded-2xl p-4 border-2 border-purple-200 shadow-md"
-            >
-              <div className="flex items-center justify-center space-x-2">
-                <Sparkles className="w-5 h-5 text-purple-500" />
-                <div className="text-center">
-                  <div className="font-bold text-purple-900 text-base">
-                    Claim MON Testnet Tokens
-                  </div>
-                  <div className="text-sm text-purple-700 mt-1">
-                    Get <span className="font-semibold">{MON_CONFIG.claimAmount} MON</span> per claim • Up to <span className="font-semibold">{MON_CONFIG.maxClaimsPerDay} claims</span> per day
-                  </div>
-                </div>
-                <Sparkles className="w-5 h-5 text-purple-500" />
-              </div>
-            </motion.div>
-
             {/* Platform Restriction Notice */}
             {!isAllowedPlatform && (
               <motion.div
@@ -182,42 +244,24 @@ export function MonFaucetCard() {
                       Access Restricted
                     </div>
                     <div className="text-sm text-red-700">
-                      This faucet is only available for <span className="font-semibold">Farcaster</span> users. Please access it through the Farcaster app to claim MON.
+                      This faucet is only available for <span className="font-semibold">Farcaster</span> users. Please access it through the Farcaster app to claim your MON.
                     </div>
                   </div>
                 </div>
               </motion.div>
             )}
 
-            {/* Wrong Network Notice */}
-            {isWrongNetwork && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-4 border-2 border-orange-200"
-              >
-                <div className="flex items-start space-x-3">
-                  <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="font-bold text-orange-900 mb-1">
-                      Wrong Network
-                    </div>
-                    <div className="text-sm text-orange-700 mb-3">
-                      Please switch to <span className="font-semibold">Monad Testnet (Chain ID: 10143)</span> to claim MON tokens
-                    </div>
-                    <Button
-                      onClick={handleSwitchNetwork}
-                      className="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white"
-                    >
-                      Switch to Monad Testnet
-                    </Button>
-                  </div>
+            {/* Wallet Info */}
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-4 border border-purple-100">
+              <div className="text-center">
+                <div className="text-sm text-gray-500 mb-1">Connected Wallet</div>
+                <div className="font-mono font-semibold text-purple-600">
+                  {formatAddress(address!)}
                 </div>
-              </motion.div>
-            )}
+              </div>
+            </div>
 
-
-            {/* Neynar Score Requirement */}
+            {/* Neynar Score Requirement - Only show if score check is required and user is in Farcaster */}
             {FARCASTER_CONFIG.spamLabelRequired && isAllowedPlatform && farcasterUser && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -278,7 +322,7 @@ export function MonFaucetCard() {
               </motion.div>
             )}
 
-            {/* Follow Requirement */}
+            {/* Follow Requirement - Only show if follow is required and user is in Farcaster */}
             {FARCASTER_CONFIG.followRequired && isAllowedPlatform && farcasterUser && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -323,6 +367,7 @@ export function MonFaucetCard() {
                           onClick={() => {
                             window.open(FARCASTER_CONFIG.targetProfileUrl, '_blank')
                             toast.info('After following, come back and refresh to claim!')
+                            // Refetch after 3 seconds
                             setTimeout(() => {
                               refetchFollow()
                             }, 3000)
@@ -340,6 +385,7 @@ export function MonFaucetCard() {
                         toast.info('Checking follow status...')
                         const result = await refetchFollow()
                         
+                        // Check the result after refetch
                         if (result.data?.isFollowing) {
                           toast.success('✓ Following confirmed! You can now claim MON.')
                         } else if (result.data?.quotaExceeded || result.data?.apiError) {
@@ -358,65 +404,85 @@ export function MonFaucetCard() {
               </motion.div>
             )}
 
-            {/* MON Stats Display */}
-            {isAllowedPlatform && isFollowing && hasSpamLabel2 && (
-              <>
-                {statsLoading ? (
-                  <div className="flex items-center justify-center p-4">
-                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                    <span className="text-gray-600">Loading MON stats...</span>
+            {/* Info Banner - Only show for allowed platforms */}
+            {isAllowedPlatform && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 rounded-2xl p-4 border-2 border-purple-200 shadow-md"
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <Sparkles className="w-5 h-5 text-purple-500" />
+                <div className="text-center">
+                  <div className="font-bold text-purple-900 text-base">
+                    Claim MON Testnet Tokens
                   </div>
-                ) : monStats ? (
-                  <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-4 border border-purple-100">
-                  <div className="text-xs text-purple-600 font-medium mb-1">Claims Today</div>
-                  <div className="text-2xl font-bold text-purple-900">
-                    {monStats.claimsMadeToday}/{MON_CONFIG.maxClaimsPerDay}
-                  </div>
-                  <div className="text-xs text-purple-600 mt-1">
-                    {monStats.remainingClaims} remaining
-                  </div>
-                </div>
-                
-                <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl p-4 border border-pink-100">
-                  <div className="text-xs text-pink-600 font-medium mb-1">MON Claimed</div>
-                  <div className="text-2xl font-bold text-pink-900">
-                    {monStats.monClaimedToday.toFixed(1)}/{MON_CONFIG.dailyLimit}
-                  </div>
-                  <div className="text-xs text-pink-600 mt-1">
-                    {monStats.remainingMON.toFixed(1)} MON left
-                  </div>
+                  <div className="text-sm text-purple-700 mt-1">
+                    Get <span className="font-semibold">{MON_CONFIG.claimAmount} MON</span> • Once per 24 hours
                   </div>
                 </div>
-              ) : (
-                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
-                  <div className="flex items-center justify-center">
-                    <AlertCircle className="w-5 h-5 text-blue-500 mr-2" />
-                    <div className="text-center text-sm text-blue-700">
-                      Contract stats unavailable. You can still try claiming!
-                    </div>
-                  </div>
-                </div>
-              )}
-              </>
+                <Sparkles className="w-5 h-5 text-purple-500" />
+              </div>
+            </motion.div>
             )}
 
-            {/* Daily Limit Reached Message - Only show if user actually reached the limit */}
-            {monStats && !monStats.canClaimNow && monStats.remainingClaims === 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+            {/* Eligibility Status */}
+            {eligibilityLoading ? (
+              <div className="flex items-center justify-center p-4">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                <span className="text-gray-600">Checking eligibility...</span>
+              </div>
+            ) : eligibility && !eligibility.eligible ? (
+              <div className={`border rounded-2xl p-4 ${
+                eligibility?.message?.includes('Connection issue') || 
+                eligibility?.message?.includes('Unable to verify') ||
+                eligibility?.message?.includes('Please try again') ||
+                eligibility?.message?.includes('Error checking') ||
+                !eligibility?.message
+                  ? 'bg-blue-50 border-blue-200'
+                  : 'bg-yellow-50 border-yellow-200'
+              }`}>
                 <div className="flex items-center justify-center">
-                  <AlertCircle className="w-5 h-5 text-amber-500 mr-2" />
+                  <AlertCircle className={`w-5 h-5 mr-2 ${
+                    eligibility?.message?.includes('Connection issue') || 
+                eligibility?.message?.includes('Unable to verify') ||
+                eligibility?.message?.includes('Please try again') ||
+                eligibility?.message?.includes('Error checking') ||
+                !eligibility?.message
+                      ? 'text-blue-500'
+                      : 'text-yellow-500'
+                  }`} />
                   <div className="text-center">
-                    <div className="font-medium text-amber-800">
-                      Daily Limit Reached
+                    <div className={`font-medium ${
+                      eligibility?.message?.includes('Connection issue') || 
+                eligibility?.message?.includes('Unable to verify') ||
+                eligibility?.message?.includes('Please try again') ||
+                eligibility?.message?.includes('Error checking') ||
+                !eligibility?.message
+                        ? 'text-blue-800'
+                        : 'text-yellow-800'
+                    }`}>
+                      {eligibility?.message?.includes('Connection issue') || eligibility?.message?.includes('Unable to verify')
+                        ? 'Connection Issue'
+                        : 'Cooldown Active'
+                      }
                     </div>
-                    <div className="text-sm text-amber-600">
-                      You've used all {MON_CONFIG.maxClaimsPerDay} claims for today. Come back tomorrow!
+                    <div className={`text-sm ${
+                      eligibility?.message?.includes('Connection issue') || 
+                eligibility?.message?.includes('Unable to verify') ||
+                eligibility?.message?.includes('Please try again') ||
+                eligibility?.message?.includes('Error checking') ||
+                !eligibility?.message
+                        ? 'text-blue-600'
+                        : 'text-yellow-600'
+                    }`}>
+                      {eligibility?.message || 'Please wait before claiming again'}
                     </div>
                   </div>
                 </div>
               </div>
-            )}
+            ) : null}
 
             {/* Progress Bar */}
             {claimProgress > 0 && (
@@ -436,29 +502,14 @@ export function MonFaucetCard() {
             <Button
               onClick={handleClaim}
               disabled={!canClaim}
-              className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isWrongNetwork ? (
-                <>
-                  <AlertCircle className="w-5 h-5 mr-2" />
-                  Wrong Network
-                </>
-              ) : !isAllowedPlatform ? (
+              {!isAllowedPlatform ? (
                 <>
                   <AlertCircle className="w-5 h-5 mr-2" />
                   Platform Restricted
                 </>
-              ) : !isFollowing ? (
-                <>
-                  <UserPlus className="w-5 h-5 mr-2" />
-                  Follow Required
-                </>
-              ) : !hasSpamLabel2 ? (
-                <>
-                  <AlertCircle className="w-5 h-5 mr-2" />
-                  Low Reputation Score
-                </>
-              ) : statsLoading ? (
+              ) : eligibilityLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                   Checking...
@@ -466,24 +517,40 @@ export function MonFaucetCard() {
               ) : isClaimPending ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Claiming...
+                  Processing...
                 </>
-              ) : monStats && !monStats.canClaimNow && monStats.remainingClaims === 0 ? (
+              ) : canClaim ? (
+                <>
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Claim MON
+                </>
+              ) : hasRealCooldown ? (
                 <>
                   <AlertCircle className="w-5 h-5 mr-2" />
-                  Daily Limit Reached
+                  Cooldown Active
+                </>
+              ) : isWrongNetwork ? (
+                <>
+                  <AlertCircle className="w-5 h-5 mr-2" />
+                  Wrong Network
                 </>
               ) : (
                 <>
                   <Sparkles className="w-5 h-5 mr-2" />
-                  Claim {MON_CONFIG.claimAmount} MON
+                  Claim MON
                 </>
               )}
             </Button>
 
-            <div className="text-center text-xs text-gray-500">
-              {MON_CONFIG.network} • Max {MON_CONFIG.dailyLimit} MON per day
-            </div>
+            {/* Disconnect Button */}
+            <Button
+              onClick={handleDisconnect}
+              variant="ghost"
+              className="w-full"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Disconnect Wallet
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>

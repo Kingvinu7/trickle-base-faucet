@@ -28,6 +28,7 @@ async function logClaim(
       body: JSON.stringify({
         address: address.toLowerCase(),
         txHash,
+        network: 'base',
         ...(farcasterUser && { farcasterUser }),
       }),
     })

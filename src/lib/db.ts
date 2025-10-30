@@ -154,11 +154,11 @@ export async function getRecentClaims(limit: number = 20, farcasterOnly: boolean
   const query = `
     WITH user_mon_stats AS (
       SELECT 
-        farcaster_fid,
-        COUNT(*) FILTER (WHERE network = 'monad-testnet' AND claim_timestamp > NOW() - INTERVAL '24 hours') as mon_claims_today
-      FROM claims
-      WHERE farcaster_fid IS NOT NULL AND network = 'monad-testnet'
-      GROUP BY farcaster_fid
+        c2.farcaster_fid,
+        COUNT(*) FILTER (WHERE c2.network = 'monad-testnet' AND c2.claim_timestamp > NOW() - INTERVAL '24 hours') as mon_claims_today
+      FROM claims c2
+      WHERE c2.farcaster_fid IS NOT NULL AND c2.network = 'monad-testnet'
+      GROUP BY c2.farcaster_fid
     )
     SELECT 
       c.address,

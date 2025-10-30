@@ -419,7 +419,7 @@ export function MonFaucetCard() {
                     Claim MON Testnet Tokens
                   </div>
                   <div className="text-sm text-purple-700 mt-1">
-                    Get <span className="font-semibold">{MON_CONFIG.claimAmount} MON</span> • Once per 24 hours
+                    Get <span className="font-semibold">{MON_CONFIG.claimAmount} MON</span> per claim • Up to {MON_CONFIG.maxClaimsPerDay} claims ({MON_CONFIG.dailyLimit} MON/day)
                   </div>
                 </div>
                 <Sparkles className="w-5 h-5 text-purple-500" />

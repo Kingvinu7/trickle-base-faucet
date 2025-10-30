@@ -149,7 +149,7 @@ export async function saveClaim(data: {
 export async function getRecentClaims(limit: number = 20, farcasterOnly: boolean = true) {
   const pool = getPool()
   
-  const whereClause = farcasterOnly ? 'WHERE farcaster_fid IS NOT NULL' : ''
+  const whereClause = farcasterOnly ? 'WHERE c.farcaster_fid IS NOT NULL' : ''
   
   const query = `
     WITH user_mon_stats AS (

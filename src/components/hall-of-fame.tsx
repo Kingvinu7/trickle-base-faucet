@@ -9,6 +9,8 @@ interface Claim {
   address: string
   txHash: string
   timestamp: string
+  network: string
+  monClaimsToday: number
   farcasterUser?: {
     fid: number
     username: string
@@ -100,7 +102,11 @@ export function HallOfFame() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               transition={{ delay: index * 0.05 }}
-              className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100 hover:border-blue-300 transition-all"
+              className={`rounded-xl p-4 border-2 transition-all ${
+                claim.network === 'monad-testnet' 
+                  ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200 hover:border-purple-400' 
+                  : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 hover:border-blue-400'
+              }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3 flex-1">
@@ -109,7 +115,7 @@ export function HallOfFame() {
                     index === 0 ? 'bg-yellow-400 text-yellow-900' :
                     index === 1 ? 'bg-gray-300 text-gray-700' :
                     index === 2 ? 'bg-orange-400 text-orange-900' :
-                    'bg-blue-200 text-blue-700'
+                    claim.network === 'monad-testnet' ? 'bg-purple-200 text-purple-700' : 'bg-blue-200 text-blue-700'
                   }`}>
                     {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
                   </div>
@@ -117,10 +123,26 @@ export function HallOfFame() {
                   {/* User Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
-                      <User className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                      <User className={`w-4 h-4 flex-shrink-0 ${
+                        claim.network === 'monad-testnet' ? 'text-purple-500' : 'text-blue-500'
+                      }`} />
                       <p className="font-semibold text-gray-900 truncate">
                         {claim.farcasterUser?.displayName || 'Anonymous'}
                       </p>
+                      {/* Network Badge */}
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                        claim.network === 'monad-testnet' 
+                          ? 'bg-purple-200 text-purple-900' 
+                          : 'bg-blue-200 text-blue-900'
+                      }`}>
+                        {claim.network === 'monad-testnet' ? 'MON' : 'BASE'}
+                      </span>
+                      {/* MON Claim Counter */}
+                      {claim.network === 'monad-testnet' && claim.monClaimsToday > 0 && (
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-pink-200 text-pink-900">
+                          {claim.monClaimsToday}/10
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-gray-600">
                       @{claim.farcasterUser?.username || 'unknown'}
@@ -138,12 +160,22 @@ export function HallOfFame() {
               </div>
               
               {/* Transaction Hash */}
-              <div className="mt-2 pt-2 border-t border-blue-200">
+              <div className={`mt-2 pt-2 border-t ${
+                claim.network === 'monad-testnet' ? 'border-purple-200' : 'border-blue-200'
+              }`}>
                 <a
-                  href={`https://basescan.org/tx/${claim.txHash}`}
+                  href={
+                    claim.network === 'monad-testnet' 
+                      ? `https://explorer.monad.xyz/tx/${claim.txHash}`
+                      : `https://basescan.org/tx/${claim.txHash}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:text-blue-800 font-mono truncate block"
+                  className={`text-xs hover:underline font-mono truncate block ${
+                    claim.network === 'monad-testnet' 
+                      ? 'text-purple-600 hover:text-purple-800' 
+                      : 'text-blue-600 hover:text-blue-800'
+                  }`}
                 >
                   {claim.txHash}
                 </a>
@@ -155,9 +187,17 @@ export function HallOfFame() {
       
       {/* Footer */}
       <div className="mt-4 pt-4 border-t border-gray-200 text-center">
-        <p className="text-sm text-gray-500">
-          Showing latest {claims.length} claim{claims.length !== 1 ? 's' : ''} from Farcaster users
-        </p>
+        <div className="flex items-center justify-center space-x-4 text-sm text-gray-500">
+          <span>Latest {claims.length} claim{claims.length !== 1 ? 's' : ''}</span>
+          <div className="flex items-center space-x-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+              BASE
+            </span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold">
+              MON
+            </span>
+          </div>
+        </div>
       </div>
     </motion.div>
   )

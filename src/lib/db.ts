@@ -52,6 +52,7 @@ export async function initializeDatabase() {
           address VARCHAR(42) NOT NULL,
           tx_hash VARCHAR(66) NOT NULL UNIQUE,
           claim_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+          network VARCHAR(50) DEFAULT 'base',
           farcaster_fid INTEGER,
           farcaster_username VARCHAR(255),
           farcaster_display_name VARCHAR(255),
@@ -86,6 +87,7 @@ export async function initializeDatabase() {
 export async function saveClaim(data: {
   address: string
   txHash: string
+  network?: string
   farcasterUser?: {
     fid: number
     username: string
@@ -95,8 +97,8 @@ export async function saveClaim(data: {
   const pool = getPool()
   
   const query = `
-    INSERT INTO claims (address, tx_hash, farcaster_fid, farcaster_username, farcaster_display_name, claim_timestamp)
-    VALUES ($1, $2, $3, $4, $5, NOW())
+    INSERT INTO claims (address, tx_hash, network, farcaster_fid, farcaster_username, farcaster_display_name, claim_timestamp)
+    VALUES ($1, $2, $3, $4, $5, $6, NOW())
     ON CONFLICT (tx_hash) DO NOTHING
     RETURNING *
   `
@@ -104,6 +106,7 @@ export async function saveClaim(data: {
   const values = [
     data.address.toLowerCase(),
     data.txHash,
+    data.network || 'base',
     data.farcasterUser?.fid || null,
     data.farcasterUser?.username || null,
     data.farcasterUser?.displayName || null,
@@ -125,16 +128,27 @@ export async function getRecentClaims(limit: number = 20, farcasterOnly: boolean
   const whereClause = farcasterOnly ? 'WHERE farcaster_fid IS NOT NULL' : ''
   
   const query = `
+    WITH user_mon_stats AS (
+      SELECT 
+        farcaster_fid,
+        COUNT(*) FILTER (WHERE network = 'monad-testnet' AND claim_timestamp > NOW() - INTERVAL '24 hours') as mon_claims_today
+      FROM claims
+      WHERE farcaster_fid IS NOT NULL AND network = 'monad-testnet'
+      GROUP BY farcaster_fid
+    )
     SELECT 
-      address,
-      tx_hash as "txHash",
-      claim_timestamp,
-      farcaster_fid as fid,
-      farcaster_username as username,
-      farcaster_display_name as "displayName"
-    FROM claims
+      c.address,
+      c.tx_hash as "txHash",
+      c.claim_timestamp,
+      c.network,
+      c.farcaster_fid as fid,
+      c.farcaster_username as username,
+      c.farcaster_display_name as "displayName",
+      COALESCE(ums.mon_claims_today, 0) as mon_claims_today
+    FROM claims c
+    LEFT JOIN user_mon_stats ums ON c.farcaster_fid = ums.farcaster_fid
     ${whereClause}
-    ORDER BY claim_timestamp DESC
+    ORDER BY c.claim_timestamp DESC
     LIMIT $1
   `
   
@@ -146,6 +160,8 @@ export async function getRecentClaims(limit: number = 20, farcasterOnly: boolean
       address: row.address,
       txHash: row.txHash,
       timestamp: row.claim_timestamp.toISOString(),
+      network: row.network || 'base',
+      monClaimsToday: Number(row.mon_claims_today) || 0,
       ...(row.fid && {
         farcasterUser: {
           fid: row.fid,
